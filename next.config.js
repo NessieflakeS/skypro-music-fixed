@@ -2,16 +2,21 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['localhost'],
-    unoptimized: process.env.NODE_ENV === 'development', 
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/img/**',
+      },
+    ],
+    unoptimized: process.env.NODE_ENV === 'development',
   },
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ['@svgr/webpack'],
-    });
-    return config;
-  },
+  turbopack: {},
+  experimental: {
+    turbo: {
+    }
+  }
 };
 
 module.exports = nextConfig;

@@ -2,6 +2,8 @@
   width: 244px;
   background-color: #181818;
   padding: 20px 0 20px 36px;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav__logo {
@@ -12,6 +14,11 @@
   margin-bottom: 20px;
 }
 
+.logo__image {
+  width: 113.33px;
+  height: 17px;
+}
+
 .nav__burger {
   width: 20px;
   height: 36px;
@@ -19,17 +26,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-}
-
-.nav__menu {
-  display: block;
-  visibility: visible;
-}
-
-.logo__image {
-  width: 113.33px;
-  height: 17px;
-  color: #181818;
+  margin-bottom: 20px;
 }
 
 .burger__line {
@@ -39,14 +36,25 @@
   background-color: #d3d3d3;
 }
 
+.nav__menu {
+  display: block;
+  visibility: visible;
+}
+
 .menu__list {
   padding: 18px 0 10px 0;
-  list-style: none;
 }
 
 .menu__item {
   padding: 5px 0;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.menu__itemIcon {
+  margin-bottom: 0;
+  padding: 0;
 }
 
 .menu__link {
@@ -54,9 +62,36 @@
   font-weight: 400;
   font-size: 16px;
   line-height: 24px;
-  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .menu__link:hover {
   color: #d9b6ff;
+}
+
+.themeToggle {
+  width: 39px;
+  height: 39px;
+  background-color: #313131;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: auto;
+  transition: background-color 0.2s ease;
+}
+
+.themeToggle:hover {
+  background-color: #404040;
+}
+
+.themeToggle__svg {
+  width: 20px;
+  height: 20px;
+  fill: transparent;
+  stroke: #ffffff;
+  stroke-width: 2;
 }

@@ -35,14 +35,18 @@ export default function Header() {
             </Link>
           </li>
           <li className={styles.menu__item}>
-            <Link href="/signin" className={styles.menu__link}>
-              Войти
-            </Link>
-          </li>
-          <li className={styles.menu__item}>
             <Link href="/logout" className={styles.menu__link}>
               Выйти
             </Link>
+          </li>
+          <li className={`${styles.menu__item} ${styles.menu__itemIcon}`}>
+            <button className={styles.themeToggle} aria-label="Сменить тему">
+              <img 
+                src="/img/icon/day-night.svg" 
+                alt="Сменить тему" 
+                className={styles.themeToggle__icon}
+              />
+            </button>
           </li>
         </ul>
       </div>

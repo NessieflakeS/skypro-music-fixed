@@ -39,3 +39,17 @@ button {
 input {
   font-family: inherit;
 }
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+use {
+  pointer-events: none;
+}

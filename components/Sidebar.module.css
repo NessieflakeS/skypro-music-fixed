@@ -1,6 +1,10 @@
 .sidebar {
   max-width: 418px;
   padding: 20px 90px 20px 78px;
+  background-color: #181818;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
 .sidebar__personal {
@@ -23,17 +27,14 @@
 .sidebar__icon {
   width: 43px;
   height: 43px;
-  background-color: #313131;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .sidebar__icon svg {
-  width: 20px;
-  height: 20px;
+  fill: transparent;
+  stroke: #ffffff;
 }
 
 .sidebar__block {
@@ -62,11 +63,11 @@
 .sidebar__link {
   width: 100%;
   height: 100%;
-  display: block;
 }
 
 .sidebar__img {
   width: 100%;
-  height: 100%;
+  height: auto;
+  border-radius: 10px;
   object-fit: cover;
 }

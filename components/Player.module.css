@@ -29,7 +29,7 @@
 .player__btnPrevSvg {
   width: 15px;
   height: 14px;
-  stroke: #ffffff;
+  fill: #d9d9d9;
 }
 
 .player__btnPlay {
@@ -49,7 +49,7 @@
 .player__btnNextSvg {
   width: 15px;
   height: 14px;
-  fill: inherit;
+  fill: #d9d9d9;
   stroke: #d9d9d9;
 }
 
@@ -64,9 +64,9 @@
   stroke: #696969;
 }
 
-.player__btnShuffle {
-  display: flex;
-  align-items: center;
+.player__btnRepeat:hover .player__btnRepeatSvg,
+.player__btnShuffle:hover .player__btnShuffleSvg {
+  stroke: #acacac;
 }
 
 .player__btnShuffleSvg {
@@ -74,18 +74,4 @@
   height: 12px;
   fill: transparent;
   stroke: #696969;
-}
-
-.player__btnPrev:hover .player__btnPrevSvg,
-.player__btnNext:hover .player__btnNextSvg {
-  stroke: #d9b6ff;
-}
-
-.player__btnPlay:hover .player__btnPlaySvg {
-  fill: #d9b6ff;
-}
-
-.player__btnRepeat:hover .player__btnRepeatSvg,
-.player__btnShuffle:hover .player__btnShuffleSvg {
-  stroke: #d9b6ff;
 }
