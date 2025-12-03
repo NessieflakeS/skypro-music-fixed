@@ -1,0 +1,91 @@
+.player {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.player__controls {
+  display: flex;
+  flex-direction: row;
+  padding: 0 27px 0 31px;
+}
+
+.player__btnPrev,
+.player__btnPlay,
+.player__btnNext,
+.player__btnRepeat,
+.player__btnShuffle {
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.player__btnPrev {
+  margin-right: 23px;
+}
+
+.player__btnPrevSvg {
+  width: 15px;
+  height: 14px;
+  stroke: #ffffff;
+}
+
+.player__btnPlay {
+  margin-right: 23px;
+}
+
+.player__btnPlaySvg {
+  width: 22px;
+  height: 20px;
+  fill: #d9d9d9;
+}
+
+.player__btnNext {
+  margin-right: 28px;
+}
+
+.player__btnNextSvg {
+  width: 15px;
+  height: 14px;
+  fill: inherit;
+  stroke: #d9d9d9;
+}
+
+.player__btnRepeat {
+  margin-right: 24px;
+}
+
+.player__btnRepeatSvg {
+  width: 18px;
+  height: 12px;
+  fill: transparent;
+  stroke: #696969;
+}
+
+.player__btnShuffle {
+  display: flex;
+  align-items: center;
+}
+
+.player__btnShuffleSvg {
+  width: 19px;
+  height: 12px;
+  fill: transparent;
+  stroke: #696969;
+}
+
+.player__btnPrev:hover .player__btnPrevSvg,
+.player__btnNext:hover .player__btnNextSvg {
+  stroke: #d9b6ff;
+}
+
+.player__btnPlay:hover .player__btnPlaySvg {
+  fill: #d9b6ff;
+}
+
+.player__btnRepeat:hover .player__btnRepeatSvg,
+.player__btnShuffle:hover .player__btnShuffleSvg {
+  stroke: #d9b6ff;
+}
