@@ -41,13 +41,8 @@ input {
 }
 
 svg {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-svg {
   flex-shrink: 0;
+  display: block;
 }
 
 use {
