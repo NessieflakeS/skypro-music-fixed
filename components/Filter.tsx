@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import classNames from "classnames";
 import styles from "./Filter.module.css";
 import { Track } from "@/types";
@@ -11,11 +11,14 @@ interface FilterProps {
 
 export default function Filter({ tracks }: FilterProps) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [windowPosition, setWindowPosition] = useState({ left: 0, top: 0 });
+  const [activeFilterIndex, setActiveFilterIndex] = useState<number | null>(null);
   
-  const authorRef = useRef<HTMLButtonElement>(null);
-  const yearRef = useRef<HTMLButtonElement>(null);
-  const genreRef = useRef<HTMLButtonElement>(null);
+  const filterButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const filterWindowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    filterButtonsRef.current = filterButtonsRef.current.slice(0, 3);
+  }, []);
 
   const authors = Array.from(
     new Set(tracks.map(track => track.author))
@@ -34,22 +37,13 @@ export default function Filter({ tracks }: FilterProps) {
     .filter(year => year !== null)
     .sort((a, b) => (b || 0) - (a || 0)) as number[];
 
-  const handleFilterClick = (filter: string, ref: React.RefObject<HTMLButtonElement>) => {
+  const handleFilterClick = (filter: string, index: number) => {
     if (activeFilter === filter) {
       setActiveFilter(null);
+      setActiveFilterIndex(null);
     } else {
       setActiveFilter(filter);
-      if (ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        const container = ref.current.closest(`.${styles.centerblock__filter}`);
-        if (container) {
-          const containerRect = container.getBoundingClientRect();
-          setWindowPosition({
-            left: rect.left - containerRect.left,
-            top: rect.bottom - containerRect.top + 10
-          });
-        }
-      }
+      setActiveFilterIndex(index);
     }
   };
 
@@ -68,11 +62,26 @@ export default function Filter({ tracks }: FilterProps) {
 
   const filterData = getFilterData();
 
+  const setAuthorRef = useCallback((el: HTMLButtonElement | null) => {
+    filterButtonsRef.current[0] = el;
+  }, []);
+
+  const setYearRef = useCallback((el: HTMLButtonElement | null) => {
+    filterButtonsRef.current[1] = el;
+  }, []);
+
+  const setGenreRef = useCallback((el: HTMLButtonElement | null) => {
+    filterButtonsRef.current[2] = el;
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest(`.${styles.filter__button}, .${styles.filter__window}`)) {
+      if (filterWindowRef.current && 
+          !filterWindowRef.current.contains(target) &&
+          !filterButtonsRef.current.some(btn => btn && btn.contains(target))) {
         setActiveFilter(null);
+        setActiveFilterIndex(null);
       }
     };
 
@@ -82,34 +91,41 @@ export default function Filter({ tracks }: FilterProps) {
     };
   }, []);
 
+  const getWindowClass = () => {
+    if (activeFilterIndex === 0) return styles.filter__window_author;
+    if (activeFilterIndex === 1) return styles.filter__window_year;
+    if (activeFilterIndex === 2) return styles.filter__window_genre;
+    return "";
+  };
+
   return (
     <div className={styles.centerblock__filter}>
       <div className={styles.filter__title}>Искать по:</div>
       <div className={styles.filter__buttons}>
         <button
-          ref={authorRef}
+          ref={setAuthorRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "author",
           })}
-          onClick={() => handleFilterClick("author", authorRef)}
+          onClick={() => handleFilterClick("author", 0)}
         >
           исполнителю
         </button>
         <button
-          ref={yearRef}
+          ref={setYearRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "year",
           })}
-          onClick={() => handleFilterClick("year", yearRef)}
+          onClick={() => handleFilterClick("year", 1)}
         >
           году выпуска
         </button>
         <button
-          ref={genreRef}
+          ref={setGenreRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "genre",
           })}
-          onClick={() => handleFilterClick("genre", genreRef)}
+          onClick={() => handleFilterClick("genre", 2)}
         >
           жанру
         </button>
@@ -117,11 +133,8 @@ export default function Filter({ tracks }: FilterProps) {
 
       {activeFilter && (
         <div 
-          className={styles.filter__window}
-          style={{
-            left: `${windowPosition.left}px`,
-            top: `${windowPosition.top}px`
-          }}
+          ref={filterWindowRef}
+          className={`${styles.filter__window} ${getWindowClass()}`}
         >
           <div className={styles.filter__list}>
             {filterData.map((item, index) => (

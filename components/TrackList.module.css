@@ -54,7 +54,6 @@
   padding-right: 0;
   margin-right: 0;
   
-  scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
@@ -62,6 +61,12 @@
   display: none;
   width: 0;
   background: transparent;
+}
+
+@supports (scrollbar-width: none) {
+  .content__playlist {
+    scrollbar-width: none;
+  }
 }
 
 .content__playlist::after {
