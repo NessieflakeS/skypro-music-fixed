@@ -17,15 +17,6 @@
   flex-shrink: 0;
 }
 
-.filter__buttons {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 10px;
-  overflow: visible;
-  position: relative;
-}
-
 .filter__button {
   font-style: normal;
   font-weight: 400;
@@ -40,7 +31,7 @@
   white-space: nowrap;
   transition: all 0.3s ease;
   flex-shrink: 0;
-  position: relative;
+  margin-right: 10px;
 }
 
 .filter__button:hover {
@@ -55,24 +46,10 @@
 
 .filter__window {
   position: absolute;
-  z-index: 1000;
   top: 100%;
-  margin-top: 10px;
-}
-
-.filter__window_author {
   left: 0;
-}
-
-.filter__window_year {
-  left: calc(15px + 105px);
-}
-
-.filter__window_genre {
-  left: calc(15px + 220px); 
-}
-
-.filter__list {
+  margin-top: 10px;
+  z-index: 1000;
   background: #313131;
   border-radius: 12px;
   padding: 34px;
@@ -87,15 +64,15 @@
   max-width: 248px;
 }
 
-.filter__list::-webkit-scrollbar {
+.filter__window::-webkit-scrollbar {
   width: 4px;
 }
 
-.filter__list::-webkit-scrollbar-track {
+.filter__window::-webkit-scrollbar-track {
   background-color: rgba(75, 73, 73, 1);
 }
 
-.filter__list::-webkit-scrollbar-thumb {
+.filter__window::-webkit-scrollbar-thumb {
   background-color: white;
 }
 

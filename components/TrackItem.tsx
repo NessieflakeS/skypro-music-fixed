@@ -10,8 +10,6 @@ interface ITrack {
   authorLink?: string;
   albumLink?: string;
   subtitle?: string;
-  year?: number; // Добавляем год выпуска
-  genres?: string[]; // Добавляем жанры
 }
 
 interface TrackItemProps {
@@ -30,20 +28,8 @@ export default function TrackItem({ track }: TrackItemProps) {
           </div>
           <div className={styles.track__titleText}>
             <a className={styles.track__titleLink} href={track.link || "#"}>
-              {track.name} 
-              {track.subtitle && <span className={styles.track__titleSpan}>{track.subtitle}</span>}
+              {track.name} <span className={styles.track__titleSpan}>{track.subtitle || ""}</span>
             </a>
-            {/* Добавляем год и жанры под названием трека */}
-            {(track.year || track.genres) && (
-              <div className={styles.track__meta}>
-                {track.year && <span className={styles.track__year}>{track.year}</span>}
-                {track.genres && track.genres.length > 0 && (
-                  <span className={styles.track__genres}>
-                    {track.genres.join(", ")}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
         <div className={styles.track__author}>

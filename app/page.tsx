@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
@@ -23,37 +23,22 @@ const tracksForDisplay: ITrack[] = data.map(track => ({
   author: track.author,
   album: track.album,
   time: formatDuration(track.duration_in_seconds),
-  year: new Date(track.release_date).getFullYear(),
-  genres: track.genre,
   link: "#",
   authorLink: "#",
   albumLink: "#"
 }));
 
 export default function Home() {
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
-
-  useEffect(() => {
-    const savedState = localStorage.getItem('menuOpen');
-    if (savedState !== null) {
-      setIsMenuOpen(savedState === 'true');
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('menuOpen', isMenuOpen.toString());
-  }, [isMenuOpen]);
-
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
-        <Header />
-        <main className={`${styles.main} ${isMenuOpen ? styles.main_with_menu : ''}`}>
+        <main className={styles.main}>
+          <Header />
           <div className={styles.centerblock}>
             <SearchBar />
             <h2 className={styles.centerblock__h2}>Треки</h2>
             <Filter tracks={data} />
-            <div className={styles.trackListContainer}>
+            <div className={styles.contentContainer}>
               <TrackList tracks={tracksForDisplay} />
             </div>
           </div>
