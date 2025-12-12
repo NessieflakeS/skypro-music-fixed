@@ -58,35 +58,33 @@
   border-radius: 12px;
   padding: 34px;
   color: white;
-  display: flex;
-  flex-direction: column;
-  height: max-content;
   max-height: 237px;
   width: 248px;
   box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  overflow: hidden;
+  display: block;
 }
 
 .filter__list {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
   overflow-y: auto;
-  height: 100%;
+  max-height: 169px;
   padding-right: 5px;
 }
 
+.filter__list {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 .filter__list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.filter__list::-webkit-scrollbar-track {
-  background-color: #4b4949;
-  border-radius: 2px;
-}
-
-.filter__list::-webkit-scrollbar-thumb {
-  background-color: #ffffff;
-  border-radius: 2px;
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
 .filter__item {
