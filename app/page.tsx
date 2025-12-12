@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
@@ -7,9 +8,8 @@ import Player from "../components/Player";
 import TrackList from "../components/TrackList";
 import Filter from "../components/Filter";
 import { data } from "@/data";
-import styles from "./page.module.css";
 import { ITrack } from "../components/TrackList";
-
+import styles from "./page.module.css";
 
 const formatDuration = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -29,11 +29,18 @@ const tracksForDisplay: ITrack[] = data.map(track => ({
 }));
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
+
   return (
     <div className={styles.wrapper}>
+      <div 
+        className={`${styles.overlay} ${isMenuOpen ? styles.overlay_active : ''}`}
+        onClick={() => setIsMenuOpen(false)}
+      />
+      
       <div className={styles.container}>
-        <main className={styles.main}>
-          <Header />
+        <Header />
+        <main className={`${styles.main} ${isMenuOpen ? styles.main_with_menu : ''}`}>
           <div className={styles.centerblock}>
             <SearchBar />
             <h2 className={styles.centerblock__h2}>Треки</h2>
