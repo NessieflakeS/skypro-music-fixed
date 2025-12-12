@@ -28,7 +28,11 @@
   flex-direction: column;
   justify-content: space-between;
   margin-bottom: 20px;
-  cursor: pointer; 
+  cursor: pointer;
+  position: absolute;
+  left: 280px;
+  top: 20px;
+  z-index: 100;
 }
 
 .burger__line {
@@ -38,19 +42,23 @@
   background-color: #d3d3d3;
 }
 
+.nav__burger:hover .burger__line {
+  background-color: #d9b6ff;
+}
+
 .nav__menu {
   display: block;
   visibility: visible;
   opacity: 1;
-  max-height: 500px; 
-  transition: opacity 0.3s ease, max-height 0.3s ease;
+  height: auto;
+  max-height: 1000px;
+  transition: opacity 0.3s ease, max-height 0.3s ease, visibility 0.3s ease;
 }
 
 .nav__menu:not(.nav__menu_active) {
   opacity: 0;
   visibility: hidden;
   max-height: 0;
-  overflow: hidden;
 }
 
 .menu__list {
@@ -99,14 +107,7 @@
   background-color: #404040;
 }
 
-.themeToggle__svg {
+.themeToggle__icon {
   width: 20px;
   height: 20px;
-  fill: transparent;
-  stroke: #ffffff;
-  stroke-width: 2;
-}
-
-.nav__burger:hover .burger__line {
-  background-color: #d9b6ff;
 }

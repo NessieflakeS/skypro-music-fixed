@@ -3,6 +3,8 @@
   align-items: center;
   margin-bottom: 51px;
   position: relative;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .filter__title {
@@ -12,7 +14,7 @@
   line-height: 24px;
   color: #ffffff;
   margin-right: 15px;
-  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .filter__buttons {
@@ -20,6 +22,7 @@
   align-items: center;
   flex-wrap: nowrap;
   gap: 10px;
+  overflow: visible;
 }
 
 .filter__button {
@@ -35,6 +38,7 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .filter__button:hover {
@@ -49,9 +53,6 @@
 
 .filter__window {
   position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 10px;
   z-index: 1000;
 }
 

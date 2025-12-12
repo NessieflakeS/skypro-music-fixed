@@ -14,6 +14,8 @@ export interface ITrack {
   authorLink?: string;
   albumLink?: string;
   subtitle?: string;
+  year?: number; 
+  genres?: string[]; 
 }
 
 interface TrackListProps {
@@ -27,6 +29,8 @@ const defaultTracks: ITrack[] = [
     author: "Nero",
     album: "Welcome Reality",
     time: "4:44",
+    year: 2011,
+    genres: ["Dubstep", "Electronic"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -37,6 +41,8 @@ const defaultTracks: ITrack[] = [
     author: "Dynoro, Outwork, Mr. Gee",
     album: "Elektro",
     time: "2:22",
+    year: 2018,
+    genres: ["House", "Electronic"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -47,6 +53,8 @@ const defaultTracks: ITrack[] = [
     author: "Ali Bakgor",
     album: "I'm Fire",
     time: "2:22",
+    year: 2020,
+    genres: ["House", "Tech House"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -58,6 +66,8 @@ const defaultTracks: ITrack[] = [
     author: "Стоункат, Psychopath",
     album: "Non Stop",
     time: "4:12",
+    year: 2019,
+    genres: ["Hardstyle", "Hard Dance"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -69,6 +79,8 @@ const defaultTracks: ITrack[] = [
     author: "Jaded, Will Clarke, AR/CO",
     album: "Run Run",
     time: "2:54",
+    year: 2017,
+    genres: ["Tech House", "House"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -79,6 +91,8 @@ const defaultTracks: ITrack[] = [
     author: "Blue Foundation",
     album: "Eyes on Fire",
     time: "5:56",
+    year: 2007,
+    genres: ["Indie Rock", "Alternative"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -89,6 +103,8 @@ const defaultTracks: ITrack[] = [
     author: "Hyperbit",
     album: "Mucho Bien",
     time: "3:41",
+    year: 2015,
+    genres: ["Hardstyle", "Hard Dance"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -99,6 +115,8 @@ const defaultTracks: ITrack[] = [
     author: "DVRST",
     album: "Knives n Cherries",
     time: "4:01",
+    year: 2021,
+    genres: ["Phonk", "Wave"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -109,6 +127,8 @@ const defaultTracks: ITrack[] = [
     author: "Calvin Harris, Disciples",
     album: "How Deep Is Your Love",
     time: "3:32",
+    year: 2015,
+    genres: ["House", "Pop"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
@@ -119,6 +139,8 @@ const defaultTracks: ITrack[] = [
     author: "Tungevaag",
     album: "Morena",
     time: "3:19",
+    year: 2019,
+    genres: ["Big Room", "House"],
     link: "#",
     authorLink: "#",
     albumLink: "#"
