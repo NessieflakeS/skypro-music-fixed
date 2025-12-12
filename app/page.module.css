@@ -527,26 +527,6 @@
   flex-shrink: 0;
 }
 
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 245px;
-  height: 100vh;
-  background-color: rgba(255, 255, 255, 0.1);
-  z-index: 999;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-  pointer-events: none;
-}
-
-.overlay_active {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
 .main_with_menu {
   margin-left: 245px;
   transition: margin-left 0.3s ease;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
@@ -7,6 +8,7 @@ import Player from "../components/Player";
 import TrackList from "../components/TrackList";
 import Filter from "../components/Filter";
 import { data } from "@/data";
+import { ITrack } from "../components/TrackList";
 import styles from "./page.module.css";
 
 const formatDuration = (seconds: number) => {
@@ -15,27 +17,45 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-const tracksForDisplay = data.map(track => ({
+const tracksForDisplay: ITrack[] = data.map(track => ({
   id: track._id,
   name: track.name,
   author: track.author,
   album: track.album,
   time: formatDuration(track.duration_in_seconds),
+  year: new Date(track.release_date).getFullYear(),
+  genres: track.genre,
   link: "#",
   authorLink: "#",
   albumLink: "#"
 }));
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
+
+  useEffect(() => {
+    const savedState = localStorage.getItem('menuOpen');
+    if (savedState !== null) {
+      setIsMenuOpen(savedState === 'true');
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('menuOpen', isMenuOpen.toString());
+  }, [isMenuOpen]);
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
-        <main className={styles.main}>
+        <Header />
+        <main className={`${styles.main} ${isMenuOpen ? styles.main_with_menu : ''}`}>
           <div className={styles.centerblock}>
             <SearchBar />
             <h2 className={styles.centerblock__h2}>Треки</h2>
             <Filter tracks={data} />
-            <TrackList tracks={tracksForDisplay} />
+            <div className={styles.trackListContainer}>
+              <TrackList tracks={tracksForDisplay} />
+            </div>
           </div>
           <Sidebar />
         </main>

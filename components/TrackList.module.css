@@ -1,8 +1,8 @@
 .centerblock__content {
   display: flex;
   flex-direction: column;
-  flex-grow: 1; /* Блок растягивается на всю высоту */
-  min-height: 0; /* Важно для корректного скролла внутри flex-контейнера */
+  height: 100%;
+  position: relative;
 }
 
 .content__title {
@@ -11,6 +11,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
 .playlistTitle__col {
@@ -50,14 +51,16 @@
 .content__playlist {
   display: flex;
   flex-direction: column;
+  flex: 1;
   overflow-y: auto;
-  flex-grow: 1;
   position: relative;
-  padding-right: 0;
-  margin-right: 0;
-  
-  -ms-overflow-style: none;
+  padding-bottom: 80px; 
+  margin-bottom: -80px; 
+}
+
+.content__playlist {
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .content__playlist::-webkit-scrollbar {
@@ -66,15 +69,9 @@
   background: transparent;
 }
 
-@supports (scrollbar-width: none) {
-  .content__playlist {
-    scrollbar-width: none;
-  }
-}
-
 .content__playlist::after {
   content: '';
-  position: absolute;
+  position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
@@ -82,11 +79,12 @@
   background: linear-gradient(
     to bottom,
     rgba(24, 24, 24, 0) 0%,
-    rgba(24, 24, 24, 0.9) 50%,
+    rgba(24, 24, 24, 0.9) 30%,
     rgba(24, 24, 24, 1) 100%
   );
   pointer-events: none;
   z-index: 1;
+  opacity: 1;
   transition: opacity 0.3s ease;
 }
 
