@@ -68,15 +68,15 @@
 }
 
 .filter__window_author {
-  left: 0;
+  left: 100px;
 }
 
 .filter__window_year {
-  left: 115px; 
+  left: 270px; 
 }
 
 .filter__window_genre {
-  left: 230px; 
+  left: 430px; 
 }
 
 .filter__list {
