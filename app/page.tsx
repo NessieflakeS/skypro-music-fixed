@@ -31,7 +31,6 @@ export default function Home() {
     <div className={styles.wrapper}>
       <div className={styles.container}>
         <main className={styles.main}>
-          <Header />
           <div className={styles.centerblock}>
             <SearchBar />
             <h2 className={styles.centerblock__h2}>Треки</h2>

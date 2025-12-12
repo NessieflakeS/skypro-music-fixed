@@ -1,6 +1,8 @@
 .centerblock__content {
   display: flex;
   flex-direction: column;
+  flex-grow: 1; /* Блок растягивается на всю высоту */
+  min-height: 0; /* Важно для корректного скролла внутри flex-контейнера */
 }
 
 .content__title {
@@ -49,12 +51,13 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  max-height: 600px;
+  flex-grow: 1;
   position: relative;
   padding-right: 0;
   margin-right: 0;
   
   -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .content__playlist::-webkit-scrollbar {
