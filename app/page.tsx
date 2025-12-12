@@ -8,6 +8,8 @@ import TrackList from "../components/TrackList";
 import Filter from "../components/Filter";
 import { data } from "@/data";
 import styles from "./page.module.css";
+import { ITrack } from "../components/TrackList";
+
 
 const formatDuration = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -15,7 +17,7 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-const tracksForDisplay = data.map(track => ({
+const tracksForDisplay: ITrack[] = data.map(track => ({
   id: track._id,
   name: track.name,
   author: track.author,

@@ -4,7 +4,17 @@
   padding: 20px 0 20px 36px;
   display: flex;
   flex-direction: column;
-  position: relative; 
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 1001;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.nav__menu_active {
+  transform: translateX(0);
 }
 
 .nav__logo {
@@ -28,7 +38,11 @@
   flex-direction: column;
   justify-content: space-between;
   margin-bottom: 20px;
-  cursor: pointer; 
+  cursor: pointer;
+  position: absolute;
+  left: 280px;
+  top: 20px;
+  z-index: 1002;
 }
 
 .burger__line {
@@ -36,21 +50,26 @@
   width: 100%;
   height: 1px;
   background-color: #d3d3d3;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.nav__menu_active ~ .nav__burger .burger__line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.nav__menu_active ~ .nav__burger .burger__line:nth-child(2) {
+  opacity: 0;
+}
+
+.nav__menu_active ~ .nav__burger .burger__line:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
 }
 
 .nav__menu {
   display: block;
   visibility: visible;
   opacity: 1;
-  max-height: 500px; 
-  transition: opacity 0.3s ease, max-height 0.3s ease;
-}
-
-.nav__menu:not(.nav__menu_active) {
-  opacity: 0;
-  visibility: hidden;
-  max-height: 0;
-  overflow: hidden;
+  height: 100%;
 }
 
 .menu__list {
@@ -67,6 +86,8 @@
 .menu__itemIcon {
   margin-bottom: 0;
   padding: 0;
+  margin-top: auto;
+  padding-bottom: 20px;
 }
 
 .menu__link {
@@ -99,12 +120,29 @@
   background-color: #404040;
 }
 
-.themeToggle__svg {
+.themeToggle__icon {
   width: 20px;
   height: 20px;
-  fill: transparent;
-  stroke: #ffffff;
-  stroke-width: 2;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 245px;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: none;
+}
+
+.overlay_active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .nav__burger:hover .burger__line {

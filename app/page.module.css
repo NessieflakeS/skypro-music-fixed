@@ -7,7 +7,7 @@
 
 .container {
   max-width: 1920px;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0 auto;
   position: relative;
   background-color: #181818;
@@ -18,12 +18,19 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+  min-height: calc(100vh - 93px);
 }
 
 .centerblock {
   width: auto;
   flex-grow: 3;
   padding: 20px 40px 20px 111px;
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
+.nav__menu_active ~ .main .centerblock {
+  margin-left: 245px;
 }
 
 .centerblock__h2 {
