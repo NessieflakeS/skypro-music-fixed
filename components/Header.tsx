@@ -1,8 +1,18 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Header.module.css";
 
 export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(true); // Изначально открыто для теста
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+    console.log("Menu toggled, isMenuOpen:", !isMenuOpen); // Для отладки
+  };
+
   return (
     <nav className={styles.nav}>
       <div className={styles.nav__logo}>
@@ -17,12 +27,12 @@ export default function Header() {
           />
         </Link>
       </div>
-      <div className={styles.nav__burger}>
+      <div className={styles.nav__burger} onClick={toggleMenu}>
         <span className={styles.burger__line}></span>
         <span className={styles.burger__line}></span>
         <span className={styles.burger__line}></span>
       </div>
-      <div className={styles.nav__menu}>
+      <div className={`${styles.nav__menu} ${isMenuOpen ? styles.nav__menu_active : ""}`}>
         <ul className={styles.menu__list}>
           <li className={styles.menu__item}>
             <Link href="/" className={styles.menu__link}>

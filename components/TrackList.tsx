@@ -1,7 +1,7 @@
 import TrackItem from "./TrackItem";
 import styles from "./TrackList.module.css";
 
-interface ITrack {
+export interface ITrack {
   id: number;
   name: string;
   author: string;
@@ -13,7 +13,11 @@ interface ITrack {
   subtitle?: string;
 }
 
-const tracksData: ITrack[] = [
+interface TrackListProps {
+  tracks?: ITrack[];
+}
+
+const defaultTracks: ITrack[] = [
   {
     id: 1,
     name: "Guilt",
@@ -43,36 +47,10 @@ const tracksData: ITrack[] = [
     link: "#",
     authorLink: "#",
     albumLink: "#"
-  },
-  {
-    id: 4,
-    name: "Non Stop",
-    subtitle: "(Remix)",
-    author: "Стоункат, Psychopath",
-    album: "Non Stop",
-    time: "4:12",
-    link: "#",
-    authorLink: "#",
-    albumLink: "#"
-  },
-  {
-    id: 5,
-    name: "Run Run",
-    subtitle: "(feat. AR/CO)",
-    author: "Jaded, Will Clarke, AR/CO",
-    album: "Run Run",
-    time: "2:54",
-    link: "#",
-    authorLink: "#",
-    albumLink: "#"
   }
 ];
 
-interface TrackListProps {
-  tracks?: ITrack[];
-}
-
-export default function TrackList({ tracks = tracksData }: TrackListProps) {
+export default function TrackList({ tracks = defaultTracks }: TrackListProps) {
   return (
     <div className={styles.centerblock__content}>
       <div className={styles.content__title}>
