@@ -11,13 +11,9 @@ interface FilterProps {
 
 export default function Filter({ tracks }: FilterProps) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [windowPosition, setWindowPosition] = useState({ left: 0, top: 0 });
-  
-  const authorButtonRef = useRef<HTMLButtonElement>(null);
-  const yearButtonRef = useRef<HTMLButtonElement>(null);
-  const genreButtonRef = useRef<HTMLButtonElement>(null);
-  const filterContainerRef = useRef<HTMLDivElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
 
+  // Получаем уникальные значения из данных треков
   const authors = Array.from(
     new Set(tracks.map(track => track.author))
   ).filter(author => author && author !== "-");
@@ -39,28 +35,11 @@ export default function Filter({ tracks }: FilterProps) {
     .filter(year => year !== null)
     .sort((a, b) => (b || 0) - (a || 0)) as number[];
 
-  const calculateWindowPosition = (buttonRef: React.RefObject<HTMLButtonElement>) => {
-    if (!buttonRef.current || !filterContainerRef.current) return { left: 0, top: 0 };
-    
-    const buttonRect = buttonRef.current.getBoundingClientRect();
-    const containerRect = filterContainerRef.current.getBoundingClientRect();
-    
-    const buttonCenter = buttonRect.left + buttonRect.width / 2;
-    const containerLeft = containerRect.left;
-    
-    return {
-      left: buttonCenter - containerLeft - 124,
-      top: buttonRect.bottom - containerRect.top + 10
-    };
-  };
-
-  const handleFilterClick = (filter: string, buttonRef: React.RefObject<HTMLButtonElement>) => {
+  const handleFilterClick = (filter: string) => {
     if (activeFilter === filter) {
       setActiveFilter(null);
     } else {
       setActiveFilter(filter);
-      const position = calculateWindowPosition(buttonRef);
-      setWindowPosition(position);
     }
   };
 
@@ -77,68 +56,54 @@ export default function Filter({ tracks }: FilterProps) {
     }
   };
 
-  const filterData = getFilterData();
-
+  // Закрываем окно при клике вне фильтра
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      const isClickInsideFilter = 
-        filterContainerRef.current?.contains(target) || 
-        target.closest(`.${styles.filter__window}`) ||
-        target.closest(`.${styles.filter__button}`);
-      
-      if (!isClickInsideFilter && activeFilter) {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
         setActiveFilter(null);
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [activeFilter]);
+  }, []);
+
+  const filterData = getFilterData();
 
   return (
-    <div className={styles.centerblock__filter} ref={filterContainerRef}>
+    <div className={styles.centerblock__filter} ref={filterRef}>
       <div className={styles.filter__title}>Искать по:</div>
       <div className={styles.filter__buttons}>
         <button
-          ref={authorButtonRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "author",
           })}
-          onClick={() => handleFilterClick("author", authorButtonRef)}
+          onClick={() => handleFilterClick("author")}
         >
           исполнителю
         </button>
         <button
-          ref={yearButtonRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "year",
           })}
-          onClick={() => handleFilterClick("year", yearButtonRef)}
+          onClick={() => handleFilterClick("year")}
         >
           году выпуска
         </button>
         <button
-          ref={genreButtonRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "genre",
           })}
-          onClick={() => handleFilterClick("genre", genreButtonRef)}
+          onClick={() => handleFilterClick("genre")}
         >
           жанру
         </button>
       </div>
 
       {activeFilter && filterData.length > 0 && (
-        <div 
-          className={styles.filter__window}
-          style={{
-            left: `${windowPosition.left}px`,
-            top: `${windowPosition.top}px`
-          }}
-        >
+        <div className={styles.filter__window}>
           <div className={styles.filter__list}>
             {filterData.map((item, index) => (
               <div key={index} className={styles.filter__item}>
