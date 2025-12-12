@@ -72,7 +72,6 @@
 .themeToggle {
   width: 39px;
   height: 39px;
-  background-color: #313131;
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -80,7 +79,6 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  margin-left: auto;
   transition: background-color 0.2s ease;
 }
 

@@ -75,3 +75,17 @@
   fill: transparent;
   stroke: #696969;
 }
+
+.player__btnPrev:hover .player__btnPrevSvg,
+.player__btnNext:hover .player__btnNextSvg {
+  stroke: #d9b6ff;
+}
+
+.player__btnPlay:hover .player__btnPlaySvg {
+  fill: #d9b6ff;
+}
+
+.player__btnRepeat:hover .player__btnRepeatSvg,
+.player__btnShuffle:hover .player__btnShuffleSvg {
+  stroke: #d9b6ff;
+}

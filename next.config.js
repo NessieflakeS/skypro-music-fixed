@@ -6,17 +6,11 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '3000',
         pathname: '/img/**',
       },
     ],
-    unoptimized: process.env.NODE_ENV === 'development',
+    unoptimized: true,
   },
-  turbopack: {},
-  experimental: {
-    turbo: {
-    }
-  }
 };
 
 module.exports = nextConfig;
