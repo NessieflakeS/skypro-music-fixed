@@ -11,9 +11,10 @@ interface FilterProps {
 
 export default function Filter({ tracks }: FilterProps) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const filterRef = useRef<HTMLDivElement>(null);
+  const [activeButtonIndex, setActiveButtonIndex] = useState<number | null>(null);
+  
+  const filterContainerRef = useRef<HTMLDivElement>(null);
 
-  // Получаем уникальные значения из данных треков
   const authors = Array.from(
     new Set(tracks.map(track => track.author))
   ).filter(author => author && author !== "-");
@@ -35,11 +36,13 @@ export default function Filter({ tracks }: FilterProps) {
     .filter(year => year !== null)
     .sort((a, b) => (b || 0) - (a || 0)) as number[];
 
-  const handleFilterClick = (filter: string) => {
+  const handleFilterClick = (filter: string, index: number) => {
     if (activeFilter === filter) {
       setActiveFilter(null);
+      setActiveButtonIndex(null);
     } else {
       setActiveFilter(filter);
+      setActiveButtonIndex(index);
     }
   };
 
@@ -56,11 +59,11 @@ export default function Filter({ tracks }: FilterProps) {
     }
   };
 
-  // Закрываем окно при клике вне фильтра
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+      if (filterContainerRef.current && !filterContainerRef.current.contains(event.target as Node)) {
         setActiveFilter(null);
+        setActiveButtonIndex(null);
       }
     };
 
@@ -72,15 +75,22 @@ export default function Filter({ tracks }: FilterProps) {
 
   const filterData = getFilterData();
 
+  const getWindowClass = () => {
+    if (activeButtonIndex === 0) return styles.filter__window_author;
+    if (activeButtonIndex === 1) return styles.filter__window_year;
+    if (activeButtonIndex === 2) return styles.filter__window_genre;
+    return "";
+  };
+
   return (
-    <div className={styles.centerblock__filter} ref={filterRef}>
+    <div className={styles.centerblock__filter} ref={filterContainerRef}>
       <div className={styles.filter__title}>Искать по:</div>
       <div className={styles.filter__buttons}>
         <button
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "author",
           })}
-          onClick={() => handleFilterClick("author")}
+          onClick={() => handleFilterClick("author", 0)}
         >
           исполнителю
         </button>
@@ -88,7 +98,7 @@ export default function Filter({ tracks }: FilterProps) {
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "year",
           })}
-          onClick={() => handleFilterClick("year")}
+          onClick={() => handleFilterClick("year", 1)}
         >
           году выпуска
         </button>
@@ -96,14 +106,14 @@ export default function Filter({ tracks }: FilterProps) {
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === "genre",
           })}
-          onClick={() => handleFilterClick("genre")}
+          onClick={() => handleFilterClick("genre", 2)}
         >
           жанру
         </button>
       </div>
 
       {activeFilter && filterData.length > 0 && (
-        <div className={styles.filter__window}>
+        <div className={`${styles.filter__window} ${getWindowClass()}`}>
           <div className={styles.filter__list}>
             {filterData.map((item, index) => (
               <div key={index} className={styles.filter__item}>
