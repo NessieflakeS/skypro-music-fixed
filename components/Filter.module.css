@@ -17,6 +17,14 @@
   flex-shrink: 0;
 }
 
+.filter__buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+  overflow: visible;
+}
+
 .filter__button {
   font-style: normal;
   font-weight: 400;
@@ -31,7 +39,6 @@
   white-space: nowrap;
   transition: all 0.3s ease;
   flex-shrink: 0;
-  margin-right: 10px;
 }
 
 .filter__button:hover {
@@ -46,9 +53,6 @@
 
 .filter__window {
   position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 10px;
   z-index: 1000;
   background: #313131;
   border-radius: 12px;
@@ -56,24 +60,33 @@
   color: white;
   display: flex;
   flex-direction: column;
-  gap: 28px;
   height: max-content;
   max-height: 237px;
-  overflow-y: auto;
-  width: max-content;
-  max-width: 248px;
+  width: 248px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
 }
 
-.filter__window::-webkit-scrollbar {
+.filter__list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  height: 100%;
+  padding-right: 5px;
+}
+
+.filter__list::-webkit-scrollbar {
   width: 4px;
 }
 
-.filter__window::-webkit-scrollbar-track {
-  background-color: rgba(75, 73, 73, 1);
+.filter__list::-webkit-scrollbar-track {
+  background-color: #4b4949;
+  border-radius: 2px;
 }
 
-.filter__window::-webkit-scrollbar-thumb {
-  background-color: white;
+.filter__list::-webkit-scrollbar-thumb {
+  background-color: #ffffff;
+  border-radius: 2px;
 }
 
 .filter__item {
@@ -86,6 +99,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #ffffff;
 }
 
 .filter__item:hover {
