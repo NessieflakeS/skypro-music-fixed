@@ -64,8 +64,19 @@
   overflow: hidden;
   display: block;
   top: 100%;
-  left: 0;
   margin-top: 10px;
+}
+
+.filter__window_author {
+  left: 0;
+}
+
+.filter__window_year {
+  left: 115px; 
+}
+
+.filter__window_genre {
+  left: 230px; 
 }
 
 .filter__list {
@@ -76,15 +87,20 @@
   overflow-y: auto;
 }
 
-
 .filter__list {
-  -ms-overflow-style: none; 
+  -ms-overflow-style: none;
 }
 
 .filter__list::-webkit-scrollbar {
   display: none; 
   width: 0;
   height: 0;
+}
+
+@supports (scrollbar-width: none) {
+  .filter__list {
+    scrollbar-width: none;
+  }
 }
 
 .filter__item {
