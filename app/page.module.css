@@ -126,10 +126,12 @@
 }
 
 .trackPlay__author {
-  grid-row: 1;
+   grid-row: 1;
   grid-column: 2;
   grid-area: author;
   min-width: 49px;
+  max-width: 200px;
+  overflow: hidden;
 }
 
 .trackPlay__authorLink {
@@ -139,6 +141,9 @@
   line-height: 24px;
   color: #ffffff;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
   text-decoration: none;
 }
 
@@ -151,6 +156,8 @@
   grid-column: 2;
   grid-area: album;
   min-width: 49px;
+  max-width: 200px;
+  overflow: hidden;
 }
 
 .trackPlay__albumLink {
@@ -159,6 +166,10 @@
   font-size: 13px;
   line-height: 24px;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
   text-decoration: none;
 }
 
@@ -345,4 +356,22 @@
 
 .track__titleImage {
   position: relative;
+}
+
+.bar__playerProgress {
+  width: 100%;
+  height: 5px;
+  background: #2e2e2e;
+  cursor: pointer;
+  position: relative;
+}
+
+.player__progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #ad61ff;
+  width: var(--progress, 0%);
+  transition: width 0.1s linear;
 }

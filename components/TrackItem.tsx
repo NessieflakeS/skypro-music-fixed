@@ -1,8 +1,8 @@
 "use client";
 
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentTrack, togglePlayPause } from "../store/playerSlice";
-import { RootState } from "../store/store";
+import { setCurrentTrack, togglePlayPause } from "@/store/playerSlice";
+import { RootState } from "@/store/store";
 import styles from "./TrackItem.module.css";
 
 interface ITrack {
@@ -24,9 +24,8 @@ interface TrackItemProps {
 
 export default function TrackItem({ track }: TrackItemProps) {
   const dispatch = useDispatch();
-  const { currentTrack, isPlaying } = useSelector(
-    (state: RootState) => state.player
-  );
+  const playerState = useSelector((state: RootState) => state.player);
+  const { currentTrack, isPlaying } = playerState;
 
   const isCurrentTrack = currentTrack?.id === track.id;
 
@@ -35,7 +34,11 @@ export default function TrackItem({ track }: TrackItemProps) {
       dispatch(togglePlayPause());
     } else {
       dispatch(setCurrentTrack({
-        ...track,
+        id: track.id,
+        name: track.name,
+        author: track.author,
+        album: track.album,
+        time: track.time,
         track_file: track.track_file || `https://example.com/track${track.id}.mp3`
       }));
     }
@@ -49,16 +52,11 @@ export default function TrackItem({ track }: TrackItemProps) {
       <div className={styles.playlist__track}>
         <div className={styles.track__title}>
           <div className={styles.track__titleImage}>
-            {isCurrentTrack ? (
-              <div className={`${styles.track__titleDot} ${isPlaying ? styles.track__titleDot_playing : ''}`}>
-                <svg className={styles.track__titleSvg}>
-                  <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
-                </svg>
-              </div>
-            ) : (
-              <svg className={styles.track__titleSvg}>
-                <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
-              </svg>
+            <svg className={styles.track__titleSvg}>
+              <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
+            </svg>
+            {isCurrentTrack && (
+              <div className={`${styles.track__titleDot} ${isPlaying ? styles.track__titleDot_playing : ''}`}></div>
             )}
           </div>
           <div className={styles.track__titleText}>

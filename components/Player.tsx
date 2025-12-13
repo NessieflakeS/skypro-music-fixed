@@ -10,14 +10,15 @@ import {
   setCurrentTime,
   setDuration,
   setNextTrack
-} from "../store/playerSlice";
-import { RootState } from "../store/store";
+} from "@/store/playerSlice";
+import { RootState } from "@/store/store";
 import styles from "./Player.module.css";
-import { data } from "../data";
+import { data } from "@/data";
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const dispatch = useDispatch();
+  const playerState = useSelector((state: RootState) => state.player);
   const { 
     currentTrack, 
     isPlaying, 
@@ -26,7 +27,7 @@ export default function Player() {
     repeat,
     currentTime,
     duration 
-  } = useSelector((state: RootState) => state.player);
+  } = playerState;
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
@@ -45,9 +46,10 @@ export default function Player() {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play();
+        dispatch(setCurrentTime(0));
       }
     } else {
-      handleNextTrack();
+      handleNextClick();
     }
   };
 
@@ -58,7 +60,6 @@ export default function Player() {
     if (currentIndex === -1) return null;
     
     if (shuffle) {
-      // Случайный трек, исключая текущий
       const availableTracks = data.filter(track => track._id !== currentTrack.id);
       if (availableTracks.length === 0) return null;
       const randomIndex = Math.floor(Math.random() * availableTracks.length);
@@ -86,21 +87,11 @@ export default function Player() {
     }
   };
 
-  const handleNextTrack = () => {
-    const nextTrack = getNextTrack();
-    if (nextTrack) {
-      dispatch(setNextTrack({
-        id: nextTrack._id,
-        name: nextTrack.name,
-        author: nextTrack.author,
-        album: nextTrack.album,
-        time: `${Math.floor(nextTrack.duration_in_seconds / 60)}:${(nextTrack.duration_in_seconds % 60).toString().padStart(2, '0')}`,
-        track_file: nextTrack.track_file
-      }));
-    }
+  const handlePlayPause = () => {
+    dispatch(togglePlayPause());
   };
 
-  const handlePrevTrack = () => {
+  const handlePrevClick = () => {
     const prevTrack = getPrevTrack();
     if (prevTrack) {
       dispatch(setNextTrack({
@@ -114,42 +105,18 @@ export default function Player() {
     }
   };
 
-  useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.play();
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    if (audioRef.current && currentTrack?.track_file) {
-      audioRef.current.src = currentTrack.track_file;
-      audioRef.current.load();
-      if (isPlaying) {
-        audioRef.current.play();
-      }
-    }
-  }, [currentTrack?.id, isPlaying]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [volume]);
-
-  const handlePlayPause = () => {
-    dispatch(togglePlayPause());
-  };
-
-  const handlePrevClick = () => {
-    handlePrevTrack();
-  };
-
   const handleNextClick = () => {
-    handleNextTrack();
+    const nextTrack = getNextTrack();
+    if (nextTrack) {
+      dispatch(setNextTrack({
+        id: nextTrack._id,
+        name: nextTrack.name,
+        author: nextTrack.author,
+        album: nextTrack.album,
+        time: `${Math.floor(nextTrack.duration_in_seconds / 60)}:${(nextTrack.duration_in_seconds % 60).toString().padStart(2, '0')}`,
+        track_file: nextTrack.track_file
+      }));
+    }
   };
 
   const handleRepeatClick = () => {
@@ -159,6 +126,38 @@ export default function Player() {
   const handleShuffleClick = () => {
     dispatch(toggleShuffle());
   };
+
+  useEffect(() => {
+    if (audioRef.current && currentTrack?.track_file) {
+      if (isPlaying) {
+        audioRef.current.play().catch(error => {
+          console.error("Ошибка воспроизведения:", error);
+        });
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying, currentTrack]);
+
+  useEffect(() => {
+    if (audioRef.current && currentTrack?.track_file) {
+      audioRef.current.src = currentTrack.track_file;
+      audioRef.current.load();
+      dispatch(setCurrentTime(0));
+      
+      if (isPlaying) {
+        audioRef.current.play().catch(error => {
+          console.error("Ошибка загрузки трека:", error);
+        });
+      }
+    }
+  }, [currentTrack?.id, dispatch, isPlaying]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
 
   return (
     <>
@@ -219,6 +218,7 @@ export default function Player() {
       {currentTrack && (
         <audio
           ref={audioRef}
+          src={currentTrack.track_file}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
