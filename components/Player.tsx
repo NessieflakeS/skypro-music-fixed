@@ -15,6 +15,8 @@ import { RootState } from "@/store/store";
 import styles from "./Player.module.css";
 import { data } from "@/data";
 
+const WORKING_TRACK_IDS = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const dispatch = useDispatch();
@@ -53,6 +55,10 @@ export default function Player() {
     }
   };
 
+  const isTrackWorking = (trackId: number) => {
+    return WORKING_TRACK_IDS.includes(trackId);
+  };
+
   const getNextTrack = () => {
     if (!currentTrack) return null;
     
@@ -60,13 +66,25 @@ export default function Player() {
     if (currentIndex === -1) return null;
     
     if (shuffle) {
-      const availableTracks = data.filter(track => track._id !== currentTrack.id);
+      const availableTracks = data.filter(track => 
+        track._id !== currentTrack.id && isTrackWorking(track._id)
+      );
       if (availableTracks.length === 0) return null;
       const randomIndex = Math.floor(Math.random() * availableTracks.length);
       return availableTracks[randomIndex];
     } else {
-      const nextIndex = (currentIndex + 1) % data.length;
-      return data[nextIndex];
+      let nextIndex = (currentIndex + 1) % data.length;
+      let attempts = 0;
+      
+      while (!isTrackWorking(data[nextIndex]._id) && attempts < data.length) {
+        nextIndex = (nextIndex + 1) % data.length;
+        attempts++;
+      }
+      
+      if (isTrackWorking(data[nextIndex]._id)) {
+        return data[nextIndex];
+      }
+      return null;
     }
   };
 
@@ -77,17 +95,34 @@ export default function Player() {
     if (currentIndex === -1) return null;
     
     if (shuffle) {
-      const availableTracks = data.filter(track => track._id !== currentTrack.id);
+      const availableTracks = data.filter(track => 
+        track._id !== currentTrack.id && isTrackWorking(track._id)
+      );
       if (availableTracks.length === 0) return null;
       const randomIndex = Math.floor(Math.random() * availableTracks.length);
       return availableTracks[randomIndex];
     } else {
-      const prevIndex = (currentIndex - 1 + data.length) % data.length;
-      return data[prevIndex];
+      let prevIndex = (currentIndex - 1 + data.length) % data.length;
+      let attempts = 0;
+      
+      while (!isTrackWorking(data[prevIndex]._id) && attempts < data.length) {
+        prevIndex = (prevIndex - 1 + data.length) % data.length;
+        attempts++;
+      }
+      
+      if (isTrackWorking(data[prevIndex]._id)) {
+        return data[prevIndex];
+      }
+      return null;
     }
   };
 
   const handlePlayPause = () => {
+    if (currentTrack && !isTrackWorking(currentTrack.id)) {
+      alert("Этот трек не может быть воспроизведен. Пожалуйста, выберите другой трек.");
+      return;
+    }
+    
     dispatch(togglePlayPause());
   };
 
@@ -132,12 +167,14 @@ export default function Player() {
       if (isPlaying) {
         audioRef.current.play().catch(error => {
           console.error("Ошибка воспроизведения:", error);
+          alert("Не удалось воспроизвести трек. Возможно, трек недоступен.");
+          dispatch(togglePlayPause());
         });
       } else {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying, currentTrack]);
+  }, [isPlaying, currentTrack, dispatch]);
 
   useEffect(() => {
     if (audioRef.current && currentTrack?.track_file) {
@@ -148,6 +185,8 @@ export default function Player() {
       if (isPlaying) {
         audioRef.current.play().catch(error => {
           console.error("Ошибка загрузки трека:", error);
+          alert("Не удалось загрузить трек. Возможно, трек недоступен.");
+          dispatch(togglePlayPause());
         });
       }
     }

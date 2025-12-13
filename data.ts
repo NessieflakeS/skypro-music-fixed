@@ -8,7 +8,7 @@ export const data = [
     duration_in_seconds: 205,
     album: 'Beautiful Things',
     logo: null,
-    track_file: 'https://example.com/track1.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3',
     stared_user: [],
   },
   {
@@ -20,7 +20,7 @@ export const data = [
     duration_in_seconds: 220,
     album: 'Adivino',
     logo: null,
-    track_file: 'https://example.com/track2.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3',
     stared_user: [],
   },
   {
@@ -32,7 +32,7 @@ export const data = [
     duration_in_seconds: 180,
     album: 'Britpop',
     logo: null,
-    track_file: 'https://example.com/track3.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Kevin_Macleod_-_Sneaky_Snitch.mp3',
     stared_user: [],
   },
   {
@@ -44,7 +44,7 @@ export const data = [
     duration_in_seconds: 195,
     album: 'XO',
     logo: null,
-    track_file: 'https://example.com/track4.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Mixkit_-_Secret_Garden.mp3',
     stared_user: [],
   },
   {
@@ -56,7 +56,7 @@ export const data = [
     duration_in_seconds: 210,
     album: 'After Hours',
     logo: null,
-    track_file: 'https://example.com/track5.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_A_Journey_For_Successful_Winners.mp3',
     stared_user: [],
   },
   {
@@ -68,7 +68,7 @@ export const data = [
     duration_in_seconds: 245,
     album: 'Ohio Players',
     logo: null,
-    track_file: 'https://example.com/track6.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_Epic_Heroic_Conquest.mp3',
     stared_user: [],
   },
   {
@@ -80,7 +80,7 @@ export const data = [
     duration_in_seconds: 230,
     album: 'Big Dawgs',
     logo: null,
-    track_file: 'https://example.com/track7.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/musiclfiles_-_The_March_Of_The_Final_Battle.mp3',
     stared_user: [],
   },
   {
@@ -92,19 +92,19 @@ export const data = [
     duration_in_seconds: 215,
     album: 'Moon Mirror',
     logo: null,
-    track_file: 'https://example.com/track8.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_True_Summer.mp3',
     stared_user: [],
   },
   {
     _id: 9,
-    name: 'That’s My Floor',
+    name: 'That\'s My Floor',
     author: 'Magdalena Bay',
     release_date: '2024-09-01',
     genre: ['Синти-поп'],
     duration_in_seconds: 200,
     album: 'Imaginal Disk',
     logo: null,
-    track_file: 'https://example.com/track9.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Waltz_Piano_-_Background_Sensible.mp3',
     stared_user: [],
   },
   {
@@ -116,7 +116,7 @@ export const data = [
     duration_in_seconds: 190,
     album: 'Brat',
     logo: null,
-    track_file: 'https://example.com/track10.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Winniethemoog_-_Action_Sport_Breakbeat.mp3',
     stared_user: [],
   },
   {
@@ -128,7 +128,7 @@ export const data = [
     duration_in_seconds: 225,
     album: 'A Bar Song (Tipsy)',
     logo: null,
-    track_file: 'https://example.com/track11.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3',
     stared_user: [],
   },
   {
@@ -140,7 +140,7 @@ export const data = [
     duration_in_seconds: 210,
     album: 'Nasty',
     logo: null,
-    track_file: 'https://example.com/track12.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3',
     stared_user: [],
   },
   {
@@ -152,7 +152,7 @@ export const data = [
     duration_in_seconds: 260,
     album: 'Not Like Us',
     logo: null,
-    track_file: 'https://example.com/track13.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Kevin_Macleod_-_Sneaky_Snitch.mp3',
     stared_user: [],
   },
   {
@@ -164,7 +164,7 @@ export const data = [
     duration_in_seconds: 240,
     album: 'The Tortured Poets Department',
     logo: null,
-    track_file: 'https://example.com/track14.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Mixkit_-_Secret_Garden.mp3',
     stared_user: [],
   },
   {
@@ -176,7 +176,7 @@ export const data = [
     duration_in_seconds: 195,
     album: 'Espresso',
     logo: null,
-    track_file: 'https://example.com/track15.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_A_Journey_For_Successful_Winners.mp3',
     stared_user: [],
   },
   {
@@ -188,8 +188,7 @@ export const data = [
     duration_in_seconds: 205,
     album: 'Chase',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3',
     stared_user: [],
   },
   {
@@ -201,8 +200,7 @@ export const data = [
     duration_in_seconds: 165,
     album: 'Open Sea epic',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3',
     stared_user: [],
   },
   {
@@ -214,8 +212,7 @@ export const data = [
     duration_in_seconds: 305,
     album: 'Sneaky Snitch',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Kevin_Macleod_-_Sneaky_Snitch.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Kevin_Macleod_-_Sneaky_Snitch.mp3',
     stared_user: [],
   },
   {
@@ -227,11 +224,9 @@ export const data = [
     duration_in_seconds: 324,
     album: 'Secret Garden',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Mixkit_-_Secret_Garden.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Mixkit_-_Secret_Garden.mp3',
     stared_user: [],
   },
-
   {
     _id: 20,
     name: 'A journey of successfull winners',
@@ -241,8 +236,7 @@ export const data = [
     duration_in_seconds: 255,
     album: '-',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_A_Journey_For_Successful_Winners.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_A_Journey_For_Successful_Winners.mp3',
     stared_user: [],
   },
   {
@@ -254,8 +248,7 @@ export const data = [
     duration_in_seconds: 200,
     album: 'Epic Heroic Conquest',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_Epic_Heroic_Conquest.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_Epic_Heroic_Conquest.mp3',
     stared_user: [],
   },
   {
@@ -267,8 +260,7 @@ export const data = [
     duration_in_seconds: 206,
     album: 'The March OF The Final Battle',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/musiclfiles_-_The_March_Of_The_Final_Battle.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/musiclfiles_-_The_March_Of_The_Final_Battle.mp3',
     stared_user: [],
   },
   {
@@ -280,8 +272,7 @@ export const data = [
     duration_in_seconds: 253,
     album: 'True Summer',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_True_Summer.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Musiclfiles_-_True_Summer.mp3',
     stared_user: [],
   },
   {
@@ -293,8 +284,7 @@ export const data = [
     duration_in_seconds: 135,
     album: 'Background Sensible',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Waltz_Piano_-_Background_Sensible.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Waltz_Piano_-_Background_Sensible.mp3',
     stared_user: [],
   },
   {
@@ -306,8 +296,7 @@ export const data = [
     duration_in_seconds: 206,
     album: 'Cinematic',
     logo: null,
-    track_file:
-      'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Winniethemoog_-_Action_Sport_Breakbeat.mp3',
+    track_file: 'https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Winniethemoog_-_Action_Sport_Breakbeat.mp3',
     stared_user: [],
   },
 ];

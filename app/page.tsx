@@ -33,6 +33,9 @@ const tracksForDisplay: ITrack[] = data.map(track => ({
 }));
 
 const workingTracks = tracksForDisplay.filter(track => track.id >= 16 && track.id <= 25);
+const otherTracks = tracksForDisplay.filter(track => track.id < 16 || track.id > 25);
+
+const orderedTracks = [...workingTracks, ...otherTracks];
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -41,7 +44,11 @@ export default function Home() {
   const progressBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-  }, [dispatch]);
+    if (progressBarRef.current) {
+      const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+      progressBarRef.current.style.setProperty('--progress', `${progressPercentage}%`);
+    }
+  }, [currentTime, duration]);
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
@@ -60,8 +67,6 @@ export default function Home() {
     dispatch(setCurrentTime(newTime));
   };
 
-  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
-
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
@@ -72,7 +77,7 @@ export default function Home() {
             <h2 className={styles.centerblock__h2}>Треки</h2>
             <Filter tracks={data} />
             <div className={styles.contentContainer}>
-              <TrackList tracks={workingTracks} />
+              <TrackList tracks={orderedTracks} />
             </div>
           </div>
           <Sidebar />
@@ -85,12 +90,7 @@ export default function Home() {
                 className={styles.bar__playerProgress} 
                 ref={progressBarRef}
                 onClick={handleProgressClick}
-              >
-                <div 
-                  className={styles.player__progress}
-                  style={{ width: `${progressPercentage}%` }}
-                ></div>
-              </div>
+              ></div>
               <div className={styles.bar__playerBlock}>
                 <div className={styles.bar__player}>
                   <Player />
