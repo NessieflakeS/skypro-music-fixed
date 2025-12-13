@@ -42,11 +42,16 @@ export default function Home() {
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, volume, currentTime, duration } = playerState;
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (progressBarRef.current) {
       const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
       progressBarRef.current.style.setProperty('--progress', `${progressPercentage}%`);
+      
+      if (glowRef.current) {
+        glowRef.current.style.left = `calc(${progressPercentage}% - 2px)`;
+      }
     }
   }, [currentTime, duration]);
 
@@ -90,7 +95,12 @@ export default function Home() {
                 className={styles.bar__playerProgress} 
                 ref={progressBarRef}
                 onClick={handleProgressClick}
-              ></div>
+              >
+                <div 
+                  ref={glowRef}
+                  className={`${styles.progressGlow} ${styles.left}`}
+                ></div>
+              </div>
               <div className={styles.bar__playerBlock}>
                 <div className={styles.bar__player}>
                   <Player />

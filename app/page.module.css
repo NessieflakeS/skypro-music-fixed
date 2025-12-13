@@ -64,10 +64,9 @@
   flex-direction: column;
 }
 
-/* Исправленный прогресс-бар */
 .bar__playerProgress {
   width: 100%;
-  height: 8px;
+  height: 12px; 
   background: #2e2e2e;
   cursor: pointer;
   position: relative;
@@ -81,26 +80,101 @@
   left: 0;
   height: 100%;
   width: var(--progress, 0%);
-  background: linear-gradient(90deg, #ad61ff, #d9b6ff, #ad61ff);
+  background: linear-gradient(90deg, 
+    #ad61ff 0%, 
+    #d9b6ff 25%, 
+    #ad61ff 50%, 
+    #d9b6ff 75%, 
+    #ad61ff 100%);
   background-size: 200% 100%;
-  animation: wave 3s ease-in-out infinite;
+  animation: wave 3s linear infinite;
   transition: width 0.1s linear;
+  z-index: 1;
+}
+
+.bar__playerProgress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--progress, 0%);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.1) 80%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  animation: fadePulse 2s ease-in-out infinite;
+  transition: width 0.1s linear;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bar__playerProgress .progressGlow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 80%;
+  background: rgba(173, 97, 255, 0.8);
+  border-radius: 2px;
+  filter: blur(2px);
+  animation: glowPulse 1.5s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.bar__playerProgress .progressGlow.left {
+  left: calc(var(--progress, 0%) - 2px);
+}
+
+.bar__playerProgress .progressGlow.right {
+  right: calc(100% - var(--progress, 0%) - 2px);
+  display: none; 
 }
 
 @keyframes wave {
   0% {
     background-position: 0% 0%;
   }
-  50% {
-    background-position: 100% 0%;
-  }
   100% {
-    background-position: 0% 0%;
+    background-position: 200% 0%;
   }
 }
 
+@keyframes fadePulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0.6;
+    filter: blur(2px) brightness(1);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(3px) brightness(1.5);
+  }
+}
+
+.bar__playerProgress::before {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 2px 6px rgba(173, 97, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
 .bar__playerBlock {
-  height: 75px; /* Увеличим на 2px чтобы компенсировать увеличение прогресс-бара */
+  height: 75px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -297,4 +371,110 @@
 
 .footer {
   height: 20px;
+}
+
+.bar__playerProgress {
+  width: 100%;
+  height: 5px;
+  background: #2e2e2e;
+  position: relative;
+  cursor: pointer;
+}
+
+.bar__playerProgress::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: var(--progress, 0%);
+  background: #ad61ff;
+  transition: width 0.1s linear;
+}
+
+.player__progress {
+  width: 100%;
+  height: 5px;
+  background: #2e2e2e;
+  position: relative;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.player__progressBar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: var(--progress, 0%);
+  background: #ad61ff;
+  transition: width 0.1s linear;
+}
+
+.playlist__item {
+  width: 100%;
+  display: block;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.playlist__item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.playlist__item_current {
+  background-color: rgba(173, 97, 255, 0.1);
+}
+
+.track__titleDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #ad61ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 2s infinite;
+}
+
+.track__titleDot_playing {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.track__titleImage {
+  position: relative;
+}
+
+.bar__playerProgress {
+  width: 100%;
+  height: 5px;
+  background: #2e2e2e;
+  cursor: pointer;
+  position: relative;
+}
+
+.player__progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #ad61ff;
+  width: var(--progress, 0%);
+  transition: width 0.1s linear;
 }
