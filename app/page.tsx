@@ -42,6 +42,7 @@ export default function Home() {
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, volume, currentTime, duration } = playerState;
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const fadeRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,6 +97,7 @@ export default function Home() {
                 ref={progressBarRef}
                 onClick={handleProgressClick}
               >
+                <div className={styles.progressFade} ref={fadeRef}></div>
                 <div 
                   ref={glowRef}
                   className={`${styles.progressGlow} ${styles.left}`}
