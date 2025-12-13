@@ -1,3 +1,8 @@
+"use client";
+
+import { useDispatch, useSelector } from "react-redux";
+import { setCurrentTrack, togglePlayPause } from "../store/playerSlice";
+import { RootState } from "../store/store";
 import styles from "./TrackItem.module.css";
 
 interface ITrack {
@@ -10,6 +15,7 @@ interface ITrack {
   authorLink?: string;
   albumLink?: string;
   subtitle?: string;
+  track_file?: string;
 }
 
 interface TrackItemProps {
@@ -17,30 +23,59 @@ interface TrackItemProps {
 }
 
 export default function TrackItem({ track }: TrackItemProps) {
+  const dispatch = useDispatch();
+  const { currentTrack, isPlaying } = useSelector(
+    (state: RootState) => state.player
+  );
+
+  const isCurrentTrack = currentTrack?.id === track.id;
+
+  const handleTrackClick = () => {
+    if (isCurrentTrack) {
+      dispatch(togglePlayPause());
+    } else {
+      dispatch(setCurrentTrack({
+        ...track,
+        track_file: track.track_file || `https://example.com/track${track.id}.mp3`
+      }));
+    }
+  };
+
   return (
-    <div className={styles.playlist__item}>
+    <div 
+      className={`${styles.playlist__item} ${isCurrentTrack ? styles.playlist__item_current : ''}`}
+      onClick={handleTrackClick}
+    >
       <div className={styles.playlist__track}>
         <div className={styles.track__title}>
           <div className={styles.track__titleImage}>
-            <svg className={styles.track__titleSvg}>
-              <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
-            </svg>
+            {isCurrentTrack ? (
+              <div className={`${styles.track__titleDot} ${isPlaying ? styles.track__titleDot_playing : ''}`}>
+                <svg className={styles.track__titleSvg}>
+                  <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
+                </svg>
+              </div>
+            ) : (
+              <svg className={styles.track__titleSvg}>
+                <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
+              </svg>
+            )}
           </div>
           <div className={styles.track__titleText}>
-            <a className={styles.track__titleLink} href={track.link || "#"}>
+            <span className={styles.track__titleLink}>
               {track.name} <span className={styles.track__titleSpan}>{track.subtitle || ""}</span>
-            </a>
+            </span>
           </div>
         </div>
         <div className={styles.track__author}>
-          <a className={styles.track__authorLink} href={track.authorLink || "#"}>
+          <span className={styles.track__authorLink}>
             {track.author}
-          </a>
+          </span>
         </div>
         <div className={styles.track__album}>
-          <a className={styles.track__albumLink} href={track.albumLink || "#"}>
+          <span className={styles.track__albumLink}>
             {track.album}
-          </a>
+          </span>
         </div>
         <div className={styles.track__time}>
           <svg className={styles.track__timeSvg}>

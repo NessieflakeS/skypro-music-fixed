@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
 import Player from "../components/Player";
 import TrackList from "../components/TrackList";
 import Filter from "../components/Filter";
-import { data } from "@/data";
+import { data } from "../data";
 import { ITrack } from "../components/TrackList";
+import { setCurrentTrack, setVolume } from "../store/playerSlice";
+import { RootState } from "../store/store";
 import styles from "./page.module.css";
 
 const formatDuration = (seconds: number) => {
@@ -25,10 +28,25 @@ const tracksForDisplay: ITrack[] = data.map(track => ({
   time: formatDuration(track.duration_in_seconds),
   link: "#",
   authorLink: "#",
-  albumLink: "#"
+  albumLink: "#",
+  track_file: track.track_file
 }));
 
 export default function Home() {
+  const dispatch = useDispatch();
+  const { currentTrack, volume } = useSelector((state: RootState) => state.player);
+
+  useEffect(() => {
+    if (tracksForDisplay.length > 0 && !currentTrack) {
+      dispatch(setCurrentTrack(tracksForDisplay[0]));
+    }
+  }, [dispatch, currentTrack]);
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    dispatch(setVolume(newVolume));
+  };
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
@@ -58,14 +76,14 @@ export default function Home() {
                       </svg>
                     </div>
                     <div className={styles.trackPlay__author}>
-                      <a className={styles.trackPlay__authorLink} href="#">
-                        {tracksForDisplay[0]?.name || "Трек не выбран"}
-                      </a>
+                      <span className={styles.trackPlay__authorLink}>
+                        {currentTrack?.name || "Трек не выбран"}
+                      </span>
                     </div>
                     <div className={styles.trackPlay__album}>
-                      <a className={styles.trackPlay__albumLink} href="#">
-                        {tracksForDisplay[0]?.author || "Исполнитель не выбран"}
-                      </a>
+                      <span className={styles.trackPlay__albumLink}>
+                        {currentTrack?.author || "Исполнитель не выбран"}
+                      </span>
                     </div>
                   </div>
                   <div className={styles.trackPlay__likeDis}>
@@ -93,7 +111,11 @@ export default function Home() {
                     <input
                       className={styles.volume__progressLine}
                       type="range"
-                      name="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={volume}
+                      onChange={handleVolumeChange}
                       placeholder="Кнопка увеличения громкости"
                     />
                   </div>
