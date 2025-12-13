@@ -34,7 +34,6 @@ export default function TrackItem({ track }: TrackItemProps) {
 
   const handleTrackClick = () => {
     if (!isWorkingTrack) {
-      alert("Этот трек не может быть воспроизведен. Пожалуйста, выберите другой трек из списка (Chase, Open Sea epic, и т.д.)");
       return;
     }
     
@@ -47,7 +46,7 @@ export default function TrackItem({ track }: TrackItemProps) {
         author: track.author,
         album: track.album,
         time: track.time,
-        track_file: track.track_file || `https://example.com/track${track.id}.mp3`
+        track_file: track.track_file
       }));
     }
   };

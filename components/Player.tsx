@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   togglePlayPause, 
@@ -48,7 +48,6 @@ export default function Player() {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play();
-        dispatch(setCurrentTime(0));
       }
     } else {
       handleNextClick();
@@ -118,11 +117,6 @@ export default function Player() {
   };
 
   const handlePlayPause = () => {
-    if (currentTrack && !isTrackWorking(currentTrack.id)) {
-      alert("Этот трек не может быть воспроизведен. Пожалуйста, выберите другой трек.");
-      return;
-    }
-    
     dispatch(togglePlayPause());
   };
 
@@ -165,16 +159,18 @@ export default function Player() {
   useEffect(() => {
     if (audioRef.current && currentTrack?.track_file) {
       if (isPlaying) {
-        audioRef.current.play().catch(error => {
-          console.error("Ошибка воспроизведения:", error);
-          alert("Не удалось воспроизвести трек. Возможно, трек недоступен.");
-          dispatch(togglePlayPause());
-        });
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Ошибка воспроизведения трека:", error);
+          });
+        }
       } else {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying, currentTrack, dispatch]);
+  }, [isPlaying, currentTrack]);
 
   useEffect(() => {
     if (audioRef.current && currentTrack?.track_file) {
@@ -183,11 +179,13 @@ export default function Player() {
       dispatch(setCurrentTime(0));
       
       if (isPlaying) {
-        audioRef.current.play().catch(error => {
-          console.error("Ошибка загрузки трека:", error);
-          alert("Не удалось загрузить трек. Возможно, трек недоступен.");
-          dispatch(togglePlayPause());
-        });
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Ошибка загрузки трека:", error);
+          });
+        }
       }
     }
   }, [currentTrack?.id, dispatch, isPlaying]);
@@ -262,6 +260,7 @@ export default function Player() {
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
           loop={repeat}
+          preload="metadata"
         />
       )}
     </>
