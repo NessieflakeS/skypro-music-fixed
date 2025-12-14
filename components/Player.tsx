@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   togglePlayPause, 
@@ -9,13 +9,11 @@ import {
   setVolume,
   setCurrentTime,
   setDuration,
-  setNextTrack
+  setNextTrack,
+  setPrevTrack
 } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
 import styles from "./Player.module.css";
-import { data } from "@/data";
-
-const WORKING_TRACK_IDS = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -48,71 +46,10 @@ export default function Player() {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play();
+        dispatch(setCurrentTime(0));
       }
     } else {
-      handleNextClick();
-    }
-  };
-
-  const isTrackWorking = (trackId: number) => {
-    return WORKING_TRACK_IDS.includes(trackId);
-  };
-
-  const getNextTrack = () => {
-    if (!currentTrack) return null;
-    
-    const currentIndex = data.findIndex(track => track._id === currentTrack.id);
-    if (currentIndex === -1) return null;
-    
-    if (shuffle) {
-      const availableTracks = data.filter(track => 
-        track._id !== currentTrack.id && isTrackWorking(track._id)
-      );
-      if (availableTracks.length === 0) return null;
-      const randomIndex = Math.floor(Math.random() * availableTracks.length);
-      return availableTracks[randomIndex];
-    } else {
-      let nextIndex = (currentIndex + 1) % data.length;
-      let attempts = 0;
-      
-      while (!isTrackWorking(data[nextIndex]._id) && attempts < data.length) {
-        nextIndex = (nextIndex + 1) % data.length;
-        attempts++;
-      }
-      
-      if (isTrackWorking(data[nextIndex]._id)) {
-        return data[nextIndex];
-      }
-      return null;
-    }
-  };
-
-  const getPrevTrack = () => {
-    if (!currentTrack) return null;
-    
-    const currentIndex = data.findIndex(track => track._id === currentTrack.id);
-    if (currentIndex === -1) return null;
-    
-    if (shuffle) {
-      const availableTracks = data.filter(track => 
-        track._id !== currentTrack.id && isTrackWorking(track._id)
-      );
-      if (availableTracks.length === 0) return null;
-      const randomIndex = Math.floor(Math.random() * availableTracks.length);
-      return availableTracks[randomIndex];
-    } else {
-      let prevIndex = (currentIndex - 1 + data.length) % data.length;
-      let attempts = 0;
-      
-      while (!isTrackWorking(data[prevIndex]._id) && attempts < data.length) {
-        prevIndex = (prevIndex - 1 + data.length) % data.length;
-        attempts++;
-      }
-      
-      if (isTrackWorking(data[prevIndex]._id)) {
-        return data[prevIndex];
-      }
-      return null;
+      dispatch(setNextTrack());
     }
   };
 
@@ -121,31 +58,11 @@ export default function Player() {
   };
 
   const handlePrevClick = () => {
-    const prevTrack = getPrevTrack();
-    if (prevTrack) {
-      dispatch(setNextTrack({
-        id: prevTrack._id,
-        name: prevTrack.name,
-        author: prevTrack.author,
-        album: prevTrack.album,
-        time: `${Math.floor(prevTrack.duration_in_seconds / 60)}:${(prevTrack.duration_in_seconds % 60).toString().padStart(2, '0')}`,
-        track_file: prevTrack.track_file
-      }));
-    }
+    dispatch(setPrevTrack());
   };
 
   const handleNextClick = () => {
-    const nextTrack = getNextTrack();
-    if (nextTrack) {
-      dispatch(setNextTrack({
-        id: nextTrack._id,
-        name: nextTrack.name,
-        author: nextTrack.author,
-        album: nextTrack.album,
-        time: `${Math.floor(nextTrack.duration_in_seconds / 60)}:${(nextTrack.duration_in_seconds % 60).toString().padStart(2, '0')}`,
-        track_file: nextTrack.track_file
-      }));
-    }
+    dispatch(setNextTrack());
   };
 
   const handleRepeatClick = () => {

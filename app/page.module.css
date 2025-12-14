@@ -64,18 +64,33 @@
   flex-direction: column;
 }
 
-/* Прогресс-бар контейнер */
+.progressContainer {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  height: 30px;
+  background: rgba(28, 28, 28, 0.95);
+}
+
+.timeDisplay {
+  color: #ffffff;
+  font-size: 12px;
+  min-width: 40px;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+}
+
 .bar__playerProgress {
-  width: 100%;
-  height: 10px;
+  flex: 1;
+  height: 8px;
   background: #2e2e2e;
   cursor: pointer;
   position: relative;
+  margin: 0 10px;
+  border-radius: 4px;
   overflow: hidden;
-  border-radius: 0;
 }
 
-/* Заполненная часть прогресс-бара */
 .bar__playerProgress::before {
   content: '';
   position: absolute;
@@ -83,126 +98,23 @@
   left: 0;
   height: 100%;
   width: var(--progress, 0%);
-  background: linear-gradient(90deg, 
-    #ad61ff 0%, 
-    #d9b6ff 25%, 
-    #ad61ff 50%, 
-    #d9b6ff 75%, 
-    #ad61ff 100%);
+  background: linear-gradient(90deg, #ad61ff, #d9b6ff, #ad61ff);
   background-size: 200% 100%;
-  animation: wave 3s linear infinite;
+  animation: wave 3s ease-in-out infinite;
   transition: width 0.1s linear;
-  z-index: 1;
-  border-radius: 0;
+  border-radius: 4px;
 }
 
-/* Фейд-эффект по всей длине прогресс-бара */
-.progressFade {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 255, 255, 0.05) 10%,
-    rgba(255, 255, 255, 0) 30%,
-    rgba(255, 255, 255, 0) 70%,
-    rgba(255, 255, 255, 0.05) 90%,
-    rgba(255, 255, 255, 0.15) 100%
-  );
-  animation: fadePulse 2s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 2;
-  border-radius: 0;
-}
-
-/* Свечение на краю прогресса */
-.progressGlow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 6px;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 3px;
-  filter: blur(3px);
-  animation: glowPulse 1.5s ease-in-out infinite alternate;
-  pointer-events: none;
-  z-index: 3;
-  box-shadow: 
-    0 0 10px rgba(173, 97, 255, 0.8),
-    0 0 20px rgba(173, 97, 255, 0.6),
-    0 0 30px rgba(173, 97, 255, 0.4);
-}
-
-.progressGlow.left {
-  left: calc(var(--progress, 0%) - 3px);
-}
-
-/* Анимации */
 @keyframes wave {
   0% {
     background-position: 0% 0%;
   }
-  100% {
-    background-position: 200% 0%;
-  }
-}
-
-@keyframes fadePulse {
-  0%, 100% {
-    opacity: 0.6;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.2) 0%,
-      rgba(255, 255, 255, 0.1) 10%,
-      rgba(255, 255, 255, 0) 30%,
-      rgba(255, 255, 255, 0) 70%,
-      rgba(255, 255, 255, 0.1) 90%,
-      rgba(255, 255, 255, 0.2) 100%
-    );
-  }
   50% {
-    opacity: 0.9;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.3) 0%,
-      rgba(255, 255, 255, 0.15) 10%,
-      rgba(255, 255, 255, 0) 30%,
-      rgba(255, 255, 255, 0) 70%,
-      rgba(255, 255, 255, 0.15) 90%,
-      rgba(255, 255, 255, 0.3) 100%
-    );
-  }
-}
-
-@keyframes glowPulse {
-  0% {
-    opacity: 0.6;
-    filter: blur(3px) brightness(1);
-    box-shadow: 
-      0 0 8px rgba(173, 97, 255, 0.6),
-      0 0 16px rgba(173, 97, 255, 0.4),
-      0 0 24px rgba(173, 97, 255, 0.2);
+    background-position: 100% 0%;
   }
   100% {
-    opacity: 1;
-    filter: blur(4px) brightness(1.5);
-    box-shadow: 
-      0 0 12px rgba(173, 97, 255, 1),
-      0 0 24px rgba(173, 97, 255, 0.8),
-      0 0 36px rgba(173, 97, 255, 0.6);
+    background-position: 0% 0%;
   }
-}
-
-/* Тень и отражение для прогресс-бара */
-.bar__playerProgress::before {
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .bar__playerBlock {

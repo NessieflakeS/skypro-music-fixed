@@ -20,6 +20,13 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
+const formatTime = (seconds: number) => {
+  if (!seconds || isNaN(seconds)) return "0:00";
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs.toString().padStart(2, '0')}`;
+};
+
 const tracksForDisplay: ITrack[] = data.map(track => ({
   id: track._id,
   name: track.name,
@@ -32,27 +39,16 @@ const tracksForDisplay: ITrack[] = data.map(track => ({
   track_file: track.track_file
 }));
 
-const workingTracks = tracksForDisplay.filter(track => track.id >= 16 && track.id <= 25);
-const otherTracks = tracksForDisplay.filter(track => track.id < 16 || track.id > 25);
-
-const orderedTracks = [...workingTracks, ...otherTracks];
-
 export default function Home() {
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, volume, currentTime, duration } = playerState;
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const fadeRef = useRef<HTMLDivElement>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (progressBarRef.current) {
       const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
       progressBarRef.current.style.setProperty('--progress', `${progressPercentage}%`);
-      
-      if (glowRef.current) {
-        glowRef.current.style.left = `calc(${progressPercentage}% - 2px)`;
-      }
     }
   }, [currentTime, duration]);
 
@@ -83,7 +79,7 @@ export default function Home() {
             <h2 className={styles.centerblock__h2}>Треки</h2>
             <Filter tracks={data} />
             <div className={styles.contentContainer}>
-              <TrackList tracks={orderedTracks} />
+              <TrackList tracks={tracksForDisplay} />
             </div>
           </div>
           <Sidebar />
@@ -92,16 +88,14 @@ export default function Home() {
         {currentTrack && (
           <div className={styles.bar}>
             <div className={styles.bar__content}>
-              <div 
-                className={styles.bar__playerProgress} 
-                ref={progressBarRef}
-                onClick={handleProgressClick}
-              >
-                <div className={styles.progressFade} ref={fadeRef}></div>
+              <div className={styles.progressContainer}>
+                <div className={styles.timeDisplay}>{formatTime(currentTime)}</div>
                 <div 
-                  ref={glowRef}
-                  className={`${styles.progressGlow} ${styles.left}`}
+                  className={styles.bar__playerProgress} 
+                  ref={progressBarRef}
+                  onClick={handleProgressClick}
                 ></div>
+                <div className={styles.timeDisplay}>{formatTime(duration)}</div>
               </div>
               <div className={styles.bar__playerBlock}>
                 <div className={styles.bar__player}>
