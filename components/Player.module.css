@@ -64,11 +64,6 @@
   stroke: #696969;
 }
 
-.player__btnRepeat:hover .player__btnRepeatSvg,
-.player__btnShuffle:hover .player__btnShuffleSvg {
-  stroke: #acacac;
-}
-
 .player__btnShuffleSvg {
   width: 19px;
   height: 12px;
@@ -88,4 +83,12 @@
 .player__btnRepeat:hover .player__btnRepeatSvg,
 .player__btnShuffle:hover .player__btnShuffleSvg {
   stroke: #d9b6ff;
+}
+
+.player__btnRepeat_active .player__btnRepeatSvg {
+  stroke: #ad61ff;
+}
+
+.player__btnShuffle_active .player__btnShuffleSvg {
+  stroke: #ad61ff;
 }

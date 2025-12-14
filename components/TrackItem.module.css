@@ -2,6 +2,25 @@
   width: 100%;
   display: block;
   margin-bottom: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.playlist__item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.playlist__item_current {
+  background-color: rgba(173, 97, 255, 0.1);
+}
+
+.playlist__item_disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.playlist__item_disabled:hover {
+  background-color: transparent;
 }
 
 .playlist__track {
@@ -27,6 +46,7 @@
   align-items: center;
   justify-content: center;
   margin-right: 17px;
+  position: relative;
 }
 
 .track__titleSvg {
@@ -34,6 +54,55 @@
   height: 17px;
   fill: transparent;
   stroke: #4e4e4e;
+}
+
+.track__titleSvg_disabled {
+  stroke: #696969;
+  opacity: 0.5;
+}
+
+.track__titleDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ad61ff;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s infinite;
+}
+
+.track__titleDot_playing {
+  animation: pulse 1s infinite;
+}
+
+.track__titleDisabled {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.track__titleDisabledSvg {
+  width: 16px;
+  height: 16px;
+  fill: #696969;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }
 
 .track__titleText {
@@ -54,6 +123,15 @@
 .track__titleLink:hover {
   color: #d9b6ff;
   text-decoration: underline;
+}
+
+.track__titleLink_disabled {
+  color: #696969;
+}
+
+.track__titleLink_disabled:hover {
+  color: #696969;
+  text-decoration: none;
 }
 
 .track__titleSpan {
@@ -85,6 +163,15 @@
   text-decoration: underline;
 }
 
+.track__authorLink_disabled {
+  color: #696969;
+}
+
+.track__authorLink_disabled:hover {
+  color: #696969;
+  text-decoration: none;
+}
+
 .track__album {
   width: 245px;
 }
@@ -104,6 +191,15 @@
   text-decoration: underline;
 }
 
+.track__albumLink_disabled {
+  color: #4e4e4e;
+}
+
+.track__albumLink_disabled:hover {
+  color: #4e4e4e;
+  text-decoration: none;
+}
+
 .track__time {
   display: flex;
   align-items: center;
@@ -120,6 +216,11 @@
   flex-shrink: 0;
 }
 
+.track__timeSvg_disabled {
+  stroke: #4e4e4e;
+  opacity: 0.5;
+}
+
 .track__timeText {
   font-style: normal;
   font-weight: 400;
@@ -127,4 +228,9 @@
   line-height: 24px;
   text-align: right;
   color: #696969;
+}
+
+.track__timeText_disabled {
+  color: #4e4e4e;
+  opacity: 0.5;
 }
