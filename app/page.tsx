@@ -1,9 +1,32 @@
+"use client";
+
+import { useState } from "react";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
 import Player from "../components/Player";
 import TrackList from "../components/TrackList";
+import Filter from "../components/Filter";
+import { data } from "@/data";
+import { ITrack } from "../components/TrackList";
 import styles from "./page.module.css";
+
+const formatDuration = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const tracksForDisplay: ITrack[] = data.map(track => ({
+  id: track._id,
+  name: track.name,
+  author: track.author,
+  album: track.album,
+  time: formatDuration(track.duration_in_seconds),
+  link: "#",
+  authorLink: "#",
+  albumLink: "#"
+}));
 
 export default function Home() {
   return (
@@ -14,13 +37,10 @@ export default function Home() {
           <div className={styles.centerblock}>
             <SearchBar />
             <h2 className={styles.centerblock__h2}>Треки</h2>
-            <div className={styles.centerblock__filter}>
-              <div className={styles.filter__title}>Искать по:</div>
-              <div className={styles.filter__button}>исполнителю</div>
-              <div className={styles.filter__button}>году выпуска</div>
-              <div className={styles.filter__button}>жанру</div>
+            <Filter tracks={data} />
+            <div className={styles.contentContainer}>
+              <TrackList tracks={tracksForDisplay} />
             </div>
-            <TrackList />
           </div>
           <Sidebar />
         </main>
@@ -38,13 +58,13 @@ export default function Home() {
                       </svg>
                     </div>
                     <div className={styles.trackPlay__author}>
-                      <a className={styles.trackPlay__authorLink} href="">
-                        Ты та...
+                      <a className={styles.trackPlay__authorLink} href="#">
+                        {tracksForDisplay[0]?.name || "Трек не выбран"}
                       </a>
                     </div>
                     <div className={styles.trackPlay__album}>
-                      <a className={styles.trackPlay__albumLink} href="">
-                        Баста
+                      <a className={styles.trackPlay__albumLink} href="#">
+                        {tracksForDisplay[0]?.author || "Исполнитель не выбран"}
                       </a>
                     </div>
                   </div>

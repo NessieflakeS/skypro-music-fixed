@@ -1,0 +1,127 @@
+.centerblock__filter {
+  display: flex;
+  align-items: center;
+  margin-bottom: 51px;
+  position: relative;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.filter__title {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #ffffff;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.filter__buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+  overflow: visible;
+}
+
+.filter__button {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  border: 1px solid #ffffff;
+  border-radius: 60px;
+  padding: 6px 20px;
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.filter__button:hover {
+  border-color: #d9b6ff;
+  color: #d9b6ff;
+}
+
+.filter__button.active {
+  border-color: #ad61ff;
+  color: #ad61ff;
+}
+
+.filter__window {
+  position: absolute;
+  z-index: 1000;
+  background: #313131;
+  border-radius: 12px;
+  color: white;
+  max-height: 237px;
+  width: 248px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  overflow: hidden;
+  display: block;
+  top: 100%;
+  margin-top: 10px;
+}
+
+.filter__window_author {
+  left: 100px;
+}
+
+.filter__window_year {
+  left: 270px; 
+}
+
+.filter__window_genre {
+  left: 430px; 
+}
+
+.filter__list {
+  display: block;
+  padding: 34px;
+  height: 100%;
+  max-height: 237px;
+  overflow-y: auto;
+}
+
+.filter__list {
+  -ms-overflow-style: none;
+}
+
+.filter__list::-webkit-scrollbar {
+  display: none; 
+  width: 0;
+  height: 0;
+}
+
+@supports (scrollbar-width: none) {
+  .filter__list {
+    scrollbar-width: none;
+  }
+}
+
+.filter__item {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #ffffff;
+  margin-bottom: 28px;
+}
+
+.filter__item:last-child {
+  margin-bottom: 0;
+}
+
+.filter__item:hover {
+  color: #b672ff;
+  text-decoration: underline;
+}

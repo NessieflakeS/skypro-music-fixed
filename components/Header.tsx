@@ -1,8 +1,28 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Header.module.css";
 
 export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
+
+  useEffect(() => {
+    const savedState = localStorage.getItem('menuOpen');
+    if (savedState !== null) {
+      setIsMenuOpen(savedState === 'true');
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('menuOpen', isMenuOpen.toString());
+  }, [isMenuOpen]);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <nav className={styles.nav}>
       <div className={styles.nav__logo}>
@@ -17,12 +37,12 @@ export default function Header() {
           />
         </Link>
       </div>
-      <div className={styles.nav__burger}>
+      <div className={styles.nav__burger} onClick={toggleMenu}>
         <span className={styles.burger__line}></span>
         <span className={styles.burger__line}></span>
         <span className={styles.burger__line}></span>
       </div>
-      <div className={styles.nav__menu}>
+      <div className={`${styles.nav__menu} ${isMenuOpen ? styles.nav__menu_active : ''}`}>
         <ul className={styles.menu__list}>
           <li className={styles.menu__item}>
             <Link href="/" className={styles.menu__link}>
