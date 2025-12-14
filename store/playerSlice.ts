@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Track } from '@/types';
 
 export interface TrackForPlayer {
   id: number;
@@ -36,6 +35,26 @@ const initialState: PlayerState = {
   currentPlaylist: [],
 };
 
+const generateShuffledOrderHelper = (state: PlayerState) => {
+  const trackIds = state.currentPlaylist.map(track => track.id);
+  const shuffled = [...trackIds];
+  
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  if (state.currentTrack) {
+    const currentIndex = shuffled.indexOf(state.currentTrack.id);
+    if (currentIndex === 0 && shuffled.length > 1) {
+      const swapIndex = Math.floor(Math.random() * (shuffled.length - 1)) + 1;
+      [shuffled[0], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[0]];
+    }
+  }
+  
+  return shuffled;
+};
+
 const playerSlice = createSlice({
   name: 'player',
   initialState,
@@ -49,7 +68,7 @@ const playerSlice = createSlice({
       state.currentShuffleIndex = trackIndex;
       
       if (state.shuffle) {
-        generateShuffledOrder(state);
+        state.shuffledOrder = generateShuffledOrderHelper(state);
       }
     },
     
@@ -73,7 +92,7 @@ const playerSlice = createSlice({
       state.shuffle = !state.shuffle;
       
       if (state.shuffle && state.currentPlaylist.length > 0) {
-        generateShuffledOrder(state);
+        state.shuffledOrder = generateShuffledOrderHelper(state);
       } else {
         state.shuffledOrder = [];
       }
@@ -94,90 +113,76 @@ const playerSlice = createSlice({
     setNextTrack: (state) => {
       if (!state.currentTrack || state.currentPlaylist.length === 0) return;
       
-      let nextIndex;
+      let nextTrack: TrackForPlayer | null = null;
+      let nextIndex = -1;
       
       if (state.shuffle && state.shuffledOrder.length > 0) {
         const currentId = state.currentTrack.id;
         const currentShuffleIndex = state.shuffledOrder.indexOf(currentId);
         
         if (currentShuffleIndex !== -1) {
-          nextIndex = (currentShuffleIndex + 1) % state.shuffledOrder.length;
-          const nextTrackId = state.shuffledOrder[nextIndex];
-          const nextTrack = state.currentPlaylist.find(t => t.id === nextTrackId);
+          const nextShuffleIndex = (currentShuffleIndex + 1) % state.shuffledOrder.length;
+          const nextTrackId = state.shuffledOrder[nextShuffleIndex];
+          const foundTrack = state.currentPlaylist.find(t => t.id === nextTrackId);
           
-          if (nextTrack) {
-            state.currentTrack = nextTrack;
-            state.currentShuffleIndex = nextIndex;
+          if (foundTrack) {
+            nextTrack = foundTrack;
+            nextIndex = state.currentPlaylist.findIndex(t => t.id === nextTrackId);
           }
         }
       } else {
-        const currentIndex = state.currentPlaylist.findIndex(t => t.id === state.currentTrack!.id);
+        const currentIndex = state.currentPlaylist.findIndex(t => t.id === state.currentTrack.id);
         if (currentIndex !== -1) {
           nextIndex = (currentIndex + 1) % state.currentPlaylist.length;
-          state.currentTrack = state.currentPlaylist[nextIndex];
-          state.currentShuffleIndex = nextIndex;
+          nextTrack = state.currentPlaylist[nextIndex];
         }
       }
       
-      state.currentTime = 0;
-      state.isPlaying = true;
+      if (nextTrack) {
+        state.currentTrack = nextTrack;
+        state.currentShuffleIndex = nextIndex;
+        state.currentTime = 0;
+        state.isPlaying = true;
+      }
     },
     
     setPrevTrack: (state) => {
       if (!state.currentTrack || state.currentPlaylist.length === 0) return;
       
-      let prevIndex;
+      let prevTrack: TrackForPlayer | null = null;
+      let prevIndex = -1;
       
       if (state.shuffle && state.shuffledOrder.length > 0) {
         const currentId = state.currentTrack.id;
         const currentShuffleIndex = state.shuffledOrder.indexOf(currentId);
         
         if (currentShuffleIndex !== -1) {
-          prevIndex = (currentShuffleIndex - 1 + state.shuffledOrder.length) % state.shuffledOrder.length;
-          const prevTrackId = state.shuffledOrder[prevIndex];
-          const prevTrack = state.currentPlaylist.find(t => t.id === prevTrackId);
+          const prevShuffleIndex = (currentShuffleIndex - 1 + state.shuffledOrder.length) % state.shuffledOrder.length;
+          const prevTrackId = state.shuffledOrder[prevShuffleIndex];
+          const foundTrack = state.currentPlaylist.find(t => t.id === prevTrackId);
           
-          if (prevTrack) {
-            state.currentTrack = prevTrack;
-            state.currentShuffleIndex = prevIndex;
+          if (foundTrack) {
+            prevTrack = foundTrack;
+            prevIndex = state.currentPlaylist.findIndex(t => t.id === prevTrackId);
           }
         }
       } else {
-        const currentIndex = state.currentPlaylist.findIndex(t => t.id === state.currentTrack!.id);
+        const currentIndex = state.currentPlaylist.findIndex(t => t.id === state.currentTrack.id);
         if (currentIndex !== -1) {
           prevIndex = (currentIndex - 1 + state.currentPlaylist.length) % state.currentPlaylist.length;
-          state.currentTrack = state.currentPlaylist[prevIndex];
-          state.currentShuffleIndex = prevIndex;
+          prevTrack = state.currentPlaylist[prevIndex];
         }
       }
       
-      state.currentTime = 0;
-      state.isPlaying = true;
-    },
-    
-    generateShuffledOrder: (state) => {
-      const trackIds = state.currentPlaylist.map(track => track.id);
-      const shuffled = [...trackIds];
-      
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      if (prevTrack) {
+        state.currentTrack = prevTrack;
+        state.currentShuffleIndex = prevIndex;
+        state.currentTime = 0;
+        state.isPlaying = true;
       }
-      
-      if (state.currentTrack) {
-        const currentIndex = shuffled.indexOf(state.currentTrack.id);
-        if (currentIndex === 0 && shuffled.length > 1) {
-          const swapIndex = Math.floor(Math.random() * (shuffled.length - 1)) + 1;
-          [shuffled[0], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[0]];
-        }
-      }
-      
-      state.shuffledOrder = shuffled;
     },
   },
 });
-
-export const { generateShuffledOrder } = playerSlice.actions;
 
 export const {
   setCurrentTrack,

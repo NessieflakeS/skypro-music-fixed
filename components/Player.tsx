@@ -30,30 +30,45 @@ export default function Player() {
   } = playerState;
 
   const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      dispatch(setCurrentTime(audioRef.current.currentTime));
+    const audio = audioRef.current;
+    if (audio) {
+      dispatch(setCurrentTime(audio.currentTime));
     }
   };
 
   const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      dispatch(setDuration(audioRef.current.duration));
+    const audio = audioRef.current;
+    if (audio) {
+      dispatch(setDuration(audio.duration));
     }
   };
 
   const handleEnded = () => {
+    const audio = audioRef.current;
     if (repeat) {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play();
+      if (audio) {
+        audio.currentTime = 0;
         dispatch(setCurrentTime(0));
+        audio.play();
       }
     } else {
       dispatch(setNextTrack());
     }
   };
 
+  const handleError = (e: any) => {
+    console.error("Ошибка воспроизведения аудио:", e);
+  };
+
   const handlePlayPause = () => {
+    if (!currentTrack) return;
+    
+    const audio = audioRef.current;
+    if (audio && audio.ended) {
+      audio.currentTime = 0;
+      dispatch(setCurrentTime(0));
+    }
+    
     dispatch(togglePlayPause());
   };
 
@@ -74,42 +89,70 @@ export default function Player() {
   };
 
   useEffect(() => {
-    if (audioRef.current && currentTrack?.track_file) {
+    const audio = audioRef.current;
+    if (!audio || !currentTrack?.track_file) return;
+
+    const playAudio = async () => {
       if (isPlaying) {
-        const playPromise = audioRef.current.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("Ошибка воспроизведения трека:", error);
-          });
+        try {
+          await audio.play();
+        } catch (error) {
+          console.error("Ошибка воспроизведения:", error);
         }
       } else {
-        audioRef.current.pause();
+        audio.pause();
       }
-    }
+    };
+
+    playAudio();
   }, [isPlaying, currentTrack]);
 
   useEffect(() => {
-    if (audioRef.current && currentTrack?.track_file) {
-      audioRef.current.src = currentTrack.track_file;
-      audioRef.current.load();
-      dispatch(setCurrentTime(0));
-      
-      if (isPlaying) {
-        const playPromise = audioRef.current.play();
+    const audio = audioRef.current;
+    if (!audio || !currentTrack?.track_file) return;
+
+    const loadTrack = async () => {
+      try {
+        audio.pause();
         
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("Ошибка загрузки трека:", error);
-          });
+        audio.src = currentTrack.track_file!;
+        
+        dispatch(setCurrentTime(0));
+        
+        await new Promise<void>((resolve, reject) => {
+          const handleCanPlay = () => {
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleErrorCallback);
+            resolve();
+          };
+          
+          const handleErrorCallback = (e: Event) => {
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleErrorCallback);
+            reject(e);
+          };
+          
+          audio.addEventListener('canplay', handleCanPlay);
+          audio.addEventListener('error', handleErrorCallback);
+          
+          audio.load();
+        });
+        
+        if (isPlaying) {
+          await audio.play();
         }
+      } catch (error) {
+        console.error("Ошибка загрузки трека:", error);
       }
-    }
+    };
+
+    loadTrack();
   }, [currentTrack?.id, dispatch, isPlaying]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = volume;
     }
   }, [volume]);
 
@@ -176,6 +219,7 @@ export default function Player() {
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
+          onError={handleError}
           loop={repeat}
           preload="metadata"
         />

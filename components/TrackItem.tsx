@@ -1,7 +1,7 @@
 "use client";
 
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentTrack } from "@/store/playerSlice";
+import { setCurrentTrack, togglePlayPause } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
 import styles from "./TrackItem.module.css";
 
@@ -32,20 +32,20 @@ export default function TrackItem({ track, playlist }: TrackItemProps) {
 
   const handleTrackClick = () => {
     if (isCurrentTrack) {
-      return;
+      dispatch(togglePlayPause());
+    } else {
+      dispatch(setCurrentTrack({
+        track: {
+          id: track.id,
+          name: track.name,
+          author: track.author,
+          album: track.album,
+          time: track.time,
+          track_file: track.track_file
+        },
+        playlist: playlist
+      }));
     }
-    
-    dispatch(setCurrentTrack({
-      track: {
-        id: track.id,
-        name: track.name,
-        author: track.author,
-        album: track.album,
-        time: track.time,
-        track_file: track.track_file
-      },
-      playlist: playlist
-    }));
   };
 
   return (
