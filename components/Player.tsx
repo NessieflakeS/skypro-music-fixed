@@ -29,6 +29,14 @@ export default function Player() {
     duration 
   } = playerState;
 
+  useEffect(() => {
+    if (audioRef.current && currentTime !== undefined && currentTime !== null) {
+      if (Math.abs(audioRef.current.currentTime - currentTime) > 0.1) {
+        audioRef.current.currentTime = currentTime;
+      }
+    }
+  }, [currentTime]);
+
   const handleTimeUpdate = () => {
     const audio = audioRef.current;
     if (audio) {
