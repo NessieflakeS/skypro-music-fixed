@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   togglePlayPause, 
@@ -9,13 +9,11 @@ import {
   setVolume,
   setCurrentTime,
   setDuration,
-  setNextTrack
+  setNextTrack,
+  setPrevTrack
 } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
 import styles from "./Player.module.css";
-import { data } from "@/data";
-
-const WORKING_TRACK_IDS = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -31,121 +29,63 @@ export default function Player() {
     duration 
   } = playerState;
 
+  useEffect(() => {
+    if (audioRef.current && currentTime !== undefined && currentTime !== null) {
+      if (Math.abs(audioRef.current.currentTime - currentTime) > 0.1) {
+        audioRef.current.currentTime = currentTime;
+      }
+    }
+  }, [currentTime]);
+
   const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      dispatch(setCurrentTime(audioRef.current.currentTime));
+    const audio = audioRef.current;
+    if (audio) {
+      dispatch(setCurrentTime(audio.currentTime));
     }
   };
 
   const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      dispatch(setDuration(audioRef.current.duration));
+    const audio = audioRef.current;
+    if (audio) {
+      dispatch(setDuration(audio.duration));
     }
   };
 
   const handleEnded = () => {
+    const audio = audioRef.current;
     if (repeat) {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play();
+      if (audio) {
+        audio.currentTime = 0;
+        dispatch(setCurrentTime(0));
+        audio.play();
       }
     } else {
-      handleNextClick();
+      dispatch(setNextTrack());
     }
   };
 
-  const isTrackWorking = (trackId: number) => {
-    return WORKING_TRACK_IDS.includes(trackId);
-  };
-
-  const getNextTrack = () => {
-    if (!currentTrack) return null;
-    
-    const currentIndex = data.findIndex(track => track._id === currentTrack.id);
-    if (currentIndex === -1) return null;
-    
-    if (shuffle) {
-      const availableTracks = data.filter(track => 
-        track._id !== currentTrack.id && isTrackWorking(track._id)
-      );
-      if (availableTracks.length === 0) return null;
-      const randomIndex = Math.floor(Math.random() * availableTracks.length);
-      return availableTracks[randomIndex];
-    } else {
-      let nextIndex = (currentIndex + 1) % data.length;
-      let attempts = 0;
-      
-      while (!isTrackWorking(data[nextIndex]._id) && attempts < data.length) {
-        nextIndex = (nextIndex + 1) % data.length;
-        attempts++;
-      }
-      
-      if (isTrackWorking(data[nextIndex]._id)) {
-        return data[nextIndex];
-      }
-      return null;
-    }
-  };
-
-  const getPrevTrack = () => {
-    if (!currentTrack) return null;
-    
-    const currentIndex = data.findIndex(track => track._id === currentTrack.id);
-    if (currentIndex === -1) return null;
-    
-    if (shuffle) {
-      const availableTracks = data.filter(track => 
-        track._id !== currentTrack.id && isTrackWorking(track._id)
-      );
-      if (availableTracks.length === 0) return null;
-      const randomIndex = Math.floor(Math.random() * availableTracks.length);
-      return availableTracks[randomIndex];
-    } else {
-      let prevIndex = (currentIndex - 1 + data.length) % data.length;
-      let attempts = 0;
-      
-      while (!isTrackWorking(data[prevIndex]._id) && attempts < data.length) {
-        prevIndex = (prevIndex - 1 + data.length) % data.length;
-        attempts++;
-      }
-      
-      if (isTrackWorking(data[prevIndex]._id)) {
-        return data[prevIndex];
-      }
-      return null;
-    }
+  const handleError = (e: any) => {
+    console.error("Ошибка воспроизведения аудио:", e);
   };
 
   const handlePlayPause = () => {
+    if (!currentTrack) return;
+    
+    const audio = audioRef.current;
+    if (audio && audio.ended) {
+      audio.currentTime = 0;
+      dispatch(setCurrentTime(0));
+    }
+    
     dispatch(togglePlayPause());
   };
 
   const handlePrevClick = () => {
-    const prevTrack = getPrevTrack();
-    if (prevTrack) {
-      dispatch(setNextTrack({
-        id: prevTrack._id,
-        name: prevTrack.name,
-        author: prevTrack.author,
-        album: prevTrack.album,
-        time: `${Math.floor(prevTrack.duration_in_seconds / 60)}:${(prevTrack.duration_in_seconds % 60).toString().padStart(2, '0')}`,
-        track_file: prevTrack.track_file
-      }));
-    }
+    dispatch(setPrevTrack());
   };
 
   const handleNextClick = () => {
-    const nextTrack = getNextTrack();
-    if (nextTrack) {
-      dispatch(setNextTrack({
-        id: nextTrack._id,
-        name: nextTrack.name,
-        author: nextTrack.author,
-        album: nextTrack.album,
-        time: `${Math.floor(nextTrack.duration_in_seconds / 60)}:${(nextTrack.duration_in_seconds % 60).toString().padStart(2, '0')}`,
-        track_file: nextTrack.track_file
-      }));
-    }
+    dispatch(setNextTrack());
   };
 
   const handleRepeatClick = () => {
@@ -157,42 +97,70 @@ export default function Player() {
   };
 
   useEffect(() => {
-    if (audioRef.current && currentTrack?.track_file) {
+    const audio = audioRef.current;
+    if (!audio || !currentTrack?.track_file) return;
+
+    const playAudio = async () => {
       if (isPlaying) {
-        const playPromise = audioRef.current.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("Ошибка воспроизведения трека:", error);
-          });
+        try {
+          await audio.play();
+        } catch (error) {
+          console.error("Ошибка воспроизведения:", error);
         }
       } else {
-        audioRef.current.pause();
+        audio.pause();
       }
-    }
+    };
+
+    playAudio();
   }, [isPlaying, currentTrack]);
 
   useEffect(() => {
-    if (audioRef.current && currentTrack?.track_file) {
-      audioRef.current.src = currentTrack.track_file;
-      audioRef.current.load();
-      dispatch(setCurrentTime(0));
-      
-      if (isPlaying) {
-        const playPromise = audioRef.current.play();
+    const audio = audioRef.current;
+    if (!audio || !currentTrack?.track_file) return;
+
+    const loadTrack = async () => {
+      try {
+        audio.pause();
         
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("Ошибка загрузки трека:", error);
-          });
+        audio.src = currentTrack.track_file!;
+        
+        dispatch(setCurrentTime(0));
+        
+        await new Promise<void>((resolve, reject) => {
+          const handleCanPlay = () => {
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleErrorCallback);
+            resolve();
+          };
+          
+          const handleErrorCallback = (e: Event) => {
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleErrorCallback);
+            reject(e);
+          };
+          
+          audio.addEventListener('canplay', handleCanPlay);
+          audio.addEventListener('error', handleErrorCallback);
+          
+          audio.load();
+        });
+        
+        if (isPlaying) {
+          await audio.play();
         }
+      } catch (error) {
+        console.error("Ошибка загрузки трека:", error);
       }
-    }
+    };
+
+    loadTrack();
   }, [currentTrack?.id, dispatch, isPlaying]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = volume;
     }
   }, [volume]);
 
@@ -259,6 +227,7 @@ export default function Player() {
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
+          onError={handleError}
           loop={repeat}
           preload="metadata"
         />
