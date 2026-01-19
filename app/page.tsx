@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
@@ -8,10 +8,10 @@ import SearchBar from "../components/SearchBar";
 import Player from "../components/Player";
 import TrackList from "../components/TrackList";
 import Filter from "../components/Filter";
-import { data } from "../data";
 import { ITrack } from "../components/TrackList";
 import { setCurrentTrack, setVolume, setCurrentTime } from "../store/playerSlice";
 import { RootState } from "../store/store";
+import { trackService } from "@/services/trackService";
 import styles from "./page.module.css";
 
 const formatDuration = (seconds: number) => {
@@ -27,23 +27,49 @@ const formatTime = (seconds: number) => {
   return `${minutes}:${secs.toString().padStart(2, '0')}`;
 };
 
-const tracksForDisplay: ITrack[] = data.map(track => ({
-  id: track._id,
-  name: track.name,
-  author: track.author,
-  album: track.album,
-  time: formatDuration(track.duration_in_seconds),
-  link: "#",
-  authorLink: "#",
-  albumLink: "#",
-  track_file: track.track_file
-}));
-
 export default function Home() {
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, volume, currentTime, duration } = playerState;
   const progressBarRef = useRef<HTMLDivElement>(null);
+
+  const [tracks, setTracks] = useState<ITrack[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadTracks();
+  }, []);
+
+  const loadTracks = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await trackService.getAllTracks();
+      
+      const tracksForDisplay: ITrack[] = data.map(track => ({
+        id: track._id,
+        name: track.name,
+        author: track.author,
+        album: track.album,
+        time: formatDuration(track.duration_in_seconds),
+        link: "#",
+        authorLink: "#",
+        albumLink: "#",
+        track_file: track.track_file,
+        genre: track.genre,
+        release_date: track.release_date,
+      }));
+      
+      setTracks(tracksForDisplay);
+    } catch (err: any) {
+      console.error('Ошибка загрузки треков:', err);
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки треков');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (progressBarRef.current) {
@@ -69,6 +95,35 @@ export default function Home() {
     dispatch(setCurrentTime(newTime));
   };
 
+  if (loading) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.container}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Загрузка треков...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.container}>
+          <div className={styles.errorContainer}>
+            <h2>Ошибка</h2>
+            <p>{error}</p>
+            <button onClick={loadTracks} className={styles.retryButton}>
+              Попробовать снова
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
@@ -77,14 +132,15 @@ export default function Home() {
           <div className={styles.centerblock}>
             <SearchBar />
             <h2 className={styles.centerblock__h2}>Треки</h2>
-            <Filter tracks={data} />
+            <Filter tracks={tracks} />
             <div className={styles.contentContainer}>
-              <TrackList tracks={tracksForDisplay} />
+              <TrackList tracks={tracks} />
             </div>
           </div>
           <Sidebar />
         </main>
         
+        {/* Плеер отображается только когда выбран трек */}
         {currentTrack && (
           <div className={styles.bar}>
             <div className={styles.bar__content}>

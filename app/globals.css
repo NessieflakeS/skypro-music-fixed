@@ -48,3 +48,23 @@ svg {
 use {
   pointer-events: none;
 }
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+  border-left: 4px solid #c62828;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #696969;
+}
+
+.empty-state h3 {
+  color: #ffffff;
+  margin-bottom: 10px;
+}
