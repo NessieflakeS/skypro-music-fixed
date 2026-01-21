@@ -1,5 +1,11 @@
+"use client";
+
+import { useEffect } from "react";
 import { Montserrat } from "next/font/google";
-import { Providers } from "./providers";
+import { Provider } from "react-redux";
+import { useDispatch } from "react-redux";
+import { store } from "@/store/store";
+import { loginSuccess } from "@/store/userSlice";
 import "./globals.css";
 
 const montserrat = Montserrat({ 
@@ -8,10 +14,29 @@ const montserrat = Montserrat({
   display: "swap",
 });
 
-export const metadata = {
-  title: "Skypro.Music",
-  description: "Музыкальный сервис",
-};
+function AuthInitializer() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          dispatch(loginSuccess(user));
+        } catch (error) {
+          console.error('Ошибка парсинга пользователя:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+    }
+  }, [dispatch]);
+
+  return null;
+}
 
 export default function RootLayout({
   children,
@@ -21,7 +46,10 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={montserrat.className}>
-        <Providers>{children}</Providers>
+        <Provider store={store}>
+          <AuthInitializer />
+          {children}
+        </Provider>
       </body>
     </html>
   );

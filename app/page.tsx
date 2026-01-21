@@ -11,7 +11,7 @@ import Filter from "../components/Filter";
 import { setCurrentTrack, setVolume, setCurrentTime } from "../store/playerSlice";
 import { RootState } from "../store/store";
 import { trackService } from "@/services/trackService";
-import { ITrack, ITrackDisplay } from "@/types";
+import { Track, ITrackDisplay } from "@/types";
 import styles from "./page.module.css";
 
 const formatDuration = (seconds: number) => {
@@ -33,7 +33,8 @@ export default function Home() {
   const { currentTrack, volume, currentTime, duration } = playerState;
   const progressBarRef = useRef<HTMLDivElement>(null);
 
-  const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [displayTracks, setDisplayTracks] = useState<ITrackDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,23 +49,24 @@ export default function Home() {
       
       const data = await trackService.getAllTracks();
       
-      const tracksForDisplay: ITrackDisplay[] = data.map(track => ({
+      setTracks(data);
+      
+      const tracksForDisplay: ITrackDisplay[] = data.map((track: Track) => ({
         id: track._id,
         name: track.name,
         author: track.author,
         album: track.album,
         release_date: track.release_date,
         genre: track.genre,
-        logo: track.logo,
+        duration_in_seconds: track.duration_in_seconds,
         track_file: track.track_file,
-        stared_user: track.stared_user,
         time: formatDuration(track.duration_in_seconds),
         link: "#",
         authorLink: "#",
         albumLink: "#",
       }));
       
-      setTracks(tracksForDisplay);
+      setDisplayTracks(tracksForDisplay);
     } catch (err: any) {
       console.error('Ошибка загрузки треков:', err);
       setError(err.response?.data?.detail || err.message || 'Ошибка загрузки треков');
@@ -136,7 +138,7 @@ export default function Home() {
             <h2 className={styles.centerblock__h2}>Треки</h2>
             <Filter tracks={tracks} />
             <div className={styles.contentContainer}>
-              <TrackList tracks={tracks} />
+              <TrackList tracks={displayTracks} />
             </div>
           </div>
           <Sidebar />

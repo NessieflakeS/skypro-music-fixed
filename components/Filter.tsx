@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import classNames from "classnames";
 import styles from "./Filter.module.css";
-import { ITrack } from "@/types";
+import { Track } from "@/types";
 
 interface FilterProps {
-  tracks: ITrack[];
+  tracks: Track[];
 }
 
 export default function Filter({ tracks }: FilterProps) {

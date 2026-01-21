@@ -3,24 +3,12 @@
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentTrack, togglePlayPause } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
+import { ITrackDisplay } from "@/types";
 import styles from "./TrackItem.module.css";
 
-interface ITrack {
-  id: number;
-  name: string;
-  author: string;
-  album: string;
-  time: string;
-  link?: string;
-  authorLink?: string;
-  albumLink?: string;
-  subtitle?: string;
-  track_file?: string;
-}
-
 interface TrackItemProps {
-  track: ITrack;
-  playlist: ITrack[];
+  track: ITrackDisplay;
+  playlist: ITrackDisplay[];
 }
 
 export default function TrackItem({ track, playlist }: TrackItemProps) {
@@ -40,8 +28,8 @@ export default function TrackItem({ track, playlist }: TrackItemProps) {
           name: track.name,
           author: track.author,
           album: track.album,
-          time: track.time,
-          track_file: track.track_file
+          track_file: track.track_file,
+          time: track.time
         },
         playlist: playlist
       }));
