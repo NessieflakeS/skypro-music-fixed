@@ -1,13 +1,19 @@
 import axios from 'axios';
 import { Track } from '@/types';
+import { data } from '@/data';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true' || true; 
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 5000, 
 });
 
 api.interceptors.request.use((config) => {
@@ -23,53 +29,70 @@ api.interceptors.request.use((config) => {
 
 export const trackService = {
   getAllTracks: async (): Promise<Track[]> => {
+    if (USE_MOCK) {
+      console.log('Using mock data for tracks');
+      await delay(300);
+      return data;
+    }
+
     try {
-      console.log('Fetching tracks from:', `${API_URL}/tracks/all`);
+      console.log('Fetching tracks from API...');
       const response = await api.get<Track[]>('/tracks/all');
-      console.log('Tracks fetched successfully:', response.data.length);
+      console.log('Successfully fetched tracks from API');
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching tracks:', error);
-      
-      if (error.code === 'ERR_NETWORK') {
-        console.warn('Network error - API server might be down');
-        throw new Error('Сервер временно недоступен. Пожалуйста, попробуйте позже.');
-      }
-      
-      if (error.response) {
-        const status = error.response.status;
-        if (status === 401) {
-          throw new Error('Требуется авторизация');
-        } else if (status === 403) {
-          throw new Error('Доступ запрещен');
-        } else if (status === 404) {
-          throw new Error('Треки не найдены');
-        } else {
-          throw new Error(`Ошибка сервера: ${status}`);
-        }
-      }
-      
-      throw new Error('Неизвестная ошибка при загрузке треков');
+      console.warn('API недоступен, используем локальные данные');
+      console.log('Falling back to mock data');
+      await delay(300);
+      return data;
     }
   },
 
   getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
+    if (USE_MOCK) {
+      console.log(`Using mock data for selection ${selectionId}`);
+      await delay(300);
+      
+      switch(selectionId) {
+        case 1: 
+          return data.slice(0, 8);
+        case 2: 
+          return data.slice(8, 16);
+        case 3: 
+          return data.slice(16, 24);
+        default:
+          return data.slice(0, 8);
+      }
+    }
+
     try {
-      console.log(`Fetching selection ${selectionId} tracks`);
+      console.log(`Fetching selection ${selectionId} from API...`);
       const response = await api.get<Track[]>(`/selections/${selectionId}/tracks`);
       return response.data;
     } catch (error: any) {
-      console.error(`Error fetching selection ${selectionId} tracks:`, error);
+      console.warn(`API недоступен для selection ${selectionId}, используем локальные данные`);
+      await delay(300);
       
-      if (error.response?.status === 404) {
-        throw new Error(`Подборка ${selectionId} не найдена`);
+      switch(selectionId) {
+        case 1:
+          return data.slice(0, 8);
+        case 2:
+          return data.slice(8, 16);
+        case 3:
+          return data.slice(16, 24);
+        default:
+          return data.slice(0, 8);
       }
-      
-      throw new Error(`Ошибка загрузки подборки: ${error.message}`);
     }
   },
 
   likeTrack: async (trackId: number): Promise<void> => {
+    if (USE_MOCK) {
+      console.log(`Mock: Track ${trackId} liked`);
+      await delay(200);
+      return;
+    }
+
     try {
       await api.post(`/tracks/${trackId}/like`);
     } catch (error) {
@@ -79,6 +102,12 @@ export const trackService = {
   },
 
   dislikeTrack: async (trackId: number): Promise<void> => {
+    if (USE_MOCK) {
+      console.log(`Mock: Track ${trackId} disliked`);
+      await delay(200);
+      return;
+    }
+
     try {
       await api.post(`/tracks/${trackId}/dislike`);
     } catch (error) {
