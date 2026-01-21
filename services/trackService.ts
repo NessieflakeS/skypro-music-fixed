@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { ITrack } from '@/types';
+import axios, { AxiosRequestConfig } from 'axios';
+import { Track } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -10,18 +10,20 @@ const api = axios.create({
   },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use((config: AxiosRequestConfig) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
 
 export const trackService = {
-  getAllTracks: async (): Promise<ITrack[]> => {
+  getAllTracks: async (): Promise<Track[]> => {
     try {
-      const response = await api.get('/tracks/all');
+      const response = await api.get<Track[]>('/tracks/all');
       return response.data;
     } catch (error) {
       console.error('Error fetching tracks:', error);
@@ -29,9 +31,9 @@ export const trackService = {
     }
   },
 
-  getSelectionTracks: async (selectionId: number): Promise<ITrack[]> => {
+  getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
     try {
-      const response = await api.get(`/selections/${selectionId}/tracks`);
+      const response = await api.get<Track[]>(`/selections/${selectionId}/tracks`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching selection ${selectionId} tracks:`, error);
@@ -39,7 +41,7 @@ export const trackService = {
     }
   },
 
-  likeTrack: async (trackId: number | string): Promise<void> => {
+  likeTrack: async (trackId: number): Promise<void> => {
     try {
       await api.post(`/tracks/${trackId}/like`);
     } catch (error) {
@@ -48,7 +50,7 @@ export const trackService = {
     }
   },
 
-  dislikeTrack: async (trackId: number | string): Promise<void> => {
+  dislikeTrack: async (trackId: number): Promise<void> => {
     try {
       await api.post(`/tracks/${trackId}/dislike`);
     } catch (error) {

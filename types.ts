@@ -1,3 +1,4 @@
+// types.ts
 export interface Track {
   _id: number;
   name: string;
@@ -25,6 +26,12 @@ export interface ITrackDisplay {
   authorLink?: string;
   albumLink?: string;
   subtitle?: string;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
 }
 
 export type FilterType = "author" | "year" | "genre" | null;
