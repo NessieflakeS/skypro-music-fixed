@@ -8,10 +8,10 @@ import SearchBar from "../components/SearchBar";
 import Player from "../components/Player";
 import TrackList from "../components/TrackList";
 import Filter from "../components/Filter";
-import { ITrack } from "../components/TrackList";
 import { setCurrentTrack, setVolume, setCurrentTime } from "../store/playerSlice";
 import { RootState } from "../store/store";
 import { trackService } from "@/services/trackService";
+import { ITrack, ITrackDisplay } from "@/types";
 import styles from "./page.module.css";
 
 const formatDuration = (seconds: number) => {
@@ -33,7 +33,7 @@ export default function Home() {
   const { currentTrack, volume, currentTime, duration } = playerState;
   const progressBarRef = useRef<HTMLDivElement>(null);
 
-  const [tracks, setTracks] = useState<ITrack[]>([]);
+  const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,18 +48,20 @@ export default function Home() {
       
       const data = await trackService.getAllTracks();
       
-      const tracksForDisplay: ITrack[] = data.map(track => ({
+      const tracksForDisplay: ITrackDisplay[] = data.map(track => ({
         id: track._id,
         name: track.name,
         author: track.author,
         album: track.album,
+        release_date: track.release_date,
+        genre: track.genre,
+        logo: track.logo,
+        track_file: track.track_file,
+        stared_user: track.stared_user,
         time: formatDuration(track.duration_in_seconds),
         link: "#",
         authorLink: "#",
         albumLink: "#",
-        track_file: track.track_file,
-        genre: track.genre,
-        release_date: track.release_date,
       }));
       
       setTracks(tracksForDisplay);

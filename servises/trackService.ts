@@ -1,27 +1,59 @@
-import api from './api';
-import { Track } from '@/types';
+import axios from 'axios';
+import { ITrack } from '@/types';
 
-export interface ApiTrack {
-  _id: number;
-  name: string;
-  author: string;
-  release_date: string;
-  genre: string[];
-  duration_in_seconds: number;
-  album: string;
-  logo: string | null;
-  track_file: string;
-  stared_user: any[];
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export const trackService = {
-  async getAllTracks(): Promise<ApiTrack[]> {
-    const response = await api.get('/catalog/track/all/');
-    return response.data;
+  getAllTracks: async (): Promise<ITrack[]> => {
+    try {
+      const response = await api.get('/tracks/all');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching tracks:', error);
+      throw error;
+    }
   },
 
-  async getSelectionTracks(selectionId: number): Promise<ApiTrack[]> {
-    const response = await api.get(`/catalog/selection/${selectionId}/`);
-    return response.data;
+  getSelectionTracks: async (selectionId: number): Promise<ITrack[]> => {
+    try {
+      const response = await api.get(`/selections/${selectionId}/tracks`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching selection ${selectionId} tracks:`, error);
+      throw error;
+    }
+  },
+
+  likeTrack: async (trackId: number | string): Promise<void> => {
+    try {
+      await api.post(`/tracks/${trackId}/like`);
+    } catch (error) {
+      console.error('Error liking track:', error);
+      throw error;
+    }
+  },
+
+  dislikeTrack: async (trackId: number | string): Promise<void> => {
+    try {
+      await api.post(`/tracks/${trackId}/dislike`);
+    } catch (error) {
+      console.error('Error disliking track:', error);
+      throw error;
+    }
   },
 };

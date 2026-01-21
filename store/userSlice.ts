@@ -1,13 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-}
+import { IUser } from '@/types';
 
 interface UserState {
-  user: User | null;
+  user: IUser | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
@@ -28,7 +23,7 @@ const userSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    loginSuccess: (state, action: PayloadAction<User>) => {
+    loginSuccess: (state, action: PayloadAction<IUser>) => {
       state.user = action.payload;
       state.isAuthenticated = true;
       state.loading = false;
@@ -42,7 +37,7 @@ const userSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    registerSuccess: (state, action: PayloadAction<User>) => {
+    registerSuccess: (state, action: PayloadAction<IUser>) => {
       state.user = action.payload;
       state.isAuthenticated = true;
       state.loading = false;
@@ -56,6 +51,8 @@ const userSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     clearError: (state) => {
       state.error = null;
