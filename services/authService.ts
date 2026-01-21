@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -27,11 +27,11 @@ const api = axios.create({
   },
 });
 
-// Добавляем interceptor для токена
-api.interceptors.request.use((config: AxiosRequestConfig) => {
+api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
     if (token && config.headers) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
@@ -40,18 +40,30 @@ api.interceptors.request.use((config: AxiosRequestConfig) => {
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/user/login/', credentials);
-    return response.data;
+    try {
+      const response = await api.post<AuthResponse>('/user/login/', credentials);
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   },
 
   register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/user/signup/', credentials);
-    return response.data;
+    try {
+      const response = await api.post<AuthResponse>('/user/signup/', credentials);
+      return response.data;
+    } catch (error) {
+      console.error('Register error:', error);
+      throw error;
+    }
   },
 
   logout: async (): Promise<void> => {
     try {
       await api.post('/user/logout/');
+    } catch (error) {
+      console.error('Logout error:', error);
     } finally {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');

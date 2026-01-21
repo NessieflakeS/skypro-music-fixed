@@ -68,8 +68,6 @@ export default function Home() {
       
       setDisplayTracks(tracksForDisplay);
     } catch (err: any) {
-      console.error('Ошибка загрузки треков:', err);
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки треков');
     } finally {
       setLoading(false);
     }
