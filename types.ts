@@ -1,4 +1,3 @@
-// types.ts
 export interface Track {
   _id: number;
   name: string;
