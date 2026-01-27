@@ -36,6 +36,14 @@ api.interceptors.response.use(
   }
 );
 
+interface ApiResponse {
+  tracks?: Track[];
+  data?: Track[];
+  items?: Track[];
+  results?: Track[];
+  [key: string]: any;
+}
+
 interface SelectionResponse {
   id: number;
   name: string;
@@ -59,9 +67,35 @@ export const trackService = {
       
       for (const endpoint of endpoints) {
         try {
-          const response = await api.get<Track[]>(endpoint);
-          console.log(`Tracks fetched successfully from ${endpoint}, count:`, response.data.length);
-          return response.data;
+          const response = await api.get<ApiResponse>(endpoint);
+          console.log(`Response from ${endpoint}:`, response.data);
+          
+          const data = response.data;
+          let tracks: Track[] = [];
+          
+          if (data.tracks && Array.isArray(data.tracks)) {
+            tracks = data.tracks;
+          } else if (data.data && Array.isArray(data.data)) {
+            tracks = data.data;
+          } else if (data.items && Array.isArray(data.items)) {
+            tracks = data.items;
+          } else if (data.results && Array.isArray(data.results)) {
+            tracks = data.results;
+          } else if (Array.isArray(data)) {
+            tracks = data;
+          } else {
+            for (const key in data) {
+              if (Array.isArray(data[key])) {
+                tracks = data[key];
+                console.log(`Found tracks in property: ${key}`);
+                break;
+              }
+            }
+          }
+          
+          console.log(`Tracks fetched successfully from ${endpoint}, count:`, tracks.length);
+          return tracks;
+          
         } catch (err: unknown) {
           const error = err as any;
           console.log(`Endpoint ${endpoint} failed:`, error.response?.status || error.message);
@@ -114,10 +148,25 @@ export const trackService = {
       
       for (const endpoint of endpoints) {
         try {
-          const response = await api.get<SelectionResponse>(endpoint);
-          const tracks = response.data.tracks || response.data.items || [];
+          const response = await api.get<ApiResponse>(endpoint); // Используем только ApiResponse
+          console.log(`Response from ${endpoint}:`, response.data);
+          
+          let tracks: Track[] = [];
+          const data = response.data;
+          
+          if ('tracks' in data && Array.isArray(data.tracks)) {
+            tracks = data.tracks;
+          } else if ('items' in data && Array.isArray(data.items)) {
+            tracks = data.items;
+          } else if (data.data && Array.isArray(data.data)) {
+            tracks = data.data;
+          } else if (Array.isArray(data)) {
+            tracks = data;
+          }
+          
           console.log(`Selection ${selectionId} fetched successfully from ${endpoint}, tracks:`, tracks.length);
           return tracks;
+          
         } catch (err: unknown) {
           const error = err as any;
           console.log(`Endpoint ${endpoint} failed:`, error.response?.status || error.message);

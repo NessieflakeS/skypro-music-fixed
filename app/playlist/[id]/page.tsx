@@ -7,9 +7,42 @@ import Sidebar from "@/components/Sidebar";
 import SearchBar from "@/components/SearchBar";
 import TrackList from "@/components/TrackList";
 import Filter from "@/components/Filter";
-import { ITrack } from "@/components/TrackList";
 import { trackService } from "@/services/trackService";
+import { Track, ITrackDisplay } from "@/types"; 
 import styles from "@/app/page.module.css";
+
+const getMockTracks = (): Promise<Track[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        {
+          id: 1,
+          name: "Mock Track 1",
+          author: "Mock Author 1",
+          album: "Mock Album 1",
+          duration_in_seconds: 180,
+          track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3",
+          release_date: "2023-01-01",
+          genre: ["Rock"],
+          logo: null,
+          stared_user: []
+        },
+        {
+          id: 2,
+          name: "Mock Track 2",
+          author: "Mock Author 2",
+          album: "Mock Album 2",
+          duration_in_seconds: 240,
+          track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3",
+          release_date: "2023-02-01",
+          genre: ["Pop"],
+          logo: null,
+          stared_user: []
+        }
+      ]);
+    }, 500);
+  });
+};
 
 const formatDuration = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -17,7 +50,6 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-// Названия подборок по ID
 const SELECTION_NAMES: { [key: number]: string } = {
   1: "Плейлист дня",
   2: "100 танцевальных хитов", 
@@ -28,7 +60,8 @@ export default function PlaylistPage() {
   const params = useParams();
   const id = params.id ? Number(params.id) : null;
   
-  const [tracks, setTracks] = useState<ITrack[]>([]);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [displayTracks, setDisplayTracks] = useState<ITrackDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectionName, setSelectionName] = useState("Подборка");
@@ -52,24 +85,41 @@ export default function PlaylistPage() {
       
       const data = await trackService.getSelectionTracks(id!);
       
-      const tracksForDisplay: ITrack[] = data.map(track => ({
-        id: track._id,
+      setTracks(data);
+      
+      const tracksForDisplay: ITrackDisplay[] = data.map(track => ({
+        id: track._id || track.id,
         name: track.name,
         author: track.author,
         album: track.album,
         time: formatDuration(track.duration_in_seconds),
+        track_file: track.track_file,
         link: "#",
         authorLink: "#",
         albumLink: "#",
-        track_file: track.track_file,
-        genre: track.genre,
-        release_date: track.release_date,
       }));
       
-      setTracks(tracksForDisplay);
+      setDisplayTracks(tracksForDisplay);
     } catch (err: any) {
       console.error('Ошибка загрузки треков подборки:', err);
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки треков подборки');
+      
+      const mockData = await getMockTracks();
+      setTracks(mockData);
+      
+      const tracksForDisplay: ITrackDisplay[] = mockData.map((track: Track) => ({
+        id: track.id,
+        name: track.name,
+        author: track.author,
+        album: track.album,
+        time: formatDuration(track.duration_in_seconds),
+        track_file: track.track_file,
+        link: "#",
+        authorLink: "#",
+        albumLink: "#",
+      }));
+      
+      setDisplayTracks(tracksForDisplay);
+      setError('Не удалось загрузить треки подборки. Используются демо-данные.');
     } finally {
       setLoading(false);
     }
@@ -88,7 +138,7 @@ export default function PlaylistPage() {
     );
   }
 
-  if (error) {
+  if (error && displayTracks.length === 0) {
     return (
       <div className={styles.wrapper}>
         <div className={styles.container}>
@@ -114,8 +164,8 @@ export default function PlaylistPage() {
             <h2 className={styles.centerblock__h2}>{selectionName}</h2>
             <Filter tracks={tracks} />
             <div className={styles.contentContainer}>
-              {tracks.length > 0 ? (
-                <TrackList tracks={tracks} />
+              {displayTracks.length > 0 ? (
+                <TrackList tracks={displayTracks} />
               ) : (
                 <div className={styles.emptyPlaylist}>
                   <p>В этой подборке пока нет треков</p>

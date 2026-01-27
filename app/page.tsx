@@ -14,6 +14,41 @@ import { trackService } from "@/services/trackService";
 import { Track, ITrackDisplay } from "@/types";
 import styles from "./page.module.css";
 
+const mockTracksData: Track[] = [
+  {
+    id: 1,
+    name: "Guilt",
+    author: "Nero",
+    album: "Welcome Reality",
+    duration_in_seconds: 180,
+    track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3",
+    release_date: "2023-01-01",
+    genre: ["Rock", "Alternative"],
+    logo: null,
+    stared_user: []
+  },
+  {
+    id: 2,
+    name: "Elektro",
+    author: "Dynoro, Outwork, Mr. Gee",
+    album: "Elektro",
+    duration_in_seconds: 240,
+    track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3",
+    release_date: "2023-02-01",
+    genre: ["Pop", "Dance"],
+    logo: null,
+    stared_user: []
+  },
+];
+
+const getMockTracks = (): Promise<Track[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(mockTracksData);
+    }, 500);
+  });
+};
+
 const formatDuration = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
@@ -42,16 +77,16 @@ export default function Home() {
     loadTracks();
   }, []);
 
-    const loadTracks = async () => {
+  const loadTracks = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Starting to load tracks...');
+      console.log('Starting to load tracks from API...');
       
       const data = await trackService.getAllTracks();
       
-      console.log('Tracks loaded successfully:', data);
+      console.log('Tracks loaded from API:', data);
       
       setTracks(data);
       
@@ -68,58 +103,33 @@ export default function Home() {
       }));
       
       setDisplayTracks(tracksForDisplay);
+      
     } catch (err: any) {
-      console.error('Ошибка загрузки треков:', err);
+      console.error('Ошибка загрузки треков с API:', err);
       
-      if (err.response) {
-        console.error('Response status:', err.response.status);
-        console.error('Response data:', err.response.data);
-        console.error('Response headers:', err.response.headers);
+      console.log('Using mock data...');
+      try {
+        const mockData = await getMockTracks();
+        
+        setTracks(mockData);
+        
+        const tracksForDisplay: ITrackDisplay[] = mockData.map((track: any) => ({
+          id: track.id, 
+          name: track.name,
+          author: track.author,
+          album: track.album,
+          time: formatDuration(track.duration_in_seconds),
+          track_file: track.track_file,
+          link: "#",
+          authorLink: "#",
+          albumLink: "#",
+        }));
+        
+        setDisplayTracks(tracksForDisplay);
+        setError('Не удалось загрузить треки с сервера. Используются демо-данные.');
+      } catch (mockError) {
+        setError('Ошибка загрузки треков. Пожалуйста, попробуйте позже.');
       }
-      
-      setError(err.message || 'Ошибка загрузки треков');
-      
-      console.log('Using mock data for development...');
-      const mockTracks: Track[] = [
-        {
-          id: 1,
-          name: "Mock Track 1",
-          author: "Mock Author 1",
-          album: "Mock Album 1",
-          duration_in_seconds: 180,
-          track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3",
-          release_date: "2023-01-01",
-          genre: ["Rock"],
-          logo: null,
-          stared_user: []
-        },
-        {
-          id: 2,
-          name: "Mock Track 2",
-          author: "Mock Author 2",
-          album: "Mock Album 2",
-          duration_in_seconds: 240,
-          track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3",
-          release_date: "2023-02-01",
-          genre: ["Pop"],
-          logo: null,
-          stared_user: []
-        }
-      ];
-      
-      setTracks(mockTracks);
-      setDisplayTracks(mockTracks.map(track => ({
-        id: track.id, 
-        name: track.name,
-        author: track.author,
-        album: track.album,
-        time: formatDuration(track.duration_in_seconds),
-        track_file: track.track_file,
-        link: "#",
-        authorLink: "#",
-        albumLink: "#",
-      })));
-      setError('Не удалось загрузить треки с сервера. Используются демо-данные.');
     } finally {
       setLoading(false);
     }
