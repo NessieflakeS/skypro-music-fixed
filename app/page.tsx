@@ -38,6 +38,7 @@ export default function Home() {
   const [displayTracks, setDisplayTracks] = useState<ITrackDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
     loadTracks();

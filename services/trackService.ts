@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Track, Selection } from '@/types';
+import { apiClient } from './apiClient';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com';
 
@@ -57,56 +58,28 @@ api.interceptors.response.use(
   }
 );
 
-export const trackService = {
-  getAllTracks: async (): Promise<Track[]> => {
-    try {
-      console.log('Fetching all tracks...');
-      const response = await api.get('/catalog/track/all/');
-      console.log('Full response:', response.data);
-      
-      let tracks: Track[] = [];
-      
-      if (response.data && Array.isArray(response.data)) {
-        tracks = response.data;
-      } else if (response.data && typeof response.data === 'object') {
-        if (response.data.results && Array.isArray(response.data.results)) {
-          tracks = response.data.results;
-        } else if (response.data.tracks && Array.isArray(response.data.tracks)) {
-          tracks = response.data.tracks;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
+  export const trackService = {
+    getAllTracks: async (): Promise<Track[]> => {
+      try {
+        console.log('Fetching all tracks...');
+        const response = await apiClient.get('/catalog/track/all/');
+        console.log('Tracks response:', response.data);
+        
+        let tracks: Track[] = [];
+        
+        if (response.data && response.data.success && response.data.data) {
           tracks = response.data.data;
-        } else if (response.data.items && Array.isArray(response.data.items)) {
-          tracks = response.data.items;
-        } else {
-          tracks = Object.values(response.data);
+        } else if (Array.isArray(response.data)) {
+          tracks = response.data;
         }
+        
+        console.log('Tracks fetched successfully:', tracks.length);
+        return tracks;
+      } catch (error: any) {
+        console.error('Error fetching tracks:', error);
+        throw new Error('Не удалось загрузить треки');
       }
-      
-      console.log('Tracks fetched successfully:', tracks.length);
-      return tracks;
-    } catch (error: any) {
-      console.error('Error fetching tracks:', error);
-      
-      if (error.response) {
-        const status = error.response.status;
-        if (status === 401) {
-          throw new Error('Требуется авторизация');
-        } else if (status === 403) {
-          throw new Error('Доступ запрещен');
-        } else if (status === 404) {
-          throw new Error('Треки не найдены');
-        } else {
-          throw new Error(`Ошибка сервера: ${status}`);
-        }
-      }
-      
-      if (error.code === 'ERR_NETWORK') {
-        throw new Error('Сервер временно недоступен');
-      }
-      
-      throw new Error('Неизвестная ошибка при загрузке треков');
-    }
-  },
+    },
 
   getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
     try {
