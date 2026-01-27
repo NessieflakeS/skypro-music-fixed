@@ -176,3 +176,24 @@ export const authService = {
     }
   },
 };
+
+export const setAuthCookies = (token: string, refreshToken: string) => {
+  if (typeof window === 'undefined') return;
+  
+  localStorage.setItem('token', token);
+  localStorage.setItem('refresh_token', refreshToken);
+  
+  document.cookie = `token=${token}; path=/; max-age=86400`; // 24 часа
+  document.cookie = `refresh_token=${refreshToken}; path=/; max-age=604800`; // 7 дней
+};
+
+export const clearAuthCookies = () => {
+  if (typeof window === 'undefined') return;
+  
+  localStorage.removeItem('token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+  
+  document.cookie = 'token=; path=/; max-age=-1';
+  document.cookie = 'refresh_token=; path=/; max-age=-1';
+};

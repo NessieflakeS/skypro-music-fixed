@@ -63,9 +63,13 @@ export default function SignUp() {
     try {
       const data = await authService.register({ email, password, username });
       
-      localStorage.setItem('token', data.access);          // Исправлено: было access_token
-      localStorage.setItem('refresh_token', data.refresh); // Исправлено: было refresh_token
+      localStorage.setItem('token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Сохраняем также в cookies для middleware
+      document.cookie = `token=${data.access}; path=/; max-age=86400`;
+      document.cookie = `refresh_token=${data.refresh}; path=/; max-age=604800`;
       
       dispatch(registerSuccess(data.user));
       router.replace('/');

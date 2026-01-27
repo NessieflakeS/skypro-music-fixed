@@ -44,6 +44,9 @@ export default function Header() {
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
         localStorage.removeItem('menuOpen');
+        
+        document.cookie = 'token=; path=/; max-age=-1';
+        document.cookie = 'refresh_token=; path=/; max-age=-1';
       }
       
       router.replace('/signin');

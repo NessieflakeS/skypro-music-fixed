@@ -30,21 +30,23 @@ export default function Signin() {
   }, [dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch(loginStart());
+  e.preventDefault();
+  dispatch(loginStart());
 
-    try {
-      const data = await authService.login({ email, password });
+  try {
+    const data = await authService.login({ email, password });
       
-      localStorage.setItem('token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
-      localStorage.setItem('user', JSON.stringify(data.user));
+    localStorage.setItem('token', data.access);
+    localStorage.setItem('refresh_token', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
       
-      dispatch(loginSuccess(data.user));
+    document.cookie = `token=${data.access}; path=/; max-age=86400`;
+    document.cookie = `refresh_token=${data.refresh}; path=/; max-age=604800`;
       
-      router.replace('/');
+    dispatch(loginSuccess(data.user));
+    router.replace('/');
     } catch (err: any) {
-      dispatch(loginFailure(err.message || 'Ошибка входа'));
+    dispatch(loginFailure(err.message || 'Ошибка входа'));
     }
   };
 

@@ -26,7 +26,7 @@ export default function Sidebar() {
     { id: 3, name: "Инди-заряд", image: "/img/playlist03.png" },
   ]);
 
-  const handleLogoutClick = async () => {
+  const handleLogout = async () => {
     try {
       await authService.logout();
     } catch (error) {
@@ -51,7 +51,7 @@ export default function Sidebar() {
         <p className={styles.sidebar__personalName}>
           {isAuthenticated ? user?.username || "Пользователь" : "Гость"}
         </p>
-        <div className={styles.sidebar__icon} onClick={handleLogoutClick}>
+        <div className={styles.sidebar__icon} onClick={handleLogout}>
           <svg>
             <use xlinkHref="/img/icon/sprite.svg#logout"></use>
           </svg>
