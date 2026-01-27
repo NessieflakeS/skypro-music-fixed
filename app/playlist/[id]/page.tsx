@@ -7,46 +7,14 @@ import Sidebar from "@/components/Sidebar";
 import SearchBar from "@/components/SearchBar";
 import TrackList from "@/components/TrackList";
 import Filter from "@/components/Filter";
+import { ITrackDisplay } from "@/components/TrackList";
 import { trackService } from "@/services/trackService";
-import { Track, ITrackDisplay } from "@/types"; 
 import styles from "@/app/page.module.css";
 
-const getMockTracks = (): Promise<Track[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: 1,
-          name: "Mock Track 1",
-          author: "Mock Author 1",
-          album: "Mock Album 1",
-          duration_in_seconds: 180,
-          track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3",
-          release_date: "2023-01-01",
-          genre: ["Rock"],
-          logo: null,
-          stared_user: []
-        },
-        {
-          id: 2,
-          name: "Mock Track 2",
-          author: "Mock Author 2",
-          album: "Mock Album 2",
-          duration_in_seconds: 240,
-          track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3",
-          release_date: "2023-02-01",
-          genre: ["Pop"],
-          logo: null,
-          stared_user: []
-        }
-      ]);
-    }, 500);
-  });
-};
-
 const formatDuration = (seconds: number) => {
+  if (!seconds || isNaN(seconds)) return "0:00";
   const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
+  const remainingSeconds = Math.floor(seconds % 60);
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
@@ -60,8 +28,7 @@ export default function PlaylistPage() {
   const params = useParams();
   const id = params.id ? Number(params.id) : null;
   
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [displayTracks, setDisplayTracks] = useState<ITrackDisplay[]>([]);
+  const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectionName, setSelectionName] = useState("Подборка");
@@ -69,11 +36,17 @@ export default function PlaylistPage() {
   useEffect(() => {
     if (id && SELECTION_NAMES[id]) {
       setSelectionName(SELECTION_NAMES[id]);
+    } else {
+      setSelectionName(`Подборка #${id}`);
     }
   }, [id]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setError("ID подборки не указан");
+      setLoading(false);
+      return;
+    }
 
     loadTracks();
   }, [id]);
@@ -85,41 +58,24 @@ export default function PlaylistPage() {
       
       const data = await trackService.getSelectionTracks(id!);
       
-      setTracks(data);
-      
       const tracksForDisplay: ITrackDisplay[] = data.map(track => ({
-        id: track._id || track.id,
-        name: track.name,
-        author: track.author,
-        album: track.album,
+        id: track.id || track._id || 0,
+        name: track.name || "Без названия",
+        author: track.author || "Неизвестный исполнитель",
+        album: track.album || "Без альбома",
         time: formatDuration(track.duration_in_seconds),
-        track_file: track.track_file,
         link: "#",
         authorLink: "#",
         albumLink: "#",
+        track_file: track.track_file || "",
+        genre: track.genre?.[0] || "",
+        release_date: track.release_date || "",
       }));
       
-      setDisplayTracks(tracksForDisplay);
+      setTracks(tracksForDisplay);
     } catch (err: any) {
       console.error('Ошибка загрузки треков подборки:', err);
-      
-      const mockData = await getMockTracks();
-      setTracks(mockData);
-      
-      const tracksForDisplay: ITrackDisplay[] = mockData.map((track: Track) => ({
-        id: track.id,
-        name: track.name,
-        author: track.author,
-        album: track.album,
-        time: formatDuration(track.duration_in_seconds),
-        track_file: track.track_file,
-        link: "#",
-        authorLink: "#",
-        albumLink: "#",
-      }));
-      
-      setDisplayTracks(tracksForDisplay);
-      setError('Не удалось загрузить треки подборки. Используются демо-данные.');
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки треков подборки');
     } finally {
       setLoading(false);
     }
@@ -138,7 +94,7 @@ export default function PlaylistPage() {
     );
   }
 
-  if (error && displayTracks.length === 0) {
+  if (error) {
     return (
       <div className={styles.wrapper}>
         <div className={styles.container}>
@@ -164,11 +120,12 @@ export default function PlaylistPage() {
             <h2 className={styles.centerblock__h2}>{selectionName}</h2>
             <Filter tracks={tracks} />
             <div className={styles.contentContainer}>
-              {displayTracks.length > 0 ? (
-                <TrackList tracks={displayTracks} />
+              {tracks.length > 0 ? (
+                <TrackList tracks={tracks} />
               ) : (
-                <div className={styles.emptyPlaylist}>
-                  <p>В этой подборке пока нет треков</p>
+                <div className={styles.emptyState}>
+                  <h3>В этой подборке пока нет треков</h3>
+                  <p>Попробуйте другую подборку</p>
                 </div>
               )}
             </div>

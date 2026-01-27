@@ -32,3 +32,10 @@ export interface User {
 }
 
 export type FilterType = "author" | "year" | "genre" | null;
+
+export interface Selection {
+  id: number;
+  name: string;
+  items: Track[];
+  tracks?: Track[];
+}

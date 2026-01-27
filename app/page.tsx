@@ -14,44 +14,10 @@ import { trackService } from "@/services/trackService";
 import { Track, ITrackDisplay } from "@/types";
 import styles from "./page.module.css";
 
-const mockTracksData: Track[] = [
-  {
-    id: 1,
-    name: "Guilt",
-    author: "Nero",
-    album: "Welcome Reality",
-    duration_in_seconds: 180,
-    track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3",
-    release_date: "2023-01-01",
-    genre: ["Rock", "Alternative"],
-    logo: null,
-    stared_user: []
-  },
-  {
-    id: 2,
-    name: "Elektro",
-    author: "Dynoro, Outwork, Mr. Gee",
-    album: "Elektro",
-    duration_in_seconds: 240,
-    track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3",
-    release_date: "2023-02-01",
-    genre: ["Pop", "Dance"],
-    logo: null,
-    stared_user: []
-  },
-];
-
-const getMockTracks = (): Promise<Track[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(mockTracksData);
-    }, 500);
-  });
-};
-
 const formatDuration = (seconds: number) => {
+  if (!seconds || isNaN(seconds)) return "0:00";
   const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
+  const remainingSeconds = Math.floor(seconds % 60);
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
@@ -82,54 +48,26 @@ export default function Home() {
       setLoading(true);
       setError(null);
       
-      console.log('Starting to load tracks from API...');
-      
       const data = await trackService.getAllTracks();
-      
-      console.log('Tracks loaded from API:', data);
       
       setTracks(data);
       
       const tracksForDisplay: ITrackDisplay[] = data.map((track: Track) => ({
-        id: track.id, 
-        name: track.name,
-        author: track.author,
-        album: track.album,
+        id: track.id || track._id || 0, 
+        name: track.name || "Без названия",
+        author: track.author || "Неизвестный исполнитель",
+        album: track.album || "Без альбома",
         time: formatDuration(track.duration_in_seconds),
-        track_file: track.track_file,
+        track_file: track.track_file || "",
         link: "#",
         authorLink: "#",
         albumLink: "#",
       }));
       
       setDisplayTracks(tracksForDisplay);
-      
     } catch (err: any) {
-      console.error('Ошибка загрузки треков с API:', err);
-      
-      console.log('Using mock data...');
-      try {
-        const mockData = await getMockTracks();
-        
-        setTracks(mockData);
-        
-        const tracksForDisplay: ITrackDisplay[] = mockData.map((track: any) => ({
-          id: track.id, 
-          name: track.name,
-          author: track.author,
-          album: track.album,
-          time: formatDuration(track.duration_in_seconds),
-          track_file: track.track_file,
-          link: "#",
-          authorLink: "#",
-          albumLink: "#",
-        }));
-        
-        setDisplayTracks(tracksForDisplay);
-        setError('Не удалось загрузить треки с сервера. Используются демо-данные.');
-      } catch (mockError) {
-        setError('Ошибка загрузки треков. Пожалуйста, попробуйте позже.');
-      }
+      console.error('Ошибка загрузки треков:', err);
+      setError(err.message || 'Ошибка загрузки треков');
     } finally {
       setLoading(false);
     }

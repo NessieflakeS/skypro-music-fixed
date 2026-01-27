@@ -43,6 +43,7 @@ export default function Header() {
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
+        localStorage.removeItem('menuOpen');
       }
       
       router.replace('/signin');
@@ -81,14 +82,21 @@ export default function Header() {
             </Link>
           </li>
           {isAuthenticated ? (
-            <li className={styles.menu__item}>
-              <button 
-                onClick={handleLogout} 
-                className={`${styles.menu__link} ${styles.logoutButton}`}
-              >
-                Выйти ({user?.username})
-              </button>
-            </li>
+            <>
+              <li className={styles.menu__item}>
+                <span className={styles.menu__link}>
+                  Привет, {user?.username}
+                </span>
+              </li>
+              <li className={styles.menu__item}>
+                <button 
+                  onClick={handleLogout} 
+                  className={`${styles.menu__link} ${styles.logoutButton}`}
+                >
+                  Выйти
+                </button>
+              </li>
+            </>
           ) : (
             <>
               <li className={styles.menu__item}>

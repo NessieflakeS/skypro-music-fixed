@@ -27,20 +27,21 @@ export default function Sidebar() {
   ]);
 
   const handleLogoutClick = async () => {
-    if (isAuthenticated) {
-      try {
-        await authService.logout();
-      } catch (error) {
-        console.error('Ошибка при выходе:', error);
-      } finally {
-        dispatch(logout());
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Ошибка при выходе:', error);
+    } finally {
+      dispatch(logout());
+      
+      if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
-        router.replace('/signin');
+        localStorage.removeItem('menuOpen');
       }
-    } else {
-      router.push('/signin');
+      
+      router.replace('/signin');
     }
   };
 

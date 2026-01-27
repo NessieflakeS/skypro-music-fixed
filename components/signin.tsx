@@ -19,7 +19,7 @@ export default function Signin() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.replace('/');
     }
   }, [isAuthenticated, router]);
 
@@ -36,19 +36,13 @@ export default function Signin() {
     try {
       const data = await authService.login({ email, password });
       
-      const token = data.access || data.access_token;
-      const refreshToken = data.refresh || data.refresh_token;
+      localStorage.setItem('token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+      localStorage.setItem('user', JSON.stringify(data.user));
       
-      if (token && refreshToken) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('refresh_token', refreshToken);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        dispatch(loginSuccess(data.user));
-        router.push('/');
-      } else {
-        throw new Error('Не удалось получить токены авторизации');
-      }
+      dispatch(loginSuccess(data.user));
+      
+      router.replace('/');
     } catch (err: any) {
       dispatch(loginFailure(err.message || 'Ошибка входа'));
     }
