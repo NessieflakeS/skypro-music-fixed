@@ -38,7 +38,16 @@ export default function Header() {
       console.error('Ошибка при выходе:', error);
     } finally {
       dispatch(logout());
+      
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+      }
+      
       router.replace('/signin');
+      
+      window.location.href = '/signin';
     }
   };
 

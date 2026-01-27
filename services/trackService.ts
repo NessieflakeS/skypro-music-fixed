@@ -36,45 +36,76 @@ api.interceptors.response.use(
   }
 );
 
+interface SelectionResponse {
+  id: number;
+  name: string;
+  items: Track[];
+  tracks?: Track[];
+}
+
 export const trackService = {
   getAllTracks: async (): Promise<Track[]> => {
     try {
+      console.log('Fetching tracks from API...');
       const response = await api.get<Track[]>('/tracks/all/');
+      console.log('Tracks fetched successfully');
       return response.data;
     } catch (error: any) {
       console.error('Error fetching tracks:', error);
-      throw new Error(error.response?.data?.detail || 'Ошибка загрузки треков');
+      
+      if (error.code === 'ERR_NETWORK') {
+        console.warn('Network error - API server might be down');
+        throw new Error('Сервер временно недоступен. Пожалуйста, попробуйте позже.');
+      }
+      
+      if (error.response) {
+        const status = error.response.status;
+        if (status === 401) {
+          throw new Error('Требуется авторизация');
+        } else if (status === 403) {
+          throw new Error('Доступ запрещен');
+        } else if (status === 404) {
+          throw new Error('Треки не найдены');
+        } else {
+          throw new Error(`Ошибка сервера: ${status}`);
+        }
+      }
+      
+      throw new Error('Неизвестная ошибка при загрузке треков');
     }
   },
 
   getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
     try {
-      interface SelectionResponse {
-        tracks: Track[];
-      }
+      console.log(`Fetching selection ${selectionId} tracks`);
       const response = await api.get<SelectionResponse>(`/selections/${selectionId}/`);
-      return response.data.tracks || [];
+      return response.data.tracks || response.data.items || [];
     } catch (error: any) {
       console.error(`Error fetching selection ${selectionId} tracks:`, error);
-      throw new Error(error.response?.data?.detail || 'Ошибка загрузки подборки');
+      
+      if (error.response?.status === 404) {
+        throw new Error(`Подборка ${selectionId} не найдена`);
+      }
+      
+      throw new Error(`Ошибка загрузки подборки: ${error.message}`);
     }
   },
 
   likeTrack: async (trackId: number): Promise<void> => {
     try {
       await api.post(`/tracks/${trackId}/favorite/`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error liking track:', error);
-      throw new Error(error.response?.data?.detail || 'Ошибка добавления в избранное');
+      throw error;
     }
   },
 
   dislikeTrack: async (trackId: number): Promise<void> => {
     try {
       await api.delete(`/tracks/${trackId}/favorite/`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error disliking track:', error);
-      throw new Error(error.response?.data?.detail || 'Ошибка удаления из избранного');
+      throw error;
     }
   },
 };

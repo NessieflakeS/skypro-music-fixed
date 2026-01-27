@@ -42,7 +42,7 @@ export default function Home() {
     loadTracks();
   }, []);
 
-  const loadTracks = async () => {
+    const loadTracks = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -52,15 +52,12 @@ export default function Home() {
       setTracks(data);
       
       const tracksForDisplay: ITrackDisplay[] = data.map((track: Track) => ({
-        id: track._id,
+        id: track.id, 
         name: track.name,
         author: track.author,
         album: track.album,
-        release_date: track.release_date,
-        genre: track.genre,
-        duration_in_seconds: track.duration_in_seconds,
-        track_file: track.track_file,
         time: formatDuration(track.duration_in_seconds),
+        track_file: track.track_file,
         link: "#",
         authorLink: "#",
         albumLink: "#",
@@ -68,6 +65,8 @@ export default function Home() {
       
       setDisplayTracks(tracksForDisplay);
     } catch (err: any) {
+      console.error('Ошибка загрузки треков:', err);
+      setError(err.message || 'Ошибка загрузки треков');
     } finally {
       setLoading(false);
     }
