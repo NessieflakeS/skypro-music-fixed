@@ -49,8 +49,12 @@ export default function TrackList({ tracks = [] }: TrackListProps) {
         ref={playlistRef}
         className={`${styles.content__playlist} ${isScrolledToBottom ? styles.scrolled_to_bottom : ''}`}
       >
-        {tracks.map((track) => (
-          <TrackItem key={track.id} track={track} playlist={tracks} />
+        {tracks.map((track, index) => (
+          <TrackItem 
+            key={track.id ? `${track.id}-${index}` : index} 
+            track={track} 
+            playlist={tracks} 
+          />
         ))}
       </div>
     </div>
