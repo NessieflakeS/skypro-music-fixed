@@ -23,7 +23,7 @@ export default function SignUp() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.replace('/');
     }
   }, [isAuthenticated, router]);
 
@@ -63,19 +63,12 @@ export default function SignUp() {
     try {
       const data = await authService.register({ email, password, username });
       
-      const token = data.access || data.access_token;
-      const refreshToken = data.refresh || data.refresh_token;
+      localStorage.setItem('token', data.access);          // Исправлено: было access_token
+      localStorage.setItem('refresh_token', data.refresh); // Исправлено: было refresh_token
+      localStorage.setItem('user', JSON.stringify(data.user));
       
-      if (token && refreshToken) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('refresh_token', refreshToken);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        dispatch(registerSuccess(data.user));
-        router.push('/');
-      } else {
-        throw new Error('Не удалось получить токены авторизации');
-      }
+      dispatch(registerSuccess(data.user));
+      router.replace('/');
     } catch (err: any) {
       dispatch(registerFailure(err.message || 'Ошибка регистрации'));
     }

@@ -7,7 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import SearchBar from "@/components/SearchBar";
 import TrackList from "@/components/TrackList";
 import Filter from "@/components/Filter";
-import { ITrackDisplay } from "@/components/TrackList";
+import { ITrackDisplay, Track } from "@/types";  // Добавили Track
 import { trackService } from "@/services/trackService";
 import styles from "@/app/page.module.css";
 
@@ -18,6 +18,7 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
+// Названия подборок по ID
 const SELECTION_NAMES: { [key: number]: string } = {
   1: "Плейлист дня",
   2: "100 танцевальных хитов", 
@@ -29,6 +30,7 @@ export default function PlaylistPage() {
   const id = params.id ? Number(params.id) : null;
   
   const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
+  const [tracksForFilter, setTracksForFilter] = useState<Track[]>([]); // Новое состояние
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectionName, setSelectionName] = useState("Подборка");
@@ -73,6 +75,23 @@ export default function PlaylistPage() {
       }));
       
       setTracks(tracksForDisplay);
+      
+      // Создаем массив Track[] для Filter
+      const tracksForFilterData: Track[] = data.map(track => ({
+        id: track.id || track._id || 0,
+        _id: track._id,
+        name: track.name || "Без названия",
+        author: track.author || "Неизвестный исполнитель",
+        release_date: track.release_date || "",
+        genre: track.genre || [],
+        duration_in_seconds: track.duration_in_seconds || 0,
+        album: track.album || "Без альбома",
+        logo: track.logo || null,
+        track_file: track.track_file || "",
+        stared_user: track.stared_user || [],
+      }));
+      
+      setTracksForFilter(tracksForFilterData);
     } catch (err: any) {
       console.error('Ошибка загрузки треков подборки:', err);
       setError(err.response?.data?.detail || err.message || 'Ошибка загрузки треков подборки');
@@ -118,7 +137,7 @@ export default function PlaylistPage() {
           <div className={styles.centerblock}>
             <SearchBar />
             <h2 className={styles.centerblock__h2}>{selectionName}</h2>
-            <Filter tracks={tracks} />
+            <Filter tracks={tracksForFilter} /> {/* Используем tracksForFilter */}
             <div className={styles.contentContainer}>
               {tracks.length > 0 ? (
                 <TrackList tracks={tracks} />

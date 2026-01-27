@@ -10,6 +10,7 @@ const api = axios.create({
   },
 });
 
+// Интерцептор для добавления токена
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
@@ -21,6 +22,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Интерцептор для обработки ошибок
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -32,18 +34,21 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
-          const response = await axios.post(`${API_URL}/user/token/refresh/`, {
+          // Пытаемся обновить токен
+          const response = await axios.post<{ access: string }>(`${API_URL}/user/token/refresh/`, {
             refresh: refreshToken
           });
           
           const newAccessToken = response.data.access;
           localStorage.setItem('token', newAccessToken);
           
+          // Обновляем заголовок и повторяем запрос
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
+        // Если не удалось обновить токен, делаем logout
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
           localStorage.removeItem('refresh_token');
@@ -100,6 +105,7 @@ export const trackService = {
       console.log(`Fetching selection ${selectionId} tracks...`);
       const response = await api.get<SelectionResponse>(`/catalog/selection/${selectionId}/`);
       
+      // API может возвращать треки в поле items или tracks
       const tracks = response.data.items || response.data.tracks || [];
       console.log(`Selection ${selectionId} tracks fetched:`, tracks.length);
       return tracks;
