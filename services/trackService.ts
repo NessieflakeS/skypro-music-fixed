@@ -127,20 +127,20 @@ api.interceptors.response.use(
 
   getAllSelections: async (): Promise<Selection[]> => {
     try {
-      console.log('Fetching all selections...');
+      console.log('Fetching all selections from API...');
       const response = await api.get('/catalog/selection/all/');
-      console.log('All selections response:', response.data);
+      console.log('Selections API response:', response.data);
       
       let selections: Selection[] = [];
       
-      if (response.data && response.data.success && response.data.data && Array.isArray(response.data.data)) {
+      if (response.data && response.data.success && response.data.data) {
         selections = response.data.data.map((selection: any) => ({
           id: selection.id || selection._id || 0,
           name: selection.name || `Подборка`,
           items: selection.items || [],
           tracks: selection.tracks || []
         }));
-      } else if (response.data && Array.isArray(response.data)) {
+      } else if (Array.isArray(response.data)) {
         selections = response.data.map((selection: any) => ({
           id: selection.id || selection._id || 0,
           name: selection.name || `Подборка`,
@@ -149,10 +149,10 @@ api.interceptors.response.use(
         }));
       }
       
-      console.log('Selections fetched:', selections.length);
+      console.log(`Successfully fetched ${selections.length} selections from API`);
       return selections;
-    } catch (error) {
-      console.error('Error fetching selections:', error);
+    } catch (error: any) {
+      console.error('Error fetching selections from API:', error);
       return [];
     }
   },

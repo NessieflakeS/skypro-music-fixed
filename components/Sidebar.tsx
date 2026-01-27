@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux"; 
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
 import { RootState } from "@/store/store";
-import { logout } from "@/store/userSlice"; 
-import { authService } from "@/services/authService";
+import { logout } from "@/store/userSlice";
 import { trackService } from "@/services/trackService";
-import Cookies from 'js-cookie'; 
+import Cookies from 'js-cookie';
 
 interface Selection {
   id: number;
@@ -20,35 +19,21 @@ interface Selection {
   tracks?: any[];
 }
 
-const DEFAULT_SELECTIONS: Selection[] = [
-  { 
-    id: 1, 
-    name: "Плейлист дня", 
-    image: "/img/playlist01.png",
-    items: [],
-    tracks: []
-  },
-  { 
-    id: 2, 
-    name: "100 танцевальных хитов", 
-    image: "/img/playlist02.png",
-    items: [],
-    tracks: []
-  },
-  { 
-    id: 3, 
-    name: "Инди-заряд", 
-    image: "/img/playlist03.png",
-    items: [],
-    tracks: []
-  },
+const DEFAULT_IMAGES = [
+  "/img/playlist01.png",
+  "/img/playlist02.png", 
+  "/img/playlist03.png"
 ];
 
 export default function Sidebar() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
-  const [selections, setSelections] = useState<Selection[]>(DEFAULT_SELECTIONS);
+  const [selections, setSelections] = useState<Selection[]>([
+    { id: 1, name: "Плейлист дня", image: DEFAULT_IMAGES[0], items: [] },
+    { id: 2, name: "100 танцевальных хитов", image: DEFAULT_IMAGES[1], items: [] },
+    { id: 3, name: "Инди-заряд", image: DEFAULT_IMAGES[2], items: [] },
+  ]);
   const [loadingSelections, setLoadingSelections] = useState(false);
 
   useEffect(() => {
@@ -60,14 +45,31 @@ export default function Sidebar() {
       setLoadingSelections(true);
       const data = await trackService.getAllSelections();
       
-      if (data.length > 0) {
-        const serverSelections: Selection[] = data.map((selection: any) => ({
-          id: selection.id || selection._id || 0,
-          name: selection.name || `Подборка ${selection.id}`,
-          image: selection.image || "/img/playlist01.png",
-          items: selection.items || [],
-          tracks: selection.tracks || [],
-        }));
+      console.log('API selections data:', data);
+      
+      if (data && data.length > 0) {
+        const firstThreeSelections = data.slice(0, 3);
+        
+        const serverSelections: Selection[] = firstThreeSelections.map((selection: any, index: number) => {
+          return {
+            id: selection.id || selection._id || index + 1,
+            name: selection.name || `Подборка ${index + 1}`,
+            image: selection.image || DEFAULT_IMAGES[index] || DEFAULT_IMAGES[0],
+            items: selection.items || [],
+            tracks: selection.tracks || [],
+          };
+        });
+        
+        while (serverSelections.length < 3) {
+          const index = serverSelections.length;
+          serverSelections.push({
+            id: index + 1,
+            name: `Подборка ${index + 1}`,
+            image: DEFAULT_IMAGES[index] || DEFAULT_IMAGES[0],
+            items: [],
+            tracks: [],
+          });
+        }
         
         setSelections(serverSelections);
       }
@@ -80,7 +82,7 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      dispatch(logout()); 
+      dispatch(logout());
       
       Cookies.remove('token');
       Cookies.remove('refresh_token');
@@ -123,6 +125,9 @@ export default function Sidebar() {
                 />
                 <div className={styles.selectionInfo}>
                   {selection.name}
+                  {selection.items?.length || selection.tracks?.length ? 
+                    ` (${selection.items?.length || selection.tracks?.length} треков)` : 
+                    ''}
                 </div>
               </Link>
             </div>
