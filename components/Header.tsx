@@ -32,26 +32,22 @@ export default function Header() {
   };
 
   const handleLogout = async () => {
-    try {
-      await authService.logout();
-    } catch (error) {
-      console.error('Ошибка при выходе:', error);
-    } finally {
-      dispatch(logout());
-      
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('menuOpen');
-        
-        document.cookie = 'token=; path=/; max-age=-1';
-        document.cookie = 'refresh_token=; path=/; max-age=-1';
-      }
-      
-      router.replace('/signin');
+  try {
+    dispatch(logout());
+    
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('menuOpen');
     }
-  };
+    
+    router.replace('/signin');
+  } catch (error) {
+    console.error('Ошибка при выходе:', error);
+    router.replace('/signin');
+  }
+};
 
   return (
     <nav className={styles.nav}>

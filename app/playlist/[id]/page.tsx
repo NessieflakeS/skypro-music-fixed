@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import SearchBar from "@/components/SearchBar";
 import TrackList from "@/components/TrackList";
 import Filter from "@/components/Filter";
-import { ITrackDisplay, Track } from "@/types";  // Добавили Track
+import { ITrackDisplay, Track } from "@/types";
 import { trackService } from "@/services/trackService";
 import styles from "@/app/page.module.css";
 
@@ -18,30 +19,15 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-// Названия подборок по ID
-const SELECTION_NAMES: { [key: number]: string } = {
-  1: "Плейлист дня",
-  2: "100 танцевальных хитов", 
-  3: "Инди-заряд",
-};
-
 export default function PlaylistPage() {
   const params = useParams();
   const id = params.id ? Number(params.id) : null;
   
   const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
-  const [tracksForFilter, setTracksForFilter] = useState<Track[]>([]); // Новое состояние
+  const [rawTracks, setRawTracks] = useState<Track[]>([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectionName, setSelectionName] = useState("Подборка");
-
-  useEffect(() => {
-    if (id && SELECTION_NAMES[id]) {
-      setSelectionName(SELECTION_NAMES[id]);
-    } else {
-      setSelectionName(`Подборка #${id}`);
-    }
-  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -58,43 +44,36 @@ export default function PlaylistPage() {
       setLoading(true);
       setError(null);
       
-      const data = await trackService.getSelectionTracks(id!);
+      const selectionInfo = await trackService.getSelectionInfo(id!);
       
-      const tracksForDisplay: ITrackDisplay[] = data.map(track => ({
-        id: track.id || track._id || 0,
-        name: track.name || "Без названия",
-        author: track.author || "Неизвестный исполнитель",
-        album: track.album || "Без альбома",
-        time: formatDuration(track.duration_in_seconds),
-        link: "#",
-        authorLink: "#",
-        albumLink: "#",
-        track_file: track.track_file || "",
-        genre: track.genre?.[0] || "",
-        release_date: track.release_date || "",
-      }));
-      
-      setTracks(tracksForDisplay);
-      
-      // Создаем массив Track[] для Filter
-      const tracksForFilterData: Track[] = data.map(track => ({
-        id: track.id || track._id || 0,
-        _id: track._id,
-        name: track.name || "Без названия",
-        author: track.author || "Неизвестный исполнитель",
-        release_date: track.release_date || "",
-        genre: track.genre || [],
-        duration_in_seconds: track.duration_in_seconds || 0,
-        album: track.album || "Без альбома",
-        logo: track.logo || null,
-        track_file: track.track_file || "",
-        stared_user: track.stared_user || [],
-      }));
-      
-      setTracksForFilter(tracksForFilterData);
+      if (selectionInfo) {
+        setSelectionName(selectionInfo.name || `Подборка ${id}`);
+        
+        const tracksData = await trackService.getSelectionTracks(id!);
+        
+        setRawTracks(tracksData);
+        
+        const tracksForDisplay: ITrackDisplay[] = tracksData.map((track: Track) => ({
+          id: track.id || track._id || 0,
+          name: track.name || "Без названия",
+          author: track.author || "Неизвестный исполнитель",
+          album: track.album || "Без альбома",
+          time: formatDuration(track.duration_in_seconds || 0),
+          link: "#",
+          authorLink: "#",
+          albumLink: "#",
+          track_file: track.track_file || "",
+          genre: track.genre || [],
+          release_date: track.release_date || "",
+        }));
+        
+        setTracks(tracksForDisplay);
+      } else {
+        throw new Error(`Подборка ${id} не найдена`);
+      }
     } catch (err: any) {
-      console.error('Ошибка загрузки треков подборки:', err);
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки треков подборки');
+      console.error('Ошибка загрузки подборки:', err);
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки подборки');
     } finally {
       setLoading(false);
     }
@@ -123,6 +102,11 @@ export default function PlaylistPage() {
             <button onClick={loadTracks} className={styles.retryButton}>
               Попробовать снова
             </button>
+            <Link href="/" style={{ marginTop: '10px', display: 'inline-block' }}>
+              <button className={styles.retryButton} style={{ backgroundColor: '#696969' }}>
+                На главную
+              </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -137,14 +121,25 @@ export default function PlaylistPage() {
           <div className={styles.centerblock}>
             <SearchBar />
             <h2 className={styles.centerblock__h2}>{selectionName}</h2>
-            <Filter tracks={tracksForFilter} /> {/* Используем tracksForFilter */}
+            <Filter tracks={rawTracks} />
             <div className={styles.contentContainer}>
               {tracks.length > 0 ? (
                 <TrackList tracks={tracks} />
               ) : (
                 <div className={styles.emptyState}>
                   <h3>В этой подборке пока нет треков</h3>
-                  <p>Попробуйте другую подборку</p>
+                  <p>Попробуйте другую подборку или перейдите на главную страницу</p>
+                  <Link href="/" style={{ 
+                    display: 'inline-block', 
+                    marginTop: '20px',
+                    padding: '10px 20px',
+                    backgroundColor: '#ad61ff',
+                    color: 'white',
+                    borderRadius: '6px',
+                    textDecoration: 'none'
+                  }}>
+                    На главную
+                  </Link>
                 </div>
               )}
             </div>

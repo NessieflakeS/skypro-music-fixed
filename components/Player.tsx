@@ -220,7 +220,7 @@ export default function Player() {
         </div>
       </div>
       
-      {currentTrack && (
+      {currentTrack && currentTrack.track_file && (
         <audio
           ref={audioRef}
           src={currentTrack.track_file}

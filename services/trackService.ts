@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Track } from '@/types';
+import { Track, Selection } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com';
 
@@ -57,13 +57,6 @@ api.interceptors.response.use(
   }
 );
 
-export interface SelectionResponse {
-  id: number;
-  name: string;
-  items: Track[];
-  tracks?: Track[];
-}
-
 export const trackService = {
   getAllTracks: async (): Promise<Track[]> => {
     try {
@@ -80,6 +73,8 @@ export const trackService = {
           tracks = response.data.results;
         } else if (response.data.tracks && Array.isArray(response.data.tracks)) {
           tracks = response.data.tracks;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          tracks = response.data.data;
         } else if (response.data.items && Array.isArray(response.data.items)) {
           tracks = response.data.items;
         } else {
@@ -116,15 +111,28 @@ export const trackService = {
   getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
     try {
       console.log(`Fetching selection ${selectionId} tracks...`);
-      const response = await api.get<SelectionResponse>(`/catalog/selection/${selectionId}/`);
+      const response = await api.get(`/catalog/selection/${selectionId}/`);
+      console.log('Selection response:', response.data);
       
       let tracks: Track[] = [];
-      if (response.data.items && Array.isArray(response.data.items)) {
-        tracks = response.data.items;
-      } else if (response.data.tracks && Array.isArray(response.data.tracks)) {
-        tracks = response.data.tracks;
+      
+      if (response.data && response.data.success && response.data.data) {
+        const selectionData = response.data.data;
+        if (selectionData.items && Array.isArray(selectionData.items)) {
+          tracks = selectionData.items;
+        } else if (selectionData.tracks && Array.isArray(selectionData.tracks)) {
+          tracks = selectionData.tracks;
+        } else if (Array.isArray(selectionData)) {
+          tracks = selectionData;
+        }
       } else if (response.data && Array.isArray(response.data)) {
         tracks = response.data;
+      } else if (response.data && response.data.items && Array.isArray(response.data.items)) {
+        tracks = response.data.items;
+      } else if (response.data && response.data.tracks && Array.isArray(response.data.tracks)) {
+        tracks = response.data.tracks;
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        tracks = response.data.data;
       }
       
       console.log(`Selection ${selectionId} tracks fetched:`, tracks.length);
@@ -141,6 +149,68 @@ export const trackService = {
       }
       
       throw new Error(`Ошибка загрузки подборки: ${error.message}`);
+    }
+  },
+
+  getAllSelections: async (): Promise<Selection[]> => {
+    try {
+      console.log('Fetching all selections...');
+      const response = await api.get('/catalog/selection/all/');
+      console.log('All selections response:', response.data);
+      
+      let selections: Selection[] = [];
+      
+      if (response.data && response.data.success && response.data.data && Array.isArray(response.data.data)) {
+        selections = response.data.data.map((selection: any) => ({
+          id: selection.id || selection._id || 0,
+          name: selection.name || `Подборка`,
+          items: selection.items || [],
+          tracks: selection.tracks || []
+        }));
+      } else if (response.data && Array.isArray(response.data)) {
+        selections = response.data.map((selection: any) => ({
+          id: selection.id || selection._id || 0,
+          name: selection.name || `Подборка`,
+          items: selection.items || [],
+          tracks: selection.tracks || []
+        }));
+      }
+      
+      console.log('Selections fetched:', selections.length);
+      return selections;
+    } catch (error) {
+      console.error('Error fetching selections:', error);
+      return [];
+    }
+  },
+
+  getSelectionInfo: async (selectionId: number): Promise<Selection | null> => {
+    try {
+      console.log(`Fetching selection ${selectionId} info...`);
+      const response = await api.get(`/catalog/selection/${selectionId}/`);
+      console.log('Selection info response:', response.data);
+      
+      let selectionData: any = null;
+      
+      if (response.data && response.data.success && response.data.data) {
+        selectionData = response.data.data;
+      } else if (response.data) {
+        selectionData = response.data;
+      }
+      
+      if (selectionData) {
+        return {
+          id: selectionData.id || selectionData._id || selectionId,
+          name: selectionData.name || `Подборка ${selectionId}`,
+          items: selectionData.items || [],
+          tracks: selectionData.tracks || []
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`Error fetching selection ${selectionId} info:`, error);
+      return null;
     }
   },
 
