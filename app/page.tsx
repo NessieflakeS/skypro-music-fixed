@@ -47,7 +47,11 @@ export default function Home() {
       setLoading(true);
       setError(null);
       
+      console.log('Starting to load tracks...');
+      
       const data = await trackService.getAllTracks();
+      
+      console.log('Tracks loaded successfully:', data);
       
       setTracks(data);
       
@@ -66,7 +70,56 @@ export default function Home() {
       setDisplayTracks(tracksForDisplay);
     } catch (err: any) {
       console.error('Ошибка загрузки треков:', err);
+      
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response data:', err.response.data);
+        console.error('Response headers:', err.response.headers);
+      }
+      
       setError(err.message || 'Ошибка загрузки треков');
+      
+      console.log('Using mock data for development...');
+      const mockTracks: Track[] = [
+        {
+          id: 1,
+          name: "Mock Track 1",
+          author: "Mock Author 1",
+          album: "Mock Album 1",
+          duration_in_seconds: 180,
+          track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Alexander_Nakarada_-_Chase.mp3",
+          release_date: "2023-01-01",
+          genre: ["Rock"],
+          logo: null,
+          stared_user: []
+        },
+        {
+          id: 2,
+          name: "Mock Track 2",
+          author: "Mock Author 2",
+          album: "Mock Album 2",
+          duration_in_seconds: 240,
+          track_file: "https://webdev-music-003b5b991590.herokuapp.com/media/music_files/Frank_Schroter_-_Open_Sea_epic.mp3",
+          release_date: "2023-02-01",
+          genre: ["Pop"],
+          logo: null,
+          stared_user: []
+        }
+      ];
+      
+      setTracks(mockTracks);
+      setDisplayTracks(mockTracks.map(track => ({
+        id: track.id, 
+        name: track.name,
+        author: track.author,
+        album: track.album,
+        time: formatDuration(track.duration_in_seconds),
+        track_file: track.track_file,
+        link: "#",
+        authorLink: "#",
+        albumLink: "#",
+      })));
+      setError('Не удалось загрузить треки с сервера. Используются демо-данные.');
     } finally {
       setLoading(false);
     }
@@ -141,7 +194,6 @@ export default function Home() {
           <Sidebar />
         </main>
         
-        {/* Плеер отображается только когда выбран трек */}
         {currentTrack && (
           <div className={styles.bar}>
             <div className={styles.bar__content}>

@@ -47,40 +47,31 @@ export const trackService = {
   getAllTracks: async (): Promise<Track[]> => {
     try {
       console.log('Fetching tracks from API...');
-      const response = await api.get<Track[]>('/tracks/all/');
-      console.log('Tracks fetched successfully');
-      return response.data;
-    } catch (error: any) {
-      console.error('Error fetching tracks:', error);
       
-      if (error.code === 'ERR_NETWORK') {
-        console.warn('Network error - API server might be down');
-        throw new Error('Сервер временно недоступен. Пожалуйста, попробуйте позже.');
-      }
+      const endpoints = [
+        '/catalog/track/all/',
+        '/tracks/',
+        '/track/all/',
+        '/music/tracks/'
+      ];
       
-      if (error.response) {
-        const status = error.response.status;
-        if (status === 401) {
-          throw new Error('Требуется авторизация');
-        } else if (status === 403) {
-          throw new Error('Доступ запрещен');
-        } else if (status === 404) {
-          throw new Error('Треки не найдены');
-        } else {
-          throw new Error(`Ошибка сервера: ${status}`);
+      let lastError: any;
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await api.get<Track[]>(endpoint);
+          console.log(`Tracks fetched successfully from ${endpoint}, count:`, response.data.length);
+          return response.data;
+        } catch (err: unknown) {
+          const error = err as any;
+          console.log(`Endpoint ${endpoint} failed:`, error.response?.status || error.message);
+          lastError = error;
+          continue;
         }
       }
       
-      throw new Error('Неизвестная ошибка при загрузке треков');
-    }
-  },
-
-  getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
-    try {
-      console.log('Fetching tracks from API...');
-      const response = await api.get<Track[]>('/tracks/all/');
-      console.log('Tracks fetched successfully, count:', response.data.length);
-      return response.data;
+      throw lastError;
+      
     } catch (error: any) {
       console.error('Error fetching tracks:', error);
       
@@ -90,14 +81,14 @@ export const trackService = {
       
       if (error.response) {
         const status = error.response.status;
-        const message = error.response.data?.detail || `Ошибка ${status}`;
+        const message = error.response.data?.detail || error.response.data?.message || `Ошибка ${status}`;
         
         if (status === 401) {
           throw new Error('Требуется авторизация. Пожалуйста, войдите в систему.');
         } else if (status === 403) {
           throw new Error('У вас нет доступа к этому ресурсу.');
         } else if (status === 404) {
-          throw new Error('Треки не найдены.');
+          throw new Error('Эндпоинт для треков не найден. Пожалуйста, проверьте подключение к API.');
         } else if (status >= 500) {
           throw new Error('Внутренняя ошибка сервера. Пожалуйста, попробуйте позже.');
         } else {
@@ -109,9 +100,69 @@ export const trackService = {
     }
   },
 
+  getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
+    try {
+      console.log(`Fetching selection ${selectionId} tracks`);
+      
+      const endpoints = [
+        `/catalog/selection/${selectionId}/`,
+        `/selections/${selectionId}/`,
+        `/playlist/${selectionId}/`
+      ];
+      
+      let lastError: any;
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await api.get<SelectionResponse>(endpoint);
+          const tracks = response.data.tracks || response.data.items || [];
+          console.log(`Selection ${selectionId} fetched successfully from ${endpoint}, tracks:`, tracks.length);
+          return tracks;
+        } catch (err: unknown) {
+          const error = err as any;
+          console.log(`Endpoint ${endpoint} failed:`, error.response?.status || error.message);
+          lastError = error;
+          continue;
+        }
+      }
+      
+      throw lastError;
+      
+    } catch (error: any) {
+      console.error(`Error fetching selection ${selectionId} tracks:`, error);
+      
+      if (error.response?.status === 404) {
+        throw new Error(`Подборка ${selectionId} не найдена`);
+      }
+      
+      throw new Error(`Ошибка загрузки подборки: ${error.message}`);
+    }
+  },
+
   likeTrack: async (trackId: number): Promise<void> => {
     try {
-      await api.post(`/tracks/${trackId}/favorite/`);
+      const endpoints = [
+        `/catalog/track/${trackId}/favorite/`,
+        `/tracks/${trackId}/favorite/`
+      ];
+      
+      let lastError: any;
+      
+      for (const endpoint of endpoints) {
+        try {
+          await api.post(endpoint);
+          console.log(`Track ${trackId} liked successfully`);
+          return;
+        } catch (err: unknown) {
+          const error = err as any;
+          console.log(`Like endpoint ${endpoint} failed:`, error.response?.status || error.message);
+          lastError = error;
+          continue;
+        }
+      }
+      
+      throw lastError;
+      
     } catch (error) {
       console.error('Error liking track:', error);
       throw error;
@@ -120,7 +171,28 @@ export const trackService = {
 
   dislikeTrack: async (trackId: number): Promise<void> => {
     try {
-      await api.delete(`/tracks/${trackId}/favorite/`);
+      const endpoints = [
+        `/catalog/track/${trackId}/favorite/`,
+        `/tracks/${trackId}/favorite/`
+      ];
+      
+      let lastError: any;
+      
+      for (const endpoint of endpoints) {
+        try {
+          await api.delete(endpoint);
+          console.log(`Track ${trackId} disliked successfully`);
+          return;
+        } catch (err: unknown) {
+          const error = err as any;
+          console.log(`Dislike endpoint ${endpoint} failed:`, error.response?.status || error.message);
+          lastError = error;
+          continue;
+        }
+      }
+      
+      throw lastError;
+      
     } catch (error) {
       console.error('Error disliking track:', error);
       throw error;
