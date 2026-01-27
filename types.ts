@@ -1,5 +1,5 @@
 export interface Track {
-  _id: number;
+  id: number;
   name: string;
   author: string;
   release_date: string;
@@ -16,11 +16,8 @@ export interface ITrackDisplay {
   name: string;
   author: string;
   album: string;
-  release_date: string;
-  genre: string[];
-  duration_in_seconds: number;
-  track_file: string;
   time: string;
+  track_file: string;
   link?: string;
   authorLink?: string;
   albumLink?: string;

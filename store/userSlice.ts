@@ -53,6 +53,12 @@ const userSlice = createSlice({
       state.error = action.payload;
     },
     logout: (state) => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('menuOpen');
+      }
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;

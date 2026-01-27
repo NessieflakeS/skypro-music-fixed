@@ -36,27 +36,14 @@ export default function Signin() {
     try {
       const data = await authService.login({ email, password });
       
-      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
       
       dispatch(loginSuccess(data.user));
       router.push('/');
     } catch (err: any) {
-      let errorMessage = 'Ошибка входа';
-      
-      if (err.response) {
-        if (err.response.status === 401) {
-          errorMessage = 'Неверный email или пароль';
-        } else if (err.response.data?.detail) {
-          errorMessage = err.response.data.detail;
-        } else if (err.response.data?.email) {
-          errorMessage = err.response.data.email[0];
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      dispatch(loginFailure(errorMessage));
+      dispatch(loginFailure(err.message || 'Ошибка входа'));
     }
   };
 

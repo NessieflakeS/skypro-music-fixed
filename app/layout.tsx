@@ -18,19 +18,18 @@ function AuthInitializer() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      
-      if (token && userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          dispatch(loginSuccess(user));
-        } catch (error) {
-          console.error('Ошибка парсинга пользователя:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        dispatch(loginSuccess(user));
+      } catch (error) {
+        console.error('Ошибка парсинга пользователя:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
       }
     }
   }, [dispatch]);

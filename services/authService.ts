@@ -1,26 +1,27 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com/api';
 
 export interface LoginCredentials {
   email: string;
   password: string;
 }
 
-export interface RegisterCredentials extends LoginCredentials {
+export interface RegisterCredentials {
+  email: string;
+  password: string;
   username: string;
 }
 
 export interface AuthResponse {
-  access_token: string;
+  access: string;
+  refresh: string;
   user: {
     id: number;
     email: string;
     username: string;
   };
 }
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const api = axios.create({
   baseURL: API_URL,
@@ -31,35 +32,42 @@ const api = axios.create({
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    console.log('Mock auth: Login for', credentials.email);
-    await delay(500);
-    
-    return {
-      access_token: 'mock-jwt-token-12345',
-      user: {
-        id: 1,
-        email: credentials.email,
-        username: credentials.email.split('@')[0] || 'user'
-      }
-    };
+    try {
+      const response = await api.post<AuthResponse>('/user/login/', credentials);
+      return response.data;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.email?.[0] || 
+                          error.response?.data?.password?.[0] || 
+                          'Ошибка входа';
+      throw new Error(errorMessage);
+    }
   },
 
   register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-    console.log('Mock auth: Register for', credentials.username);
-    await delay(500);
-    
-    return {
-      access_token: 'mock-jwt-token-12345',
-      user: {
-        id: 2,
-        email: credentials.email,
-        username: credentials.username
-      }
-    };
+    try {
+      const response = await api.post<AuthResponse>('/user/signup/', credentials);
+      return response.data;
+    } catch (error: any) {
+      console.error('Register error:', error);
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.email?.[0] || 
+                          error.response?.data?.username?.[0] || 
+                          error.response?.data?.password?.[0] || 
+                          'Ошибка регистрации';
+      throw new Error(errorMessage);
+    }
   },
 
   logout: async (): Promise<void> => {
-    console.log('Mock auth: Logout');
-    await delay(200);
+    try {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (refreshToken) {
+        await api.post('/user/logout/', { refresh: refreshToken });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   },
 };

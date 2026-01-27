@@ -34,10 +34,11 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await authService.logout();
-      dispatch(logout());
-      router.push('/signin');
     } catch (error) {
       console.error('Ошибка при выходе:', error);
+    } finally {
+      dispatch(logout());
+      router.replace('/signin');
     }
   };
 
@@ -74,7 +75,10 @@ export default function Header() {
           </li>
           {isAuthenticated ? (
             <li className={styles.menu__item}>
-              <button onClick={handleLogout} className={styles.menu__link}>
+              <button 
+                onClick={handleLogout} 
+                className={`${styles.menu__link} ${styles.logoutButton}`}
+              >
                 Выйти ({user?.username})
               </button>
             </li>

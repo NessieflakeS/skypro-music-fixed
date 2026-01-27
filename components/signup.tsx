@@ -63,29 +63,14 @@ export default function SignUp() {
     try {
       const data = await authService.register({ email, password, username });
       
-      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
       
       dispatch(registerSuccess(data.user));
       router.push('/');
     } catch (err: any) {
-      let errorMessage = 'Ошибка регистрации';
-      
-      if (err.response) {
-        if (err.response.data?.email) {
-          errorMessage = `Email: ${err.response.data.email[0]}`;
-        } else if (err.response.data?.username) {
-          errorMessage = `Имя пользователя: ${err.response.data.username[0]}`;
-        } else if (err.response.data?.password) {
-          errorMessage = `Пароль: ${err.response.data.password[0]}`;
-        } else if (err.response.data?.detail) {
-          errorMessage = err.response.data.detail;
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      dispatch(registerFailure(errorMessage));
+      dispatch(registerFailure(err.message || 'Ошибка регистрации'));
     }
   };
 
