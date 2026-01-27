@@ -8,7 +8,6 @@ import Link from "next/link";
 import styles from "./Header.module.css";
 import { logout } from "@/store/userSlice";
 import { RootState } from "@/store/store";
-import { authService } from "@/services/authService";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
@@ -28,26 +27,43 @@ export default function Header() {
   }, [isMenuOpen]);
 
   const toggleMenu = () => {
+    console.log('Toggling menu, current state:', isMenuOpen);
     setIsMenuOpen(!isMenuOpen);
   };
 
   const handleLogout = async () => {
-  try {
-    dispatch(logout());
-    
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('menuOpen');
+    console.log('Logout clicked');
+    try {
+      dispatch(logout());
+      
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('menuOpen');
+      }
+      
+      console.log('Redirecting to signin');
+      router.push('/signin');
+      
+      window.location.href = '/signin';
+    } catch (error) {
+      console.error('Ошибка при выходе:', error);
+      router.push('/signin');
     }
-    
-    router.replace('/signin');
-  } catch (error) {
-    console.error('Ошибка при выходе:', error);
-    router.replace('/signin');
-  }
-};
+  };
+
+  const handleLoginClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('Login link clicked');
+    router.push('/signin');
+  };
+
+  const handleRegisterClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('Register link clicked');
+    router.push('/signup');
+  };
 
   return (
     <nav className={styles.nav}>
@@ -91,6 +107,16 @@ export default function Header() {
                 <button 
                   onClick={handleLogout} 
                   className={`${styles.menu__link} ${styles.logoutButton}`}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    font: 'inherit',
+                    color: 'inherit',
+                    padding: 0,
+                    textAlign: 'left',
+                    width: '100%'
+                  }}
                 >
                   Выйти
                 </button>
@@ -99,14 +125,40 @@ export default function Header() {
           ) : (
             <>
               <li className={styles.menu__item}>
-                <Link href="/signin" className={styles.menu__link}>
+                <button 
+                  onClick={handleLoginClick}
+                  className={`${styles.menu__link} ${styles.logoutButton}`}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    font: 'inherit',
+                    color: 'inherit',
+                    padding: 0,
+                    textAlign: 'left',
+                    width: '100%'
+                  }}
+                >
                   Войти
-                </Link>
+                </button>
               </li>
               <li className={styles.menu__item}>
-                <Link href="/signup" className={styles.menu__link}>
+                <button 
+                  onClick={handleRegisterClick}
+                  className={`${styles.menu__link} ${styles.logoutButton}`}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    font: 'inherit',
+                    color: 'inherit',
+                    padding: 0,
+                    textAlign: 'left',
+                    width: '100%'
+                  }}
+                >
                   Регистрация
-                </Link>
+                </button>
               </li>
             </>
           )}

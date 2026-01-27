@@ -19,15 +19,46 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
+const SELECTION_NAMES: { [key: number]: string } = {
+  1: "Плейлист дня",
+  2: "100 танцевальных хитов", 
+  3: "Инди-заряд",
+  4: "Лучшие хиты",
+  5: "Танцевальные биты",
+  6: "Ретро волна",
+};
+
+const getRandomTracks = (tracks: Track[], count: number, selectionId: number): Track[] => {
+  if (tracks.length === 0) return [];
+  
+  const shuffled = [...tracks].sort((a, b) => {
+    const hashA = a.id + selectionId;
+    const hashB = b.id + selectionId;
+    return (hashA % 100) - (hashB % 100);
+  });
+  
+  const trackCount = Math.min(Math.max(5, selectionId % 4 + 5), tracks.length);
+  return shuffled.slice(0, trackCount);
+};
+
 export default function PlaylistPage() {
   const params = useParams();
   const id = params.id ? Number(params.id) : null;
   
   const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
-  const [rawTracks, setRawTracks] = useState<Track[]>([]); 
+  const [rawTracks, setRawTracks] = useState<Track[]>([]);
+  const [allTracks, setAllTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectionName, setSelectionName] = useState("Подборка");
+
+  useEffect(() => {
+    if (id && SELECTION_NAMES[id]) {
+      setSelectionName(SELECTION_NAMES[id]);
+    } else {
+      setSelectionName(`Подборка #${id}`);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -39,38 +70,65 @@ export default function PlaylistPage() {
     loadTracks();
   }, [id]);
 
+  const loadAllTracks = async (): Promise<Track[]> => {
+    try {
+      const data = await trackService.getAllTracks();
+      setAllTracks(data);
+      return data;
+    } catch (err: any) {
+      console.error('Ошибка загрузки всех треков:', err);
+      throw err;
+    }
+  };
+
   const loadTracks = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const selectionInfo = await trackService.getSelectionInfo(id!);
+      const allTracksData = await loadAllTracks();
       
-      if (selectionInfo) {
-        setSelectionName(selectionInfo.name || `Подборка ${id}`);
-        
-        const tracksData = await trackService.getSelectionTracks(id!);
-        
-        setRawTracks(tracksData);
-        
-        const tracksForDisplay: ITrackDisplay[] = tracksData.map((track: Track) => ({
-          id: track.id || track._id || 0,
-          name: track.name || "Без названия",
-          author: track.author || "Неизвестный исполнитель",
-          album: track.album || "Без альбома",
-          time: formatDuration(track.duration_in_seconds || 0),
-          link: "#",
-          authorLink: "#",
-          albumLink: "#",
-          track_file: track.track_file || "",
-          genre: track.genre || [],
-          release_date: track.release_date || "",
-        }));
-        
-        setTracks(tracksForDisplay);
-      } else {
-        throw new Error(`Подборка ${id} не найдена`);
+      if (allTracksData.length === 0) {
+        throw new Error('Нет доступных треков');
       }
+      
+      try {
+        const selectionInfo = await trackService.getSelectionInfo(id!);
+        if (selectionInfo && selectionInfo.name) {
+          setSelectionName(selectionInfo.name);
+        }
+      } catch (selectionError) {
+        console.log('Информация о подборке не найдена, используем дефолтное название');
+      }
+      
+      let tracksData: Track[] = [];
+      try {
+        tracksData = await trackService.getSelectionTracks(id!);
+      } catch (trackError) {
+        console.log('Треки подборки не найдены, используем случайные');
+      }
+      
+      if (tracksData.length === 0) {
+        tracksData = getRandomTracks(allTracksData, 8, id!);
+      }
+      
+      setRawTracks(tracksData);
+      
+      const tracksForDisplay: ITrackDisplay[] = tracksData.map((track: Track) => ({
+        id: track.id || track._id || 0,
+        name: track.name || "Без названия",
+        author: track.author || "Неизвестный исполнитель",
+        album: track.album || "Без альбома",
+        time: formatDuration(track.duration_in_seconds || 0),
+        link: "#",
+        authorLink: "#",
+        albumLink: "#",
+        track_file: track.track_file || "",
+        genre: track.genre || [],
+        release_date: track.release_date || "",
+      }));
+      
+      setTracks(tracksForDisplay);
     } catch (err: any) {
       console.error('Ошибка загрузки подборки:', err);
       setError(err.response?.data?.detail || err.message || 'Ошибка загрузки подборки');
@@ -124,7 +182,16 @@ export default function PlaylistPage() {
             <Filter tracks={rawTracks} />
             <div className={styles.contentContainer}>
               {tracks.length > 0 ? (
-                <TrackList tracks={tracks} />
+                <>
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    color: '#696969',
+                    fontSize: '14px'
+                  }}>
+                    В подборке {tracks.length} треков
+                  </div>
+                  <TrackList tracks={tracks} />
+                </>
               ) : (
                 <div className={styles.emptyState}>
                   <h3>В этой подборке пока нет треков</h3>

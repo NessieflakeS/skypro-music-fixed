@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   togglePlayPause, 
@@ -17,6 +17,7 @@ import styles from "./Player.module.css";
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [isAudioReady, setIsAudioReady] = useState(false);
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
   const { 
@@ -48,6 +49,7 @@ export default function Player() {
     const audio = audioRef.current;
     if (audio) {
       dispatch(setDuration(audio.duration));
+      setIsAudioReady(true);
     }
   };
 
@@ -57,7 +59,7 @@ export default function Player() {
       if (audio) {
         audio.currentTime = 0;
         dispatch(setCurrentTime(0));
-        audio.play();
+        playAudio();
       }
     } else {
       dispatch(setNextTrack());
@@ -66,6 +68,24 @@ export default function Player() {
 
   const handleError = (e: any) => {
     console.error("Ошибка воспроизведения аудио:", e);
+    setIsAudioReady(false);
+  };
+
+  const handleCanPlay = () => {
+    setIsAudioReady(true);
+  };
+
+  const playAudio = async () => {
+    const audio = audioRef.current;
+    if (!audio || !isAudioReady) return;
+
+    try {
+      await audio.play();
+    } catch (error) {
+      console.error("Ошибка воспроизведения:", error);
+      audio.load();
+      setIsAudioReady(false);
+    }
   };
 
   const handlePlayPause = () => {
@@ -100,54 +120,20 @@ export default function Player() {
     const audio = audioRef.current;
     if (!audio || !currentTrack?.track_file) return;
 
-    const playAudio = async () => {
-      if (isPlaying) {
-        try {
-          await audio.play();
-        } catch (error) {
-          console.error("Ошибка воспроизведения:", error);
-        }
-      } else {
-        audio.pause();
-      }
-    };
-
-    playAudio();
-  }, [isPlaying, currentTrack]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack?.track_file) return;
-
     const loadTrack = async () => {
       try {
-        audio.pause();
+        if (isPlaying) {
+          audio.pause();
+        }
         
-        audio.src = currentTrack.track_file!;
-        
+        audio.src = currentTrack.track_file;
         dispatch(setCurrentTime(0));
+        setIsAudioReady(false);
         
-        await new Promise<void>((resolve, reject) => {
-          const handleCanPlay = () => {
-            audio.removeEventListener('canplay', handleCanPlay);
-            audio.removeEventListener('error', handleErrorCallback);
-            resolve();
-          };
-          
-          const handleErrorCallback = (e: Event) => {
-            audio.removeEventListener('canplay', handleCanPlay);
-            audio.removeEventListener('error', handleErrorCallback);
-            reject(e);
-          };
-          
-          audio.addEventListener('canplay', handleCanPlay);
-          audio.addEventListener('error', handleErrorCallback);
-          
-          audio.load();
-        });
+        audio.load();
         
         if (isPlaying) {
-          await audio.play();
+          await playAudio();
         }
       } catch (error) {
         console.error("Ошибка загрузки трека:", error);
@@ -156,6 +142,21 @@ export default function Player() {
 
     loadTrack();
   }, [currentTrack?.id, dispatch, isPlaying]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !currentTrack?.track_file) return;
+
+    const handlePlay = async () => {
+      if (isPlaying && isAudioReady) {
+        await playAudio();
+      } else if (audio) {
+        audio.pause();
+      }
+    };
+
+    handlePlay();
+  }, [isPlaying, isAudioReady]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -226,6 +227,7 @@ export default function Player() {
           src={currentTrack.track_file}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
+          onCanPlay={handleCanPlay}
           onEnded={handleEnded}
           onError={handleError}
           loop={repeat}
