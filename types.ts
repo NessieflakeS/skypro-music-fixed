@@ -1,5 +1,6 @@
 export interface Track {
-  _id: number;
+  id: number;
+  _id?: number; 
   name: string;
   author: string;
   release_date: string;
@@ -11,4 +12,30 @@ export interface Track {
   stared_user: any[];
 }
 
+export interface ITrackDisplay {
+  id: number;
+  name: string;
+  author: string;
+  album: string;
+  time: string;
+  track_file: string;
+  link?: string;
+  authorLink?: string;
+  albumLink?: string;
+  subtitle?: string;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+}
+
 export type FilterType = "author" | "year" | "genre" | null;
+
+export interface Selection {
+  id: number;
+  name: string;
+  items: Track[];
+  tracks?: Track[];
+}
