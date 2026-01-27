@@ -8,25 +8,56 @@ import Link from "next/link";
 import styles from "./Sidebar.module.css";
 import { RootState } from "@/store/store";
 import { logout } from "@/store/userSlice";
+import { authService } from "@/services/authService";
+import { trackService } from "@/services/trackService";
 
-interface SelectionDisplay {
+interface Selection {
   id: number;
   name: string;
   image: string;
+  items?: any[];
+  tracks?: any[];
 }
 
 export default function Sidebar() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
-  const [selections, setSelections] = useState<SelectionDisplay[]>([
+  const [selections, setSelections] = useState<Selection[]>([
     { id: 1, name: "Плейлист дня", image: "/img/playlist01.png" },
     { id: 2, name: "100 танцевальных хитов", image: "/img/playlist02.png" },
     { id: 3, name: "Инди-заряд", image: "/img/playlist03.png" },
   ]);
+  const [loadingSelections, setLoadingSelections] = useState(false);
+
+  useEffect(() => {
+    loadSelections();
+  }, []);
+
+  const loadSelections = async () => {
+    try {
+      setLoadingSelections(true);
+      const data = await trackService.getAllSelections();
+      
+      if (data.length > 0) {
+        const serverSelections: Selection[] = data.map((selection: any) => ({
+          id: selection.id || selection._id || 0,
+          name: selection.name || `Подборка ${selection.id}`,
+          image: selection.image || "/img/playlist01.png",
+          items: selection.items || [],
+          tracks: selection.tracks || [],
+        }));
+        
+        setSelections(serverSelections);
+      }
+    } catch (error) {
+      console.error('Error loading selections:', error);
+    } finally {
+      setLoadingSelections(false);
+    }
+  };
 
   const handleLogout = async () => {
-    console.log('Sidebar logout clicked');
     try {
       dispatch(logout());
       
@@ -37,13 +68,10 @@ export default function Sidebar() {
         localStorage.removeItem('menuOpen');
       }
       
-      console.log('Redirecting to signin from sidebar');
-      router.push('/signin');
-      
-      window.location.href = '/signin';
+      router.replace('/signin');
     } catch (error) {
       console.error('Ошибка при выходе:', error);
-      router.push('/signin');
+      router.replace('/signin');
     }
   };
 
@@ -72,13 +100,11 @@ export default function Sidebar() {
                   height={150}
                   priority={selection.id === 1}
                 />
-                <div style={{ 
-                  color: 'white', 
-                  textAlign: 'center', 
-                  marginTop: '5px',
-                  fontSize: '14px'
-                }}>
+                <div className={styles.selectionInfo}>
                   {selection.name}
+                  {(selection.items?.length || selection.tracks?.length) ? 
+                    ` (${selection.items?.length || selection.tracks?.length} треков)` : 
+                    ' (пусто)'}
                 </div>
               </Link>
             </div>
