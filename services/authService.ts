@@ -14,8 +14,10 @@ export interface RegisterCredentials {
 }
 
 export interface AuthResponse {
-  access: string;
-  refresh: string;
+  access_token?: string;
+  access?: string;
+  refresh_token?: string;
+  refresh?: string;
   user: {
     id: number;
     email: string;
@@ -33,27 +35,25 @@ const api = axios.create({
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
-      console.log('Login attempt with:', credentials);
-      
       const response = await api.post<AuthResponse>('/api/user/login/', credentials);
+      const data = response.data;
       
-      console.log('Login successful:', response.data);
-      return response.data;
-    } catch (error: any) {
-      console.error('Login error details:', error.response?.data || error.message);
+      const token = data.access || data.access_token;
+      const refreshToken = data.refresh || data.refresh_token;
       
-      let errorMessage = 'Ошибка входа';
-      
-      if (error.response?.status === 412) {
-        errorMessage = 'Неверные учетные данные или требуется подтверждение email';
-      } else if (error.response?.status === 400) {
-        const data = error.response.data;
-        if (data.email) errorMessage = `Email: ${data.email[0]}`;
-        else if (data.password) errorMessage = `Пароль: ${data.password[0]}`;
-        else if (data.detail) errorMessage = data.detail;
-      } else if (error.response?.status === 401) {
-        errorMessage = 'Неверный email или пароль';
+      if (!token || !refreshToken) {
+        throw new Error('Сервер не вернул токены авторизации');
       }
+      
+      return data;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.email?.[0] || 
+                          error.response?.data?.password?.[0] || 
+                          error.message || 
+                          'Ошибка входа';
       
       throw new Error(errorMessage);
     }
@@ -61,25 +61,26 @@ export const authService = {
 
   register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
     try {
-      console.log('Register attempt with:', credentials);
-      
       const response = await api.post<AuthResponse>('/api/user/signup/', credentials);
+      const data = response.data;
       
-      console.log('Register successful:', response.data);
-      return response.data;
-    } catch (error: any) {
-      console.error('Register error details:', error.response?.data || error.message);
+      const token = data.access || data.access_token;
+      const refreshToken = data.refresh || data.refresh_token;
       
-      let errorMessage = 'Ошибка регистрации';
-      
-      if (error.response?.status === 400) {
-        const data = error.response.data;
-        if (data.email) errorMessage = `Email: ${data.email[0]}`;
-        else if (data.username) errorMessage = `Имя пользователя: ${data.username[0]}`;
-        else if (data.password) errorMessage = `Пароль: ${data.password[0]}`;
-        else if (data.detail) errorMessage = data.detail;
-        else errorMessage = 'Проверьте введенные данные';
+      if (!token || !refreshToken) {
+        throw new Error('Сервер не вернул токены авторизации');
       }
+      
+      return data;
+    } catch (error: any) {
+      console.error('Register error:', error);
+      
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.email?.[0] || 
+                          error.response?.data?.username?.[0] || 
+                          error.response?.data?.password?.[0] || 
+                          error.message || 
+                          'Ошибка регистрации';
       
       throw new Error(errorMessage);
     }

@@ -36,13 +36,24 @@ const playerSlice = createSlice({
   initialState,
   reducers: {
     setCurrentTrack: (state, action: PayloadAction<{track: PlayerTrack, playlist: PlayerTrack[]}>) => {
-      state.currentTrack = action.payload.track;
-      state.playlist = action.payload.playlist;
-      state.isPlaying = true;
-      state.currentTime = 0;
+      const { track, playlist } = action.payload;
+      
+      const isSameTrack = state.currentTrack && state.currentTrack.id === track.id;
+      
+      if (isSameTrack) {
+        state.isPlaying = !state.isPlaying;
+      } else {
+        state.currentTrack = track;
+        state.playlist = playlist;
+        state.isPlaying = true;
+        state.currentTime = 0;
+        state.duration = 0;
+      }
     },
     togglePlayPause: (state) => {
-      state.isPlaying = !state.isPlaying;
+      if (state.currentTrack) {
+        state.isPlaying = !state.isPlaying;
+      }
     },
     setVolume: (state, action: PayloadAction<number>) => {
       state.volume = action.payload;
@@ -73,6 +84,8 @@ const playerSlice = createSlice({
 
       state.currentTrack = state.playlist[nextIndex];
       state.currentTime = 0;
+      state.duration = 0;
+      state.isPlaying = true;
     },
     setPrevTrack: (state) => {
       if (!state.currentTrack || state.playlist.length === 0) return;
@@ -88,6 +101,14 @@ const playerSlice = createSlice({
 
       state.currentTrack = state.playlist[prevIndex];
       state.currentTime = 0;
+      state.duration = 0;
+      state.isPlaying = true;
+    },
+    clearPlayer: (state) => {
+      state.currentTrack = null;
+      state.isPlaying = false;
+      state.currentTime = 0;
+      state.duration = 0;
     },
   },
 });
@@ -102,6 +123,7 @@ export const {
   setDuration,
   setNextTrack,
   setPrevTrack,
+  clearPlayer,
 } = playerSlice.actions;
 
 export default playerSlice.reducer;

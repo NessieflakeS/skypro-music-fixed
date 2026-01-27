@@ -16,10 +16,11 @@ export default function TrackItem({ track, playlist }: TrackItemProps) {
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying } = playerState;
 
-  const isCurrentTrack = currentTrack?.id === track.id;
+  const isCurrent = currentTrack?.id === track.id;
+  const isPlayingCurrent = isCurrent && isPlaying;
 
   const handleTrackClick = () => {
-    if (isCurrentTrack) {
+    if (isCurrent) {
       dispatch(togglePlayPause());
     } else {
       dispatch(setCurrentTrack({
@@ -31,14 +32,21 @@ export default function TrackItem({ track, playlist }: TrackItemProps) {
           track_file: track.track_file,
           time: track.time
         },
-        playlist: playlist
+        playlist: playlist.map(t => ({
+          id: t.id,
+          name: t.name,
+          author: t.author,
+          album: t.album,
+          track_file: t.track_file,
+          time: t.time
+        }))
       }));
     }
   };
 
   return (
     <div 
-      className={`${styles.playlist__item} ${isCurrentTrack ? styles.playlist__item_current : ''}`}
+      className={`${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`}
       onClick={handleTrackClick}
     >
       <div className={styles.playlist__track}>
@@ -47,13 +55,13 @@ export default function TrackItem({ track, playlist }: TrackItemProps) {
             <svg className={styles.track__titleSvg}>
               <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
             </svg>
-            {isCurrentTrack && (
-              <div className={`${styles.track__titleDot} ${isPlaying ? styles.track__titleDot_playing : ''}`}></div>
+            {isCurrent && (
+              <div className={`${styles.track__titleDot} ${isPlayingCurrent ? styles.track__titleDot_playing : ''}`}></div>
             )}
           </div>
           <div className={styles.track__titleText}>
             <span className={styles.track__titleLink}>
-              {track.name} <span className={styles.track__titleSpan}>{track.subtitle || ""}</span>
+              {track.name}
             </span>
           </div>
         </div>

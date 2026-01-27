@@ -36,12 +36,19 @@ export default function Signin() {
     try {
       const data = await authService.login({ email, password });
       
-      localStorage.setItem('token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      const token = data.access || data.access_token;
+      const refreshToken = data.refresh || data.refresh_token;
       
-      dispatch(loginSuccess(data.user));
-      router.push('/');
+      if (token && refreshToken) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('refresh_token', refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        dispatch(loginSuccess(data.user));
+        router.push('/');
+      } else {
+        throw new Error('Не удалось получить токены авторизации');
+      }
     } catch (err: any) {
       dispatch(loginFailure(err.message || 'Ошибка входа'));
     }
