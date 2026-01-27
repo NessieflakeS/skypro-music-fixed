@@ -9,6 +9,7 @@ import { authService } from '@/services/authService';
 import styles from './signup.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
+import Cookies from 'js-cookie';
 
 export default function SignUp() {
   const [username, setUsername] = useState('');
@@ -67,9 +68,8 @@ export default function SignUp() {
       localStorage.setItem('refresh_token', data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Сохраняем также в cookies для middleware
-      document.cookie = `token=${data.access}; path=/; max-age=86400`;
-      document.cookie = `refresh_token=${data.refresh}; path=/; max-age=604800`;
+      Cookies.set('token', data.access, { expires: 7 });
+      Cookies.set('refresh_token', data.refresh, { expires: 7 });
       
       dispatch(registerSuccess(data.user));
       router.replace('/');
@@ -79,72 +79,70 @@ export default function SignUp() {
   };
 
   return (
-    <>
-      <div className={styles.wrapper}>
-        <div className={styles.containerEnter}>
-          <div className={styles.modal__block}>
-            <form className={styles.modal__form} onSubmit={handleSubmit}>
-              <Link href="/">
-                <div className={styles.modal__logo}>
-                  <img src="/img/logo_modal.png" alt="logo" />
-                </div>
-              </Link>
-              <input
-                className={classNames(styles.modal__input)}
-                type="text"
-                name="username"
-                placeholder="Имя пользователя"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={loading}
-                required
-              />
-              <input
-                className={classNames(styles.modal__input)}
-                type="email"
-                name="email"
-                placeholder="Почта"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required
-              />
-              <input
-                className={classNames(styles.modal__input)}
-                type="password"
-                name="password"
-                placeholder="Пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required
-              />
-              <input
-                className={classNames(styles.modal__input)}
-                type="password"
-                name="confirmPassword"
-                placeholder="Повторите пароль"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={loading}
-                required
-              />
-              <div className={styles.errorContainer}>
-                {(error || passwordError) && (
-                  <p className={styles.errorText}>{error || passwordError}</p>
-                )}
+    <div className={styles.wrapper}>
+      <div className={styles.containerEnter}>
+        <div className={styles.modal__block}>
+          <form className={styles.modal__form} onSubmit={handleSubmit}>
+            <Link href="/">
+              <div className={styles.modal__logo}>
+                <img src="/img/logo_modal.png" alt="logo" />
               </div>
-              <button 
-                type="submit" 
-                className={styles.modal__btnSignupEnt}
-                disabled={loading}
-              >
-                {loading ? 'Загрузка...' : 'Зарегистрироваться'}
-              </button>
-            </form>
-          </div>
+            </Link>
+            <input
+              className={classNames(styles.modal__input)}
+              type="text"
+              name="username"
+              placeholder="Имя пользователя"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
+              required
+            />
+            <input
+              className={classNames(styles.modal__input)}
+              type="email"
+              name="email"
+              placeholder="Почта"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+            <input
+              className={classNames(styles.modal__input)}
+              type="password"
+              name="password"
+              placeholder="Пароль"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+            <input
+              className={classNames(styles.modal__input)}
+              type="password"
+              name="confirmPassword"
+              placeholder="Повторите пароль"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+            <div className={styles.errorContainer}>
+              {(error || passwordError) && (
+                <p className={styles.errorText}>{error || passwordError}</p>
+              )}
+            </div>
+            <button 
+              type="submit" 
+              className={styles.modal__btnSignupEnt}
+              disabled={loading}
+            >
+              {loading ? 'Загрузка...' : 'Зарегистрироваться'}
+            </button>
+          </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }

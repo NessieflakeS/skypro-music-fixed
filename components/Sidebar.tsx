@@ -8,8 +8,7 @@ import Link from "next/link";
 import styles from "./Sidebar.module.css";
 import { RootState } from "@/store/store";
 import { logout } from "@/store/userSlice";
-import { authService } from "@/services/authService";
-import { trackService } from "@/services/trackService";
+import Cookies from 'js-cookie';
 
 interface Selection {
   id: number;
@@ -19,59 +18,52 @@ interface Selection {
   tracks?: any[];
 }
 
+const DEFAULT_SELECTIONS: Selection[] = [
+  { 
+    id: 1, 
+    name: "Плейлист дня", 
+    image: "/img/playlist01.png",
+    items: [],
+    tracks: []
+  },
+  { 
+    id: 2, 
+    name: "100 танцевальных хитов", 
+    image: "/img/playlist02.png",
+    items: [],
+    tracks: []
+  },
+  { 
+    id: 3, 
+    name: "Инди-заряд", 
+    image: "/img/playlist03.png",
+    items: [],
+    tracks: []
+  },
+];
+
 export default function Sidebar() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
-  const [selections, setSelections] = useState<Selection[]>([
-    { id: 1, name: "Плейлист дня", image: "/img/playlist01.png" },
-    { id: 2, name: "100 танцевальных хитов", image: "/img/playlist02.png" },
-    { id: 3, name: "Инди-заряд", image: "/img/playlist03.png" },
-  ]);
+  const [selections, setSelections] = useState<Selection[]>(DEFAULT_SELECTIONS);
   const [loadingSelections, setLoadingSelections] = useState(false);
-
-  useEffect(() => {
-    loadSelections();
-  }, []);
-
-  const loadSelections = async () => {
-    try {
-      setLoadingSelections(true);
-      const data = await trackService.getAllSelections();
-      
-      if (data.length > 0) {
-        const serverSelections: Selection[] = data.map((selection: any) => ({
-          id: selection.id || selection._id || 0,
-          name: selection.name || `Подборка ${selection.id}`,
-          image: selection.image || "/img/playlist01.png",
-          items: selection.items || [],
-          tracks: selection.tracks || [],
-        }));
-        
-        setSelections(serverSelections);
-      }
-    } catch (error) {
-      console.error('Error loading selections:', error);
-    } finally {
-      setLoadingSelections(false);
-    }
-  };
 
   const handleLogout = async () => {
     try {
       dispatch(logout());
       
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('menuOpen');
-      }
+      Cookies.remove('token');
+      Cookies.remove('refresh_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('menuOpen');
       
-      router.replace('/signin');
+      router.push('/signin');
     } catch (error) {
       console.error('Ошибка при выходе:', error);
-      router.replace('/signin');
+      router.push('/signin');
     }
   };
 
@@ -102,9 +94,6 @@ export default function Sidebar() {
                 />
                 <div className={styles.selectionInfo}>
                   {selection.name}
-                  {(selection.items?.length || selection.tracks?.length) ? 
-                    ` (${selection.items?.length || selection.tracks?.length} треков)` : 
-                    ' (пусто)'}
                 </div>
               </Link>
             </div>

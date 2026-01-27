@@ -11,6 +11,10 @@ export function middleware(request: NextRequest) {
     pathname === path || pathname.startsWith(`${path}/`)
   )
 
+  if (pathname === '/signin' || pathname === '/signup') {
+    return NextResponse.next()
+  }
+
   if (!token && isProtectedPath) {
     return NextResponse.redirect(new URL('/signin', request.url))
   }
