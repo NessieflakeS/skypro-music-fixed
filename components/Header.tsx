@@ -35,17 +35,28 @@ export default function Header() {
     try {
       dispatch(logout());
       
-      Cookies.remove('token');
-      Cookies.remove('refresh_token');
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
       localStorage.removeItem('menuOpen');
       
-      router.push('/signin');
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      
+      Cookies.remove('token');
+      Cookies.remove('refresh_token');
+      
+      console.log('Logout successful, redirecting to signin...');
+      
+      router.replace('/signin');
+      
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 100);
+      
     } catch (error) {
       console.error('Ошибка при выходе:', error);
-      router.push('/signin');
+      router.replace('/signin');
     }
   };
 

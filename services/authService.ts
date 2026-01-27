@@ -30,63 +30,53 @@ export interface AuthResponse {
   };
 }
 
+export interface TokenResponse {
+  access: string;
+  refresh: string;
+}
+
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
       console.log('Attempting login with:', { email: credentials.email });
       
-      const tokenResponse = await api.post<{ access: string; refresh: string }>('/user/token/', {
+      const tokenResponse = await api.post<TokenResponse>('/user/token/', {
         email: credentials.email,
         password: credentials.password
       });
       
       console.log('Token response:', tokenResponse.data);
       
-      const userResponse = await api.get(`/user/${tokenResponse.data.access}/`, {
-        headers: {
-          'Authorization': `Bearer ${tokenResponse.data.access}`
-        }
-      });
-      
-      const loginData = {
+      const userResponse = await api.post('/user/login/', {
         email: credentials.email,
         password: credentials.password
-      };
+      });
       
-      const loginResponse = await api.post('/user/login/', loginData);
-      console.log('Login response:', loginResponse.data);
-      
-      let userData;
-      if (loginResponse.data && loginResponse.data._id) {
-        userData = {
-          id: loginResponse.data._id,
-          email: loginResponse.data.email,
-          username: loginResponse.data.username || loginResponse.data.email.split('@')[0],
-        };
-      } else {
-        userData = {
-          id: Date.now(),
-          email: credentials.email,
-          username: credentials.email.split('@')[0],
-        };
-      }
+      console.log('User response:', userResponse.data);
       
       return {
         access: tokenResponse.data.access,
         refresh: tokenResponse.data.refresh,
-        user: userData
+        user: {
+          id: userResponse.data._id,
+          email: userResponse.data.email,
+          username: userResponse.data.username,
+        }
       };
     } catch (error: any) {
       console.error('Login error:', error);
       
       if (error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
+        const status = error.response.status;
         
-        if (error.response.status === 401) {
-          throw new Error('Неверный email или пароль');
-        } else if (error.response.status === 400) {
-          throw new Error('Неверный формат данных');
+        if (status === 401) {
+          throw new Error('Пользователь с таким email или паролем не найден');
+        } else if (status === 400) {
+          const message = error.response.data?.message || 
+                         error.response.data?.email?.[0] || 
+                         error.response.data?.password?.[0] || 
+                         'Неверный формат данных';
+          throw new Error(message);
         }
       }
       
@@ -96,12 +86,15 @@ export const authService = {
 
   register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
     try {
-      console.log('Attempting registration for:', credentials.username);
+      console.log('Attempting registration with:', {
+        email: credentials.email,
+        username: credentials.username
+      });
       
       const registerData = {
         email: credentials.email,
         password: credentials.password,
-        username: credentials.username,
+        username: credentials.username
       };
       
       console.log('Sending registration data:', registerData);
@@ -109,24 +102,41 @@ export const authService = {
       const registerResponse = await api.post('/user/signup/', registerData);
       console.log('Register response:', registerResponse.data);
       
-      return await authService.login({
-        email: credentials.email,
-        password: credentials.password
-      });
-      
+      if (registerResponse.status === 201 && registerResponse.data.success) {
+        console.log('Registration successful, attempting auto-login...');
+        
+        const tokenResponse = await api.post<TokenResponse>('/user/token/', {
+          email: credentials.email,
+          password: credentials.password
+        });
+        
+        return {
+          access: tokenResponse.data.access,
+          refresh: tokenResponse.data.refresh,
+          user: {
+            id: registerResponse.data.result._id,
+            email: registerResponse.data.result.email,
+            username: registerResponse.data.result.username,
+          }
+        };
+      } else {
+        throw new Error(registerResponse.data?.message || 'Ошибка регистрации');
+      }
     } catch (error: any) {
       console.error('Register error:', error);
       
       if (error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
+        const status = error.response.status;
         
-        if (error.response.status === 403) {
-          const errorMsg = error.response.data?.message || error.response.data?.email?.[0] || 'Email уже занят';
-          throw new Error(errorMsg);
-        } else if (error.response.status === 400) {
-          const errorMsg = error.response.data?.message || 'Неверный формат данных';
-          throw new Error(errorMsg);
+        if (status === 403) {
+          throw new Error(error.response.data?.message || 'Email уже занят');
+        } else if (status === 400) {
+          const message = error.response.data?.message || 
+                         error.response.data?.email?.[0] || 
+                         error.response.data?.username?.[0] || 
+                         error.response.data?.password?.[0] || 
+                         'Неверный формат данных';
+          throw new Error(message);
         }
       }
       
@@ -135,6 +145,22 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    console.log('Logout: clearing auth data');
+    try {
+      console.log('Logging out...');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  },
+
+  refreshToken: async (refreshToken: string): Promise<string> => {
+    try {
+      const response = await api.post<TokenResponse>('/user/token/refresh/', {
+        refresh: refreshToken
+      });
+      return response.data.access;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      throw new Error('Не удалось обновить токен');
+    }
   },
 };

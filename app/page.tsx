@@ -44,14 +44,12 @@ export default function Home() {
     loadTracks();
   }, []);
 
-    const loadTracks = async () => {
+    const loadTracks = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
       
-      const data = await trackService.getAllTracks();
-      
-      console.log('Loaded tracks:', data);
+      const data: Track[] = await trackService.getAllTracks();
       
       if (!Array.isArray(data)) {
         throw new Error('Данные треков не являются массивом');

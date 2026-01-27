@@ -11,15 +11,16 @@ export function middleware(request: NextRequest) {
     pathname === path || pathname.startsWith(`${path}/`)
   )
 
-  if (pathname === '/signin' || pathname === '/signup') {
-    return NextResponse.next()
-  }
+  const authPaths = ['/signin', '/signup']
+  const isAuthPath = authPaths.includes(pathname)
 
   if (!token && isProtectedPath) {
+    console.log('No token, redirecting to signin');
     return NextResponse.redirect(new URL('/signin', request.url))
   }
 
-  if (token && (pathname === '/signin' || pathname === '/signup')) {
+  if (token && isAuthPath) {
+    console.log('Token exists, redirecting to home');
     return NextResponse.redirect(new URL('/', request.url))
   }
 

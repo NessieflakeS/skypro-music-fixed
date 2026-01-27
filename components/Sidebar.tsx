@@ -1,46 +1,86 @@
 "use client";
 
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux"; 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
 import { RootState } from "@/store/store";
-import { logout } from "@/store/userSlice";
-import { mockAuthService } from "@/services/mockAuthService";
-import Cookies from 'js-cookie';
+import { logout } from "@/store/userSlice"; 
+import { authService } from "@/services/authService";
+import { trackService } from "@/services/trackService";
+import Cookies from 'js-cookie'; 
 
 interface Selection {
   id: number;
   name: string;
   image: string;
+  items?: any[];
+  tracks?: any[];
 }
 
-const SELECTIONS: Selection[] = [
+const DEFAULT_SELECTIONS: Selection[] = [
   { 
     id: 1, 
     name: "Плейлист дня", 
-    image: "/img/playlist01.png"
+    image: "/img/playlist01.png",
+    items: [],
+    tracks: []
   },
   { 
     id: 2, 
     name: "100 танцевальных хитов", 
-    image: "/img/playlist02.png"
+    image: "/img/playlist02.png",
+    items: [],
+    tracks: []
   },
   { 
     id: 3, 
     name: "Инди-заряд", 
-    image: "/img/playlist03.png"
+    image: "/img/playlist03.png",
+    items: [],
+    tracks: []
   },
 ];
 
 export default function Sidebar() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
+  const [selections, setSelections] = useState<Selection[]>(DEFAULT_SELECTIONS);
+  const [loadingSelections, setLoadingSelections] = useState(false);
+
+  useEffect(() => {
+    loadSelections();
+  }, []);
+
+  const loadSelections = async () => {
+    try {
+      setLoadingSelections(true);
+      const data = await trackService.getAllSelections();
+      
+      if (data.length > 0) {
+        const serverSelections: Selection[] = data.map((selection: any) => ({
+          id: selection.id || selection._id || 0,
+          name: selection.name || `Подборка ${selection.id}`,
+          image: selection.image || "/img/playlist01.png",
+          items: selection.items || [],
+          tracks: selection.tracks || [],
+        }));
+        
+        setSelections(serverSelections);
+      }
+    } catch (error) {
+      console.error('Error loading selections:', error);
+    } finally {
+      setLoadingSelections(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
-      await mockAuthService.logout();
+      dispatch(logout()); 
       
       Cookies.remove('token');
       Cookies.remove('refresh_token');
@@ -49,10 +89,10 @@ export default function Sidebar() {
       localStorage.removeItem('user');
       localStorage.removeItem('menuOpen');
       
-      router.push('/signin');
+      router.replace('/signin');
     } catch (error) {
       console.error('Ошибка при выходе:', error);
-      router.push('/signin');
+      router.replace('/signin');
     }
   };
 
@@ -62,17 +102,15 @@ export default function Sidebar() {
         <p className={styles.sidebar__personalName}>
           {isAuthenticated ? user?.username || "Пользователь" : "Гость"}
         </p>
-        {isAuthenticated && (
-          <div className={styles.sidebar__icon} onClick={handleLogout}>
-            <svg>
-              <use xlinkHref="/img/icon/sprite.svg#logout"></use>
-            </svg>
-          </div>
-        )}
+        <div className={styles.sidebar__icon} onClick={handleLogout}>
+          <svg>
+            <use xlinkHref="/img/icon/sprite.svg#logout"></use>
+          </svg>
+        </div>
       </div>
       <div className={styles.sidebar__block}>
         <div className={styles.sidebar__list}>
-          {SELECTIONS.map((selection) => (
+          {selections.map((selection) => (
             <div key={selection.id} className={styles.sidebar__item}>
               <Link className={styles.sidebar__link} href={`/playlist/${selection.id}`}>
                 <Image
