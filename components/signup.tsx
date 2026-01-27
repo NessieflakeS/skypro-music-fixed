@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { registerStart, registerSuccess, registerFailure, clearError } from '@/store/userSlice';
 import { RootState } from '@/store/store';
-import { authService } from '@/services/authService';
+import { mockAuthService } from '@/services/mockAuthService';
 import styles from './signup.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
@@ -21,6 +21,12 @@ export default function SignUp() {
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      mockAuthService.init();
+    }
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -62,7 +68,7 @@ export default function SignUp() {
     dispatch(registerStart());
 
     try {
-      const data = await authService.register({ email, password, username });
+      const data = await mockAuthService.register({ email, password, username });
       
       localStorage.setItem('token', data.access);
       localStorage.setItem('refresh_token', data.refresh);

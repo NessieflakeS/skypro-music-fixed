@@ -1,57 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
 import { RootState } from "@/store/store";
 import { logout } from "@/store/userSlice";
+import { mockAuthService } from "@/services/mockAuthService";
 import Cookies from 'js-cookie';
 
 interface Selection {
   id: number;
   name: string;
   image: string;
-  items?: any[];
-  tracks?: any[];
 }
 
-const DEFAULT_SELECTIONS: Selection[] = [
+const SELECTIONS: Selection[] = [
   { 
     id: 1, 
     name: "Плейлист дня", 
-    image: "/img/playlist01.png",
-    items: [],
-    tracks: []
+    image: "/img/playlist01.png"
   },
   { 
     id: 2, 
     name: "100 танцевальных хитов", 
-    image: "/img/playlist02.png",
-    items: [],
-    tracks: []
+    image: "/img/playlist02.png"
   },
   { 
     id: 3, 
     name: "Инди-заряд", 
-    image: "/img/playlist03.png",
-    items: [],
-    tracks: []
+    image: "/img/playlist03.png"
   },
 ];
 
 export default function Sidebar() {
   const router = useRouter();
-  const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
-  const [selections, setSelections] = useState<Selection[]>(DEFAULT_SELECTIONS);
-  const [loadingSelections, setLoadingSelections] = useState(false);
 
   const handleLogout = async () => {
     try {
-      dispatch(logout());
+      await mockAuthService.logout();
       
       Cookies.remove('token');
       Cookies.remove('refresh_token');
@@ -73,15 +62,17 @@ export default function Sidebar() {
         <p className={styles.sidebar__personalName}>
           {isAuthenticated ? user?.username || "Пользователь" : "Гость"}
         </p>
-        <div className={styles.sidebar__icon} onClick={handleLogout}>
-          <svg>
-            <use xlinkHref="/img/icon/sprite.svg#logout"></use>
-          </svg>
-        </div>
+        {isAuthenticated && (
+          <div className={styles.sidebar__icon} onClick={handleLogout}>
+            <svg>
+              <use xlinkHref="/img/icon/sprite.svg#logout"></use>
+            </svg>
+          </div>
+        )}
       </div>
       <div className={styles.sidebar__block}>
         <div className={styles.sidebar__list}>
-          {selections.map((selection) => (
+          {SELECTIONS.map((selection) => (
             <div key={selection.id} className={styles.sidebar__item}>
               <Link className={styles.sidebar__link} href={`/playlist/${selection.id}`}>
                 <Image

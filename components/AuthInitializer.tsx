@@ -3,31 +3,41 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { loginSuccess, logout } from "@/store/userSlice";
+import { mockAuthService } from "@/services/mockAuthService";
 import Cookies from 'js-cookie';
 
 export function AuthInitializer() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const token = Cookies.get('token') || localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
+    mockAuthService.init();
     
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
+    if (mockAuthService.isAuthenticated()) {
+      const user = mockAuthService.getCurrentUser();
+      if (user) {
         dispatch(loginSuccess(user));
         
         if (!Cookies.get('token')) {
-          Cookies.set('token', token, { expires: 7 });
+          Cookies.set('token', 'mock-token', { expires: 7 });
         }
-      } catch (error) {
-        console.error('Ошибка парсинга пользователя:', error);
+      }
+    } else {
+      const token = Cookies.get('token') || localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          dispatch(loginSuccess(user));
+        } catch (error) {
+          console.error('Ошибка парсинга пользователя:', error);
+          clearAuthData();
+          dispatch(logout());
+        }
+      } else {
         clearAuthData();
         dispatch(logout());
       }
-    } else {
-      clearAuthData();
-      dispatch(logout());
     }
   }, [dispatch]);
 

@@ -5,18 +5,24 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { loginStart, loginSuccess, loginFailure, clearError } from '@/store/userSlice';
 import { RootState } from '@/store/store';
-import { authService } from '@/services/authService';
+import { mockAuthService } from '@/services/mockAuthService';
 import styles from './signin.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 
 export default function Signin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('test@test.com'); 
+  const [password, setPassword] = useState('test123'); 
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      mockAuthService.init();
+    }
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -35,7 +41,7 @@ export default function Signin() {
     dispatch(loginStart());
 
     try {
-      const data = await authService.login({ email, password });
+      const data = await mockAuthService.login({ email, password });
       
       localStorage.setItem('token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
@@ -83,6 +89,11 @@ export default function Signin() {
             />
             <div className={styles.errorContainer}>
               {error && <p className={styles.errorText}>{error}</p>}
+            </div>
+            <div className={styles.testCredentials}>
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                Тестовые данные: test@test.com / test123
+              </p>
             </div>
             <button 
               type="submit" 
