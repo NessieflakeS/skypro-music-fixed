@@ -11,9 +11,6 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
-  env: {
-    NEXT_PUBLIC_USE_MOCK: process.env.NEXT_PUBLIC_USE_MOCK || 'true',
-  },
 };
 
 module.exports = nextConfig;

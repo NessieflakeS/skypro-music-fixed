@@ -77,17 +77,35 @@ export const trackService = {
 
   getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
     try {
-      console.log(`Fetching selection ${selectionId} tracks`);
-      const response = await api.get<SelectionResponse>(`/selections/${selectionId}/`);
-      return response.data.tracks || response.data.items || [];
+      console.log('Fetching tracks from API...');
+      const response = await api.get<Track[]>('/tracks/all/');
+      console.log('Tracks fetched successfully, count:', response.data.length);
+      return response.data;
     } catch (error: any) {
-      console.error(`Error fetching selection ${selectionId} tracks:`, error);
+      console.error('Error fetching tracks:', error);
       
-      if (error.response?.status === 404) {
-        throw new Error(`Подборка ${selectionId} не найдена`);
+      if (error.code === 'ERR_NETWORK') {
+        throw new Error('Не удалось подключиться к серверу. Проверьте интернет-соединение.');
       }
       
-      throw new Error(`Ошибка загрузки подборки: ${error.message}`);
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.detail || `Ошибка ${status}`;
+        
+        if (status === 401) {
+          throw new Error('Требуется авторизация. Пожалуйста, войдите в систему.');
+        } else if (status === 403) {
+          throw new Error('У вас нет доступа к этому ресурсу.');
+        } else if (status === 404) {
+          throw new Error('Треки не найдены.');
+        } else if (status >= 500) {
+          throw new Error('Внутренняя ошибка сервера. Пожалуйста, попробуйте позже.');
+        } else {
+          throw new Error(message);
+        }
+      }
+      
+      throw new Error('Произошла неизвестная ошибка при загрузке треков.');
     }
   },
 

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
 import { RootState } from "@/store/store";
+import { logout } from "@/store/userSlice";
+import { authService } from "@/services/authService";
 
 interface Selection {
   id: number;
@@ -16,6 +18,7 @@ interface Selection {
 
 export default function Sidebar() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
   const [selections, setSelections] = useState<Selection[]>([
     { id: 1, name: "Плейлист дня", image: "/img/playlist01.png" },
@@ -23,8 +26,22 @@ export default function Sidebar() {
     { id: 3, name: "Инди-заряд", image: "/img/playlist03.png" },
   ]);
 
-  const handleLogoutClick = () => {
-    router.push('/signin');
+  const handleLogoutClick = async () => {
+    if (isAuthenticated) {
+      try {
+        await authService.logout();
+      } catch (error) {
+        console.error('Ошибка при выходе:', error);
+      } finally {
+        dispatch(logout());
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        router.replace('/signin');
+      }
+    } else {
+      router.push('/signin');
+    }
   };
 
   return (

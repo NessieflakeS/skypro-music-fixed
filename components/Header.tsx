@@ -46,8 +46,6 @@ export default function Header() {
       }
       
       router.replace('/signin');
-      
-      window.location.href = '/signin';
     }
   };
 
