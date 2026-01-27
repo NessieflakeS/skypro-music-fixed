@@ -43,25 +43,33 @@ export default function Home() {
     loadTracks();
   }, []);
 
-  const loadTracks = async () => {
+    const loadTracks = async () => {
     try {
       setLoading(true);
       setError(null);
       
       const data = await trackService.getAllTracks();
       
+      console.log('Loaded tracks:', data);
+      
+      if (!Array.isArray(data)) {
+        throw new Error('Данные треков не являются массивом');
+      }
+      
       setTracks(data);
       
       const tracksForDisplay: ITrackDisplay[] = data.map((track: Track) => ({
-        id: track.id || track._id || 0, 
+        id: track.id || track._id || 0,
         name: track.name || "Без названия",
         author: track.author || "Неизвестный исполнитель",
         album: track.album || "Без альбома",
-        time: formatDuration(track.duration_in_seconds),
+        time: formatDuration(track.duration_in_seconds || 0),
         track_file: track.track_file || "",
         link: "#",
         authorLink: "#",
         albumLink: "#",
+        genre: track.genre || [],
+        release_date: track.release_date || "",
       }));
       
       setDisplayTracks(tracksForDisplay);

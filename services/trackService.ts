@@ -10,7 +10,6 @@ const api = axios.create({
   },
 });
 
-// Интерцептор для добавления токена
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
@@ -22,7 +21,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Интерцептор для обработки ошибок
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -34,7 +32,6 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
-          // Пытаемся обновить токен
           const response = await axios.post<{ access: string }>(`${API_URL}/user/token/refresh/`, {
             refresh: refreshToken
           });
@@ -42,13 +39,11 @@ api.interceptors.response.use(
           const newAccessToken = response.data.access;
           localStorage.setItem('token', newAccessToken);
           
-          // Обновляем заголовок и повторяем запрос
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
-        // Если не удалось обновить токен, делаем logout
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
           localStorage.removeItem('refresh_token');
@@ -73,9 +68,27 @@ export const trackService = {
   getAllTracks: async (): Promise<Track[]> => {
     try {
       console.log('Fetching all tracks...');
-      const response = await api.get<Track[]>('/catalog/track/all/');
-      console.log('Tracks fetched successfully:', response.data.length);
-      return response.data;
+      const response = await api.get('/catalog/track/all/');
+      console.log('Full response:', response.data);
+      
+      let tracks: Track[] = [];
+      
+      if (response.data && Array.isArray(response.data)) {
+        tracks = response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        if (response.data.results && Array.isArray(response.data.results)) {
+          tracks = response.data.results;
+        } else if (response.data.tracks && Array.isArray(response.data.tracks)) {
+          tracks = response.data.tracks;
+        } else if (response.data.items && Array.isArray(response.data.items)) {
+          tracks = response.data.items;
+        } else {
+          tracks = Object.values(response.data);
+        }
+      }
+      
+      console.log('Tracks fetched successfully:', tracks.length);
+      return tracks;
     } catch (error: any) {
       console.error('Error fetching tracks:', error);
       
@@ -105,8 +118,15 @@ export const trackService = {
       console.log(`Fetching selection ${selectionId} tracks...`);
       const response = await api.get<SelectionResponse>(`/catalog/selection/${selectionId}/`);
       
-      // API может возвращать треки в поле items или tracks
-      const tracks = response.data.items || response.data.tracks || [];
+      let tracks: Track[] = [];
+      if (response.data.items && Array.isArray(response.data.items)) {
+        tracks = response.data.items;
+      } else if (response.data.tracks && Array.isArray(response.data.tracks)) {
+        tracks = response.data.tracks;
+      } else if (response.data && Array.isArray(response.data)) {
+        tracks = response.data;
+      }
+      
       console.log(`Selection ${selectionId} tracks fetched:`, tracks.length);
       return tracks;
     } catch (error: any) {
@@ -147,9 +167,25 @@ export const trackService = {
   getFavoriteTracks: async (): Promise<Track[]> => {
     try {
       console.log('Fetching favorite tracks...');
-      const response = await api.get<Track[]>('/catalog/track/favorite/all/');
-      console.log('Favorite tracks fetched:', response.data.length);
-      return response.data;
+      const response = await api.get('/catalog/track/favorite/all/');
+      
+      let tracks: Track[] = [];
+      if (response.data && Array.isArray(response.data)) {
+        tracks = response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        if (response.data.results && Array.isArray(response.data.results)) {
+          tracks = response.data.results;
+        } else if (response.data.tracks && Array.isArray(response.data.tracks)) {
+          tracks = response.data.tracks;
+        } else if (response.data.items && Array.isArray(response.data.items)) {
+          tracks = response.data.items;
+        } else {
+          tracks = Object.values(response.data);
+        }
+      }
+      
+      console.log('Favorite tracks fetched:', tracks.length);
+      return tracks;
     } catch (error) {
       console.error('Error fetching favorite tracks:', error);
       throw error;

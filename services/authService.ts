@@ -103,7 +103,14 @@ export const authService = {
     try {
       console.log('Attempting registration for:', credentials.username);
       
-      const registerResponse = await api.post<RegisterResponse>('/user/signup/', credentials);
+      const registerData = {
+        email: credentials.email,
+        password1: credentials.password,
+        password2: credentials.password,
+        username: credentials.username,
+      };
+      
+      const registerResponse = await api.post<RegisterResponse>('/user/signup/', registerData);
       console.log('Register response:', registerResponse.data);
       
       if (!registerResponse.data.success) {
@@ -175,25 +182,4 @@ export const authService = {
       throw new Error('Не удалось обновить токен');
     }
   },
-};
-
-export const setAuthCookies = (token: string, refreshToken: string) => {
-  if (typeof window === 'undefined') return;
-  
-  localStorage.setItem('token', token);
-  localStorage.setItem('refresh_token', refreshToken);
-  
-  document.cookie = `token=${token}; path=/; max-age=86400`; // 24 часа
-  document.cookie = `refresh_token=${refreshToken}; path=/; max-age=604800`; // 7 дней
-};
-
-export const clearAuthCookies = () => {
-  if (typeof window === 'undefined') return;
-  
-  localStorage.removeItem('token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('user');
-  
-  document.cookie = 'token=; path=/; max-age=-1';
-  document.cookie = 'refresh_token=; path=/; max-age=-1';
 };
