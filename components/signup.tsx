@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { registerStart, registerSuccess, registerFailure, clearError } from '@/store/userSlice';
 import { RootState } from '@/store/store';
-import { mockAuthService } from '@/services/mockAuthService';
+import { authService } from '@/services/authService'; // Только реальный сервис
 import styles from './signup.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
@@ -21,12 +21,6 @@ export default function SignUp() {
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.user);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      mockAuthService.init();
-    }
-  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -68,7 +62,7 @@ export default function SignUp() {
     dispatch(registerStart());
 
     try {
-      const data = await mockAuthService.register({ email, password, username });
+      const data = await authService.register({ email, password, username });
       
       localStorage.setItem('token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
@@ -85,70 +79,72 @@ export default function SignUp() {
   };
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.containerEnter}>
-        <div className={styles.modal__block}>
-          <form className={styles.modal__form} onSubmit={handleSubmit}>
-            <Link href="/">
-              <div className={styles.modal__logo}>
-                <img src="/img/logo_modal.png" alt="logo" />
+    <>
+      <div className={styles.wrapper}>
+        <div className={styles.containerEnter}>
+          <div className={styles.modal__block}>
+            <form className={styles.modal__form} onSubmit={handleSubmit}>
+              <Link href="/">
+                <div className={styles.modal__logo}>
+                  <img src="/img/logo_modal.png" alt="logo" />
+                </div>
+              </Link>
+              <input
+                className={classNames(styles.modal__input)}
+                type="text"
+                name="username"
+                placeholder="Имя пользователя"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+                required
+              />
+              <input
+                className={classNames(styles.modal__input)}
+                type="email"
+                name="email"
+                placeholder="Почта"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                required
+              />
+              <input
+                className={classNames(styles.modal__input)}
+                type="password"
+                name="password"
+                placeholder="Пароль"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+              />
+              <input
+                className={classNames(styles.modal__input)}
+                type="password"
+                name="confirmPassword"
+                placeholder="Повторите пароль"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
+                required
+              />
+              <div className={styles.errorContainer}>
+                {(error || passwordError) && (
+                  <p className={styles.errorText}>{error || passwordError}</p>
+                )}
               </div>
-            </Link>
-            <input
-              className={classNames(styles.modal__input)}
-              type="text"
-              name="username"
-              placeholder="Имя пользователя"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={loading}
-              required
-            />
-            <input
-              className={classNames(styles.modal__input)}
-              type="email"
-              name="email"
-              placeholder="Почта"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              required
-            />
-            <input
-              className={classNames(styles.modal__input)}
-              type="password"
-              name="password"
-              placeholder="Пароль"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
-            <input
-              className={classNames(styles.modal__input)}
-              type="password"
-              name="confirmPassword"
-              placeholder="Повторите пароль"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
-            <div className={styles.errorContainer}>
-              {(error || passwordError) && (
-                <p className={styles.errorText}>{error || passwordError}</p>
-              )}
-            </div>
-            <button 
-              type="submit" 
-              className={styles.modal__btnSignupEnt}
-              disabled={loading}
-            >
-              {loading ? 'Загрузка...' : 'Зарегистрироваться'}
-            </button>
-          </form>
+              <button 
+                type="submit" 
+                className={styles.modal__btnSignupEnt}
+                disabled={loading}
+              >
+                {loading ? 'Загрузка...' : 'Зарегистрироваться'}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
