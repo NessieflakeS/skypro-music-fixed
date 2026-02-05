@@ -542,3 +542,56 @@
   text-decoration: none;
   transition: color 0.2s ease;
 }
+
+.trackCount {
+  margin-bottom: 20px;
+  color: #696969;
+  font-size: 14px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: #696969;
+}
+
+.emptyState h3 {
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.emptyStateText {
+  color: #ffffff;
+  margin-bottom: 20px;
+}
+
+.emptyStateLink {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #ad61ff;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.emptyStateLink:hover {
+  background-color: #d9b6ff;
+}
+
+.homeLink {
+  margin-top: 10px;
+  display: inline-block;
+}
+
+.homeButton {
+  background-color: #696969 !important;
+}
+
+.homeButton:hover {
+  background-color: #7a7a7a !important;
+}

@@ -19,15 +19,43 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
+const SELECTION_NAMES: { [key: number]: string } = {
+  1: "Плейлист дня",
+  2: "100 танцевальных хитов", 
+  3: "Инди-заряд",
+};
+
+const getRandomTracks = (tracks: Track[], count: number, selectionId: number): Track[] => {
+  if (tracks.length === 0) return [];
+  
+  const shuffled = [...tracks].sort((a, b) => {
+    const hashA = a.id + selectionId;
+    const hashB = b.id + selectionId;
+    return (hashA % 100) - (hashB % 100);
+  });
+  
+  const trackCount = Math.min(Math.max(5, selectionId % 4 + 5), tracks.length);
+  return shuffled.slice(0, trackCount);
+};
+
 export default function PlaylistPage() {
   const params = useParams();
   const id = params.id ? Number(params.id) : null;
   
   const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
   const [rawTracks, setRawTracks] = useState<Track[]>([]);
+  const [allTracks, setAllTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectionName, setSelectionName] = useState("Подборка");
+
+  useEffect(() => {
+    if (id && SELECTION_NAMES[id]) {
+      setSelectionName(SELECTION_NAMES[id]);
+    } else {
+      setSelectionName(`Подборка #${id}`);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -39,12 +67,47 @@ export default function PlaylistPage() {
     loadTracks();
   }, [id]);
 
-  const loadTracks = async (): Promise<void> => {
+  const loadAllTracks = async (): Promise<Track[]> => {
+    try {
+      const data = await trackService.getAllTracks();
+      setAllTracks(data);
+      return data;
+    } catch (err: any) {
+      console.error('Ошибка загрузки всех треков:', err);
+      throw err;
+    }
+  };
+
+  const loadTracks = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const tracksData: Track[] = await trackService.getSelectionTracks(id!);
+      const allTracksData = await loadAllTracks();
+      
+      if (allTracksData.length === 0) {
+        throw new Error('Нет доступных треков');
+      }
+      
+      try {
+        const selectionInfo = await trackService.getSelectionInfo(id!);
+        if (selectionInfo && selectionInfo.name) {
+          setSelectionName(selectionInfo.name);
+        }
+      } catch (selectionError) {
+        console.log('Информация о подборке не найдена, используем дефолтное название');
+      }
+      
+      let tracksData: Track[] = [];
+      try {
+        tracksData = await trackService.getSelectionTracks(id!);
+      } catch (trackError) {
+        console.log('Треки подборки не найдены, используем случайные');
+      }
+      
+      if (tracksData.length === 0) {
+        tracksData = getRandomTracks(allTracksData, 8, id!);
+      }
       
       setRawTracks(tracksData);
       
@@ -63,12 +126,9 @@ export default function PlaylistPage() {
       }));
       
       setTracks(tracksForDisplay);
-      
-      setSelectionName(`Подборка #${id}`);
-      
     } catch (err: any) {
       console.error('Ошибка загрузки подборки:', err);
-      setError(err.message || 'Ошибка загрузки подборки');
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки подборки');
     } finally {
       setLoading(false);
     }
@@ -97,8 +157,8 @@ export default function PlaylistPage() {
             <button onClick={loadTracks} className={styles.retryButton}>
               Попробовать снова
             </button>
-            <Link href="/" style={{ marginTop: '10px', display: 'inline-block' }}>
-              <button className={styles.retryButton} style={{ backgroundColor: '#696969' }}>
+            <Link href="/" className={styles.homeLink}>
+              <button className={`${styles.retryButton} ${styles.homeButton}`}>
                 На главную
               </button>
             </Link>
@@ -120,11 +180,7 @@ export default function PlaylistPage() {
             <div className={styles.contentContainer}>
               {tracks.length > 0 ? (
                 <>
-                  <div style={{ 
-                    marginBottom: '20px', 
-                    color: '#696969',
-                    fontSize: '14px'
-                  }}>
+                  <div className={styles.trackCount}>
                     В подборке {tracks.length} треков
                   </div>
                   <TrackList tracks={tracks} />
@@ -132,16 +188,10 @@ export default function PlaylistPage() {
               ) : (
                 <div className={styles.emptyState}>
                   <h3>В этой подборке пока нет треков</h3>
-                  <p style={{ color: '#ffffff', marginBottom: '20px' }}>Попробуйте другую подборку или перейдите на главную страницу</p>
-                  <Link href="/" style={{ 
-                    display: 'inline-block', 
-                    marginTop: '20px',
-                    padding: '10px 20px',
-                    backgroundColor: '#ad61ff',
-                    color: 'white',
-                    borderRadius: '6px',
-                    textDecoration: 'none'
-                  }}>
+                  <p className={styles.emptyStateText}>
+                    Попробуйте другую подборку или перейдите на главную страницу
+                  </p>
+                  <Link href="/" className={styles.emptyStateLink}>
                     На главную
                   </Link>
                 </div>
