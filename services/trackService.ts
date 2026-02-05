@@ -12,10 +12,18 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
+  const protectedEndpoints = [
+    '/catalog/track/favorite/all/',
+    '/catalog/track/:id/favorite/'
+  ];
+  
+  const isProtected = protectedEndpoints.some(endpoint => 
+    config.url?.includes(endpoint.replace('/:id/', ''))
+  );
+  
+  if (typeof window !== 'undefined' && isProtected) {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
   }

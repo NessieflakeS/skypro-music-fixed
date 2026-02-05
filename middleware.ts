@@ -6,22 +6,31 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  const protectedPaths = ['/', '/favorites', '/playlist']
-  const isProtectedPath = protectedPaths.some(path => 
+  const publicPaths = ['/', '/playlist']
+  const isPublicPath = publicPaths.some(path => 
     pathname === path || pathname.startsWith(`${path}/`)
   )
 
   const authPaths = ['/signin', '/signup']
   const isAuthPath = authPaths.includes(pathname)
 
+  const protectedPaths = ['/favorites'] 
+  const isProtectedPath = protectedPaths.some(path => 
+    pathname === path || pathname.startsWith(`${path}/`)
+  )
+
   if (!token && isProtectedPath) {
-    console.log('No token, redirecting to signin');
+    console.log('No token for protected path, redirecting to signin');
     return NextResponse.redirect(new URL('/signin', request.url))
   }
 
   if (token && isAuthPath) {
-    console.log('Token exists, redirecting to home');
+    console.log('Token exists for auth page, redirecting to home');
     return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  if (isPublicPath) {
+    return NextResponse.next()
   }
 
   return NextResponse.next()

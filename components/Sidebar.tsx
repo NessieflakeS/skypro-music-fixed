@@ -19,21 +19,27 @@ interface Selection {
   tracks?: any[];
 }
 
-const DEFAULT_IMAGES = [
-  "/img/playlist01.png",
-  "/img/playlist02.png", 
-  "/img/playlist03.png"
-];
+const SELECTION_MAPPING: { [key: string]: string } = {
+  'dayplaylist': 'Плейлист дня',
+  'dancehits': '100 танцевальных хитов',
+  'indiecharge': 'Инди-заряд',
+  'Плейлист дня': 'Плейлист дня',
+  '100 танцевальных хитов': '100 танцевальных хитов',
+  'Инди-заряд': 'Инди-заряд'
+};
+
+const SELECTION_IMAGES: { [key: string]: string } = {
+  'Плейлист дня': '/img/playlist01.png',
+  '100 танцевальных хитов': '/img/playlist02.png',
+  'Инди-заряд': '/img/playlist03.png',
+  'default': '/img/playlist01.png'
+};
 
 export default function Sidebar() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
-  const [selections, setSelections] = useState<Selection[]>([
-    { id: 1, name: "Плейлист дня", image: DEFAULT_IMAGES[0], items: [] },
-    { id: 2, name: "100 танцевальных хитов", image: DEFAULT_IMAGES[1], items: [] },
-    { id: 3, name: "Инди-заряд", image: DEFAULT_IMAGES[2], items: [] },
-  ]);
+  const [selections, setSelections] = useState<Selection[]>([]);
   const [loadingSelections, setLoadingSelections] = useState(false);
 
   useEffect(() => {
@@ -48,33 +54,66 @@ export default function Sidebar() {
       console.log('API selections data:', data);
       
       if (data && data.length > 0) {
-        const firstThreeSelections = data.slice(0, 3);
-        
-        const serverSelections: Selection[] = firstThreeSelections.map((selection: any, index: number) => {
-          return {
-            id: selection.id || selection._id || index + 1,
-            name: selection.name || `Подборка ${index + 1}`,
-            image: selection.image || DEFAULT_IMAGES[index] || DEFAULT_IMAGES[0],
-            items: selection.items || [],
-            tracks: selection.tracks || [],
-          };
-        });
-        
-        while (serverSelections.length < 3) {
-          const index = serverSelections.length;
-          serverSelections.push({
-            id: index + 1,
-            name: `Подборка ${index + 1}`,
-            image: DEFAULT_IMAGES[index] || DEFAULT_IMAGES[0],
-            items: [],
-            tracks: [],
+        const formattedSelections: Selection[] = data
+          .filter((selection: any) => {
+            const name = selection.name || '';
+            return (
+              name.includes('Плейлист дня') || 
+              name.includes('100 танцевальных хитов') || 
+              name.includes('Инди-заряд') ||
+              name.includes('dayplaylist') ||
+              name.includes('dancehits') ||
+              name.includes('indiecharge')
+            );
+          })
+          .slice(0, 3) 
+          .map((selection: any, index: number) => {
+            const originalName = selection.name || '';
+            let displayName = originalName;
+            
+            if (originalName.includes('dayplaylist')) {
+              displayName = 'Плейлист дня';
+            } else if (originalName.includes('dancehits')) {
+              displayName = '100 танцевальных хитов';
+            } else if (originalName.includes('indiecharge')) {
+              displayName = 'Инди-заряд';
+            }
+            
+            return {
+              id: selection.id || selection._id || index + 1,
+              name: SELECTION_MAPPING[displayName] || displayName || `Подборка ${index + 1}`,
+              image: SELECTION_IMAGES[displayName] || `/img/playlist0${(index % 3) + 1}.png`,
+              items: selection.items || [],
+              tracks: selection.tracks || [],
+            };
           });
-        }
         
-        setSelections(serverSelections);
+        if (formattedSelections.length === 0) {
+          const defaultSelections = [
+            { id: 1, name: "Плейлист дня", image: "/img/playlist01.png", items: [], tracks: [] },
+            { id: 2, name: "100 танцевальных хитов", image: "/img/playlist02.png", items: [], tracks: [] },
+            { id: 3, name: "Инди-заряд", image: "/img/playlist03.png", items: [], tracks: [] },
+          ];
+          setSelections(defaultSelections);
+        } else {
+          setSelections(formattedSelections);
+        }
+      } else {
+        const defaultSelections = [
+          { id: 1, name: "Плейлист дня", image: "/img/playlist01.png", items: [], tracks: [] },
+          { id: 2, name: "100 танцевальных хитов", image: "/img/playlist02.png", items: [], tracks: [] },
+          { id: 3, name: "Инди-заряд", image: "/img/playlist03.png", items: [], tracks: [] },
+        ];
+        setSelections(defaultSelections);
       }
     } catch (error) {
       console.error('Error loading selections:', error);
+      const defaultSelections = [
+        { id: 1, name: "Плейлист дня", image: "/img/playlist01.png", items: [], tracks: [] },
+        { id: 2, name: "100 танцевальных хитов", image: "/img/playlist02.png", items: [], tracks: [] },
+        { id: 3, name: "Инди-заряд", image: "/img/playlist03.png", items: [], tracks: [] },
+      ];
+      setSelections(defaultSelections);
     } finally {
       setLoadingSelections(false);
     }
@@ -123,12 +162,6 @@ export default function Sidebar() {
                   height={150}
                   priority={selection.id === 1}
                 />
-                <div className={styles.selectionInfo}>
-                  {selection.name}
-                  {selection.items?.length || selection.tracks?.length ? 
-                    ` (${selection.items?.length || selection.tracks?.length} треков)` : 
-                    ''}
-                </div>
               </Link>
             </div>
           ))}

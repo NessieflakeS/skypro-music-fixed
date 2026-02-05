@@ -132,7 +132,7 @@ export default function PlaylistPage() {
               ) : (
                 <div className={styles.emptyState}>
                   <h3>В этой подборке пока нет треков</h3>
-                  <p>Попробуйте другую подборку или перейдите на главную страницу</p>
+                  <p style={{ color: '#ffffff', marginBottom: '20px' }}>Попробуйте другую подборку или перейдите на главную страницу</p>
                   <Link href="/" style={{ 
                     display: 'inline-block', 
                     marginTop: '20px',
