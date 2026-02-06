@@ -142,27 +142,25 @@ api.interceptors.response.use(
       let selections: Selection[] = [];
       
       if (response.data && response.data.success && response.data.data) {
-        console.log('Формат 1: response.data.data');
-        selections = response.data.data;
+        selections = response.data.data.map((selection: any): Selection => ({
+          id: selection.id || selection._id || 0,
+          name: selection.name || `Подборка`,
+          items: selection.items || [],
+          tracks: selection.tracks || []
+        }));
       } else if (Array.isArray(response.data)) {
-        console.log('Формат 2: response.data (массив)');
-        selections = response.data;
-      } else if (response.data && response.data.results) {
-        console.log('Формат 3: response.data.results');
-        selections = response.data.results;
-      } else if (response.data) {
-        console.log('Формат 4: response.data (объект)');
-        selections = Object.values(response.data).flat();
+        selections = response.data.map((selection: any): Selection => ({
+          id: selection.id || selection._id || 0,
+          name: selection.name || `Подборка`,
+          items: selection.items || [],
+          tracks: selection.tracks || []
+        }));
       }
       
       console.log(`Successfully fetched ${selections.length} selections from API`);
       return selections;
     } catch (error: any) {
       console.error('Error fetching selections from API:', error);
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-      }
       return [];
     }
   },
