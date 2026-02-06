@@ -19,17 +19,35 @@ interface Selection {
   tracks?: any[];
 }
 
-const DEFAULT_SELECTIONS = [
-  { id: 1, name: "Плейлист дня", image: "/img/playlist01.png" },
-  { id: 2, name: "100 танцевальных хитов", image: "/img/playlist02.png" },
-  { id: 3, name: "Инди-заряд", image: "/img/playlist03.png" },
+const FIXED_SELECTIONS: Selection[] = [
+  { 
+    id: 1, 
+    name: "Плейлист дня", 
+    image: "/img/playlist01.png",
+    items: [],
+    tracks: []
+  },
+  { 
+    id: 2, 
+    name: "100 танцевальных хитов", 
+    image: "/img/playlist02.png",
+    items: [],
+    tracks: []
+  },
+  { 
+    id: 3, 
+    name: "Инди-заряд", 
+    image: "/img/playlist03.png",
+    items: [],
+    tracks: []
+  },
 ];
 
 export default function Sidebar() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
-  const [selections, setSelections] = useState<Selection[]>(DEFAULT_SELECTIONS);
+  const [selections, setSelections] = useState<Selection[]>(FIXED_SELECTIONS);
   const [loadingSelections, setLoadingSelections] = useState(false);
 
   useEffect(() => {
@@ -39,31 +57,48 @@ export default function Sidebar() {
   const loadSelections = async () => {
     try {
       setLoadingSelections(true);
+      
+      console.log("Запрашиваем подборки из API...");
       const data = await trackService.getAllSelections();
+      console.log("Ответ от API (все подборки):", data);
       
       if (data && data.length > 0) {
-        const apiSelections = data.slice(0, 3).map((selection: any, index: number) => ({
-          id: selection.id || selection._id || index + 1,
-          name: selection.name || `Подборка ${index + 1}`,
-          image: selection.image || `/img/playlist0${(index % 3) + 1}.png`,
-        }));
+        const meaningfulSelections = data.filter((selection: any) => {
+          const name = (selection.name || '').toLowerCase();
+          return (
+            name.includes('плейлист') ||
+            name.includes('playlist') ||
+            name.includes('хит') ||
+            name.includes('hit') ||
+            name.includes('инди') ||
+            name.includes('indie') ||
+            name.includes('танц') ||
+            name.includes('dance')
+          );
+        });
         
-        while (apiSelections.length < 3) {
-          const index = apiSelections.length;
-          apiSelections.push({
-            id: index + 1,
-            name: DEFAULT_SELECTIONS[index]?.name || `Подборка ${index + 1}`,
-            image: DEFAULT_SELECTIONS[index]?.image || `/img/playlist0${(index % 3) + 1}.png`,
-          });
+        console.log("Осмысленные подборки:", meaningfulSelections);
+        
+        if (meaningfulSelections.length >= 3) {
+          const formattedSelections = meaningfulSelections.slice(0, 3).map((selection: any, index: number) => ({
+            id: selection.id || selection._id || index + 1,
+            name: selection.name || `Подборка ${index + 1}`,
+            image: `/img/playlist0${index + 1}.png`,
+            items: selection.items || [],
+            tracks: selection.tracks || [],
+          }));
+          setSelections(formattedSelections);
+        } else {
+          console.log("Используем фиксированные подборки");
+          setSelections(FIXED_SELECTIONS);
         }
-        
-        setSelections(apiSelections);
       } else {
-        setSelections(DEFAULT_SELECTIONS);
+        console.log("API не вернул данные, используем фиксированные подборки");
+        setSelections(FIXED_SELECTIONS);
       }
     } catch (error) {
-      console.error('Error loading selections:', error);
-      setSelections(DEFAULT_SELECTIONS);
+      console.error('Ошибка загрузки подборок:', error);
+      setSelections(FIXED_SELECTIONS);
     } finally {
       setLoadingSelections(false);
     }
@@ -87,17 +122,36 @@ export default function Sidebar() {
     }
   };
 
+  const handleLogin = () => {
+    router.push('/signin');
+  };
+
+  const handleRegister = () => {
+    router.push('/signup');
+  };
+
   return (
     <div className={styles.sidebar}>
       <div className={styles.sidebar__personal}>
         <p className={styles.sidebar__personalName}>
           {isAuthenticated ? user?.username || "Пользователь" : "Гость"}
         </p>
-        <div className={styles.sidebar__icon} onClick={handleLogout}>
-          <svg>
-            <use xlinkHref="/img/icon/sprite.svg#logout"></use>
-          </svg>
-        </div>
+        {isAuthenticated ? (
+          <div className={styles.sidebar__icon} onClick={handleLogout}>
+            <svg>
+              <use xlinkHref="/img/icon/sprite.svg#logout"></use>
+            </svg>
+          </div>
+        ) : (
+          <div className={styles.sidebar__authButtons}>
+            <button onClick={handleLogin} className={styles.sidebar__authButton}>
+              Войти
+            </button>
+            <button onClick={handleRegister} className={styles.sidebar__authButton}>
+              Регистрация
+            </button>
+          </div>
+        )}
       </div>
       <div className={styles.sidebar__block}>
         <div className={styles.sidebar__list}>

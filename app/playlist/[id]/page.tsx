@@ -78,35 +78,38 @@ export default function PlaylistPage() {
     }
   };
 
-  const loadTracks = async () => {
+  const loadTracks = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
       
-      const allTracksData = await loadAllTracks();
+      const selectionNames: { [key: number]: string } = {
+        1: "Плейлист дня",
+        2: "100 танцевальных хитов", 
+        3: "Инди-заряд",
+      };
       
-      if (allTracksData.length === 0) {
-        throw new Error('Нет доступных треков');
-      }
-      
-      try {
-        const selectionInfo = await trackService.getSelectionInfo(id!);
-        if (selectionInfo && selectionInfo.name) {
-          setSelectionName(selectionInfo.name);
-        }
-      } catch (selectionError) {
-        console.log('Информация о подборке не найдена, используем дефолтное название');
+      if (id && selectionNames[id]) {
+        setSelectionName(selectionNames[id]);
+      } else {
+        setSelectionName(`Подборка #${id}`);
       }
       
       let tracksData: Track[] = [];
       try {
         tracksData = await trackService.getSelectionTracks(id!);
-      } catch (trackError) {
-        console.log('Треки подборки не найдены, используем случайные');
-      }
-      
-      if (tracksData.length === 0) {
-        tracksData = getRandomTracks(allTracksData, 8, id!);
+      } catch (apiError) {
+        console.log('Не удалось получить треки подборки, используем все треки');
+        const allTracks = await trackService.getAllTracks();
+        if (id === 1) {
+          tracksData = allTracks.slice(0, 8);
+        } else if (id === 2) {
+          tracksData = allTracks.slice(8, 16);
+        } else if (id === 3) {
+          tracksData = allTracks.slice(16, 24);
+        } else {
+          tracksData = allTracks.slice(0, 8);
+        }
       }
       
       setRawTracks(tracksData);
@@ -126,9 +129,10 @@ export default function PlaylistPage() {
       }));
       
       setTracks(tracksForDisplay);
+      
     } catch (err: any) {
       console.error('Ошибка загрузки подборки:', err);
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки подборки');
+      setError(err.message || 'Ошибка загрузки подборки');
     } finally {
       setLoading(false);
     }

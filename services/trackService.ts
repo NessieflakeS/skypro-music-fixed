@@ -137,30 +137,36 @@ api.interceptors.response.use(
     try {
       console.log('Fetching all selections from API...');
       const response = await api.get('/catalog/selection/all/');
-      console.log('Selections API response:', response.data);
+      console.log('Full API response for selections:', response.data);
       
       let selections: Selection[] = [];
       
       if (response.data && response.data.success && response.data.data) {
-        selections = response.data.data.map((selection: any) => ({
-          id: selection.id || selection._id || 0,
-          name: selection.name || `Подборка`,
-          items: selection.items || [],
-          tracks: selection.tracks || []
-        }));
+        console.log('Data structure: success.data.data', response.data.data);
+        selections = response.data.data.map((selection: any, index: number) => {
+          console.log(`Selection ${index}:`, selection);
+          return {
+            id: selection.id || selection._id || 0,
+            name: selection.name || `Подборка ${selection.id || index}`,
+            items: selection.items || [],
+            tracks: selection.tracks || []
+          };
+        });
       } else if (Array.isArray(response.data)) {
-        selections = response.data.map((selection: any) => ({
+        console.log('Data structure: array', response.data);
+        selections = response.data.map((selection: any, index: number) => ({
           id: selection.id || selection._id || 0,
-          name: selection.name || `Подборка`,
+          name: selection.name || `Подборка ${selection.id || index}`,
           items: selection.items || [],
           tracks: selection.tracks || []
         }));
       }
       
-      console.log(`Successfully fetched ${selections.length} selections from API`);
+      console.log(`Processed ${selections.length} selections`);
       return selections;
     } catch (error: any) {
       console.error('Error fetching selections from API:', error);
+      console.error('Error details:', error.response?.data);
       return [];
     }
   },
