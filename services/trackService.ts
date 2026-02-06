@@ -137,36 +137,32 @@ api.interceptors.response.use(
     try {
       console.log('Fetching all selections from API...');
       const response = await api.get('/catalog/selection/all/');
-      console.log('Full API response for selections:', response.data);
+      console.log('Selections API response:', response.data);
       
       let selections: Selection[] = [];
       
       if (response.data && response.data.success && response.data.data) {
-        console.log('Data structure: success.data.data', response.data.data);
-        selections = response.data.data.map((selection: any, index: number) => {
-          console.log(`Selection ${index}:`, selection);
-          return {
-            id: selection.id || selection._id || 0,
-            name: selection.name || `Подборка ${selection.id || index}`,
-            items: selection.items || [],
-            tracks: selection.tracks || []
-          };
-        });
+        console.log('Формат 1: response.data.data');
+        selections = response.data.data;
       } else if (Array.isArray(response.data)) {
-        console.log('Data structure: array', response.data);
-        selections = response.data.map((selection: any, index: number) => ({
-          id: selection.id || selection._id || 0,
-          name: selection.name || `Подборка ${selection.id || index}`,
-          items: selection.items || [],
-          tracks: selection.tracks || []
-        }));
+        console.log('Формат 2: response.data (массив)');
+        selections = response.data;
+      } else if (response.data && response.data.results) {
+        console.log('Формат 3: response.data.results');
+        selections = response.data.results;
+      } else if (response.data) {
+        console.log('Формат 4: response.data (объект)');
+        selections = Object.values(response.data).flat();
       }
       
-      console.log(`Processed ${selections.length} selections`);
+      console.log(`Successfully fetched ${selections.length} selections from API`);
       return selections;
     } catch (error: any) {
       console.error('Error fetching selections from API:', error);
-      console.error('Error details:', error.response?.data);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
       return [];
     }
   },
