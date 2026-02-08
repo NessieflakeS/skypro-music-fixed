@@ -69,6 +69,7 @@
     margin-bottom: 16px;
     display: flex;
     align-items: center;
+    color: #fff;
 }
 
 .menu__itemIcon {
@@ -104,4 +105,19 @@
 
 .themeToggle:hover {
     background-color: #404040;
+}
+
+.logoutButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.logoutButton:hover {
+  color: #d9b6ff;
 }
