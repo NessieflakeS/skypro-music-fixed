@@ -40,12 +40,6 @@ export default function Header() {
       localStorage.removeItem('user');
       localStorage.removeItem('menuOpen');
       
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      
-      Cookies.remove('token');
-      Cookies.remove('refresh_token');
-      
       console.log('Logout successful, redirecting to signin...');
       
       router.replace('/signin');

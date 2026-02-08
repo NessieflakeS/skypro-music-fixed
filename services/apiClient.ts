@@ -12,10 +12,7 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token') || document.cookie
-      .split('; ')
-      .find(row => row.startsWith('token='))
-      ?.split('=')[1];
+    const token = localStorage.getItem('token');
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -32,10 +29,10 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      }
-      if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
-        window.location.href = '/signin';
+        
+        if (window.location.pathname !== '/signin') {
+          window.location.href = '/signin';
+        }
       }
     }
     return Promise.reject(error);

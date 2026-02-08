@@ -67,54 +67,87 @@ api.interceptors.response.use(
 );
 
   export const trackService = {
-    getAllTracks: async (): Promise<Track[]> => {
-      try {
-        console.log('Fetching all tracks...');
-        const response = await apiClient.get('/catalog/track/all/');
-        console.log('Tracks response:', response.data);
-        
-        let tracks: Track[] = [];
-        
-        if (response.data && response.data.success && response.data.data) {
-          tracks = response.data.data;
-        } else if (Array.isArray(response.data)) {
-          tracks = response.data;
-        }
-        
-        console.log('Tracks fetched successfully:', tracks.length);
-        return tracks;
-      } catch (error: any) {
-        console.error('Error fetching tracks:', error);
-        throw new Error('Не удалось загрузить треки');
+  getAllTracks: async (): Promise<Track[]> => {
+    try {
+      console.log('Fetching all tracks...');
+      const response = await apiClient.get('/catalog/track/all/');
+      console.log('Tracks response:', response.data);
+      
+      let tracks: Track[] = [];
+      
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        tracks = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        tracks = response.data;
       }
-    },
+      
+      tracks = tracks.map((track: any) => ({
+        id: track.id || track._id || 0,
+        name: track.name || track.title || "Без названия",
+        author: track.author || track.artist || "Неизвестный исполнитель",
+        album: track.album || "Без альбома",
+        duration_in_seconds: track.duration_in_seconds || track.duration || 0,
+        track_file: track.track_file || track.audio_file || track.url || "",
+        release_date: track.release_date || "2023-01-01",
+        genre: Array.isArray(track.genre) ? track.genre : 
+               track.genre ? [track.genre] : [],
+        logo: track.logo || null,
+        stared_user: track.stared_user || []
+      }));
+      
+      console.log('Tracks fetched successfully:', tracks.length);
+      return tracks;
+    } catch (error: any) {
+      console.error('Error fetching tracks:', error);
+      throw new Error('Не удалось загрузить треки');
+    }
+  },
 
   getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
     try {
       console.log(`Fetching selection ${selectionId} tracks...`);
-      const response = await api.get(`/catalog/selection/${selectionId}/`);
+      const response = await apiClient.get(`/catalog/selection/${selectionId}/`);
       console.log('Selection response:', response.data);
       
       let tracks: Track[] = [];
       
       if (response.data && response.data.success && response.data.data) {
         const selectionData = response.data.data;
+        
         if (selectionData.items && Array.isArray(selectionData.items)) {
           tracks = selectionData.items;
-        } else if (selectionData.tracks && Array.isArray(selectionData.tracks)) {
+        }
+        else if (selectionData.tracks && Array.isArray(selectionData.tracks)) {
           tracks = selectionData.tracks;
-        } else if (Array.isArray(selectionData)) {
+        }
+        else if (Array.isArray(selectionData)) {
           tracks = selectionData;
         }
-      } else if (response.data && Array.isArray(response.data)) {
+      } 
+      else if (Array.isArray(response.data)) {
         tracks = response.data;
-      } else if (response.data && response.data.items && Array.isArray(response.data.items)) {
-        tracks = response.data.items;
-      } else if (response.data && response.data.tracks && Array.isArray(response.data.tracks)) {
-        tracks = response.data.tracks;
-      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        tracks = response.data.data;
       }
+      else if (response.data && response.data.items) {
+        tracks = Array.isArray(response.data.items) ? response.data.items : [];
+      } else if (response.data && response.data.tracks) {
+        tracks = Array.isArray(response.data.tracks) ? response.data.tracks : [];
+      } else if (response.data && response.data.data) {
+        tracks = Array.isArray(response.data.data) ? response.data.data : [];
+      }
+      
+      tracks = tracks.map((track: any) => ({
+        id: track.id || track._id || 0,
+        name: track.name || track.title || "Без названия",
+        author: track.author || track.artist || "Неизвестный исполнитель",
+        album: track.album || "Без альбома",
+        duration_in_seconds: track.duration_in_seconds || track.duration || 0,
+        track_file: track.track_file || track.audio_file || track.url || "",
+        release_date: track.release_date || "2023-01-01",
+        genre: Array.isArray(track.genre) ? track.genre : 
+               track.genre ? [track.genre] : [],
+        logo: track.logo || null,
+        stared_user: track.stared_user || []
+      }));
       
       console.log(`Selection ${selectionId} tracks fetched:`, tracks.length);
       return tracks;
@@ -123,10 +156,6 @@ api.interceptors.response.use(
       
       if (error.response?.status === 404) {
         throw new Error(`Подборка ${selectionId} не найдена`);
-      }
-      
-      if (error.code === 'ERR_NETWORK') {
-        throw new Error('Сервер временно недоступен');
       }
       
       throw new Error(`Ошибка загрузки подборки: ${error.message}`);

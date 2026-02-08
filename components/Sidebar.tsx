@@ -18,17 +18,17 @@ interface Selection {
 
 const FIXED_PLAYLISTS = [
   { 
-    id: 2,
+    id: 1,  
     name: "Плейлист дня", 
     image: "/img/playlist01.png"
   },
   { 
-    id: 3, 
+    id: 2,  
     name: "100 танцевальных хитов", 
     image: "/img/playlist02.png"
   },
   { 
-    id: 4, 
+    id: 3,  
     name: "Инди-заряд", 
     image: "/img/playlist03.png"
   },

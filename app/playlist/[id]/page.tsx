@@ -28,13 +28,14 @@ const SELECTION_NAMES: { [key: number]: string } = {
 const getRandomTracks = (tracks: Track[], count: number, selectionId: number): Track[] => {
   if (tracks.length === 0) return [];
   
+  const seed = selectionId;
   const shuffled = [...tracks].sort((a, b) => {
-    const hashA = a.id + selectionId;
-    const hashB = b.id + selectionId;
-    return (hashA % 100) - (hashB % 100);
+    const hashA = (a.id + seed) * 9301 + 49297;
+    const hashB = (b.id + seed) * 9301 + 49297;
+    return (hashA % 233280) - (hashB % 233280);
   });
   
-  const trackCount = Math.min(Math.max(5, selectionId % 4 + 5), tracks.length);
+  const trackCount = Math.min(8, tracks.length); 
   return shuffled.slice(0, trackCount);
 };
 

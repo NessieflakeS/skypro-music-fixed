@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { registerStart, registerSuccess, registerFailure, clearError } from '@/store/userSlice';
 import { RootState } from '@/store/store';
-import { authService } from '@/services/authService'; // Только реальный сервис
+import { authService } from '@/services/authService'; 
 import styles from './signup.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
@@ -67,9 +67,6 @@ export default function SignUp() {
       localStorage.setItem('token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
-      
-      Cookies.set('token', data.access, { expires: 7 });
-      Cookies.set('refresh_token', data.refresh, { expires: 7 });
       
       dispatch(registerSuccess(data.user));
       router.replace('/');
