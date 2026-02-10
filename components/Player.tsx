@@ -31,14 +31,16 @@ const Player = memo(function Player() {
   const handleTimeUpdate = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
+      dispatch(setCurrentTime(audio.currentTime));
     }
-  }, []);
+  }, [dispatch]);
 
   const handleLoadedMetadata = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
+      dispatch(setDuration(audio.duration));
     }
-  }, []);
+  }, [dispatch]);
 
   const handleEnded = useCallback(() => {
     if (repeat) {
@@ -78,6 +80,13 @@ const Player = memo(function Player() {
   const handleShuffleClick = useCallback(() => {
     dispatch(toggleShuffle());
   }, [dispatch]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && currentTrack && Math.abs(audio.currentTime - currentTime) > 0.1) {
+      audio.currentTime = currentTime;
+    }
+  }, [currentTime, currentTrack]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -211,20 +220,9 @@ const Player = memo(function Player() {
       {currentTrack && currentTrack.track_file && (
         <audio
           ref={audioRef}
-          src={currentTrack?.track_file}
-          onTimeUpdate={() => {
-            if (audioRef.current) {
-              dispatch(setCurrentTime(audioRef.current.currentTime));
-              if (!duration && audioRef.current.duration) {
-                dispatch(setDuration(audioRef.current.duration));
-              }
-            }
-          }}
-          onLoadedMetadata={() => {
-            if (audioRef.current) {
-              dispatch(setDuration(audioRef.current.duration));
-            }
-          }}
+          src={currentTrack.track_file}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
           loop={repeat}
           preload="metadata"
