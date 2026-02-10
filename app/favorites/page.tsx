@@ -28,6 +28,7 @@ export default function FavoritesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allTracks, setAllTracks] = useState<Track[]>([]);
+  const [hasAttemptedDirectLoad, setHasAttemptedDirectLoad] = useState(false);
 
   const loadAllTracks = useCallback(async (): Promise<Track[]> => {
     try {
@@ -40,31 +41,45 @@ export default function FavoritesPage() {
     }
   }, []);
 
-  const filterFavoriteTracks = useCallback((tracks: Track[]): ITrackDisplay[] => {
+  const filterFavoriteTracksToDisplay = useCallback((tracks: Track[]): ITrackDisplay[] => {
+    console.log("Фильтруем треки. favoriteTracks из Redux:", favoriteTracks);
+    console.log("Всего треков для фильтрации:", tracks.length);
+    
     if (favoriteTracks && favoriteTracks.length > 0) {
-      return tracks
-        .filter(track => favoriteTracks.includes(track.id))
-        .map((track: Track) => ({
-          id: track.id || track._id || 0,
-          name: track.name || "Без названия",
-          author: track.author || "Неизвестный исполнитель",
-          album: track.album || "Без альбома",
-          time: formatDuration(track.duration_in_seconds || 0),
-          track_file: track.track_file || "",
-          link: "#",
-          authorLink: "#",
-          albumLink: "#",
-          genre: track.genre || [],
-          release_date: track.release_date || "",
-        }));
+      const filtered = tracks.filter(track => {
+        const trackId = track.id || track._id || 0;
+        const isFavorite = favoriteTracks.includes(trackId);
+        console.log(`Трек ${trackId} (${track.name}): ${isFavorite ? 'избранный' : 'не избранный'}`);
+        return isFavorite;
+      });
+      
+      console.log("Отфильтровано треков:", filtered.length);
+      
+      return filtered.map((track: Track) => ({
+        id: track.id || track._id || 0,
+        name: track.name || "Без названия",
+        author: track.author || "Неизвестный исполнитель",
+        album: track.album || "Без альбома",
+        time: formatDuration(track.duration_in_seconds || 0),
+        track_file: track.track_file || "",
+        link: "#",
+        authorLink: "#",
+        albumLink: "#",
+        genre: track.genre || [],
+        release_date: track.release_date || "",
+      }));
     }
+    
+    console.log("favoriteTracks пуст, фильтруем по stared_user");
     
     return tracks
       .filter(track => {
         if (user && track.stared_user && Array.isArray(track.stared_user)) {
-          return track.stared_user.some((u: any) => 
+          const isLiked = track.stared_user.some((u: any) => 
             u.id === user.id || u._id === user.id || u === user.id
           );
+          console.log(`Трек ${track.id} (${track.name}): ${isLiked ? 'лайкнут пользователем' : 'не лайкнут'}`);
+          return isLiked;
         }
         return false;
       })
@@ -83,67 +98,107 @@ export default function FavoritesPage() {
       }));
   }, [favoriteTracks, user]);
 
+  const filterFavoriteTrackObjects = useCallback((tracks: Track[]): Track[] => {
+    if (favoriteTracks && favoriteTracks.length > 0) {
+      return tracks.filter(track => {
+        const trackId = track.id || track._id || 0;
+        return favoriteTracks.includes(trackId);
+      });
+    }
+    
+    if (user) {
+      return tracks.filter(track => {
+        if (track.stared_user && Array.isArray(track.stared_user)) {
+          return track.stared_user.some((u: any) => 
+            u.id === user.id || u._id === user.id || u === user.id
+          );
+        }
+        return false;
+      });
+    }
+    
+    return [];
+  }, [favoriteTracks, user]);
+
   const loadFavorites = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log("Загрузка избранных треков...");
-      console.log("Пользователь:", user);
+      console.log("=== НАЧАЛО ЗАГРУЗКИ ИЗБРАННОГО ===");
+      console.log("Пользователь:", user?.username);
       console.log("Избранные ID из Redux:", favoriteTracks);
+      console.log("Длина favoriteTracks:", favoriteTracks?.length || 0);
       
-      try {
-        const favoriteTracksData = await trackService.getFavoriteTracks();
-        console.log("Получены избранные треки с сервера:", favoriteTracksData.length);
-        
-        const trackIds = favoriteTracksData.map(track => track.id || track._id || 0);
-        dispatch(setFavoriteTracks(trackIds));
-        
-        const tracksForDisplay: ITrackDisplay[] = favoriteTracksData.map((track: Track) => ({
-          id: track.id || track._id || 0,
-          name: track.name || "Без названия",
-          author: track.author || "Неизвестный исполнитель",
-          album: track.album || "Без альбома",
-          time: formatDuration(track.duration_in_seconds || 0),
-          track_file: track.track_file || "",
-          link: "#",
-          authorLink: "#",
-          albumLink: "#",
-          genre: track.genre || [],
-          release_date: track.release_date || "",
-        }));
-        
-        setTracks(tracksForDisplay);
-        
-      } catch (apiError) {
-        console.log("Не удалось получить избранные с сервера, используем альтернативный метод...");
-        
-        const allTracksData = await loadAllTracks();
-        const favoriteTracksData = filterFavoriteTracks(allTracksData);
-        
-        setTracks(favoriteTracksData);
-        
-        const trackIds = favoriteTracksData.map(track => track.id);
-        dispatch(setFavoriteTracks(trackIds));
+      let favoriteTracksData: Track[] = [];
+      
+      if (!hasAttemptedDirectLoad) {
+        try {
+          console.log("Пробуем прямой запрос избранных треков...");
+          favoriteTracksData = await trackService.getFavoriteTracks();
+          console.log("Прямой запрос успешен! Получено треков:", favoriteTracksData.length);
+          setHasAttemptedDirectLoad(true);
+        } catch (apiError: any) {
+          console.log("Прямой запрос не удался:", apiError.message);
+          console.log("Используем альтернативный метод...");
+        }
       }
+      
+      if (favoriteTracksData.length === 0) {
+        console.log("Загружаем все треки для фильтрации...");
+        const allTracksData = await loadAllTracks();
+        console.log("Всего треков загружено:", allTracksData.length);
+        
+        favoriteTracksData = filterFavoriteTrackObjects(allTracksData);
+        console.log("После фильтрации осталось:", favoriteTracksData.length);
+      }
+      
+      console.log("Итоговое количество избранных треков:", favoriteTracksData.length);
+      
+      const tracksForDisplay: ITrackDisplay[] = favoriteTracksData.map((track: Track) => ({
+        id: track.id || track._id || 0,
+        name: track.name || "Без названия",
+        author: track.author || "Неизвестный исполнитель",
+        album: track.album || "Без альбома",
+        time: formatDuration(track.duration_in_seconds || 0),
+        track_file: track.track_file || "",
+        link: "#",
+        authorLink: "#",
+        albumLink: "#",
+        genre: track.genre || [],
+        release_date: track.release_date || "",
+      }));
+      
+      setTracks(tracksForDisplay);
+      
+      const trackIds = favoriteTracksData.map(track => track.id || track._id || 0);
+      console.log("Обновляем Redux с ID треков:", trackIds);
+      dispatch(setFavoriteTracks(trackIds));
       
     } catch (err: any) {
       console.error('Ошибка загрузки избранного:', err);
       setError(err.message || 'Ошибка загрузки избранных треков');
     } finally {
       setLoading(false);
+      console.log("=== ЗАВЕРШЕНИЕ ЗАГРУЗКИ ИЗБРАННОГО ===");
     }
-  }, [user, favoriteTracks, dispatch, loadAllTracks, filterFavoriteTracks]);
+  }, [user, favoriteTracks, dispatch, loadAllTracks, filterFavoriteTrackObjects, hasAttemptedDirectLoad]);
 
   const handleUnlike = useCallback(async (trackId: number) => {
     try {
+      console.log("Удаление трека из избранного:", trackId);
       await trackService.dislikeTrack(trackId);
       
-      setTracks(prev => prev.filter(track => track.id !== trackId));
+      setTracks(prev => {
+        const newTracks = prev.filter(track => track.id !== trackId);
+        console.log("Локальное состояние обновлено, осталось треков:", newTracks.length);
+        return newTracks;
+      });
       
-      dispatch(setFavoriteTracks(favoriteTracks.filter(id => id !== trackId)));
+      const newFavoriteTracks = favoriteTracks.filter(id => id !== trackId);
+      dispatch(setFavoriteTracks(newFavoriteTracks));
+      console.log("Redux состояние обновлено, осталось ID:", newFavoriteTracks.length);
       
-      console.log(`Трек ${trackId} удален из избранного`);
     } catch (err) {
       console.error('Ошибка удаления из избранного:', err);
       setError('Не удалось удалить трек из избранного');
@@ -157,6 +212,11 @@ export default function FavoritesPage() {
       loadFavorites();
     }
   }, [isAuthenticated, router, loadFavorites]);
+
+  useEffect(() => {
+    console.log("Треки для отображения (tracks состояние):", tracks.length);
+    console.log("Избранные ID в Redux (favoriteTracks):", favoriteTracks?.length || 0);
+  }, [tracks, favoriteTracks]);
 
   const emptyState = useMemo(() => (
     <div className={styles.emptyState}>
@@ -225,14 +285,19 @@ export default function FavoritesPage() {
                   
                   <div className={styles.favoritesActions}>
                     <button 
-                      onClick={() => loadFavorites()}
+                      onClick={() => {
+                        console.log("Обновление списка...");
+                        loadFavorites();
+                      }}
                       className={styles.refreshButton}
                     >
                       Обновить список
                     </button>
                   </div>
                   
-                  <TrackList tracks={tracks} />
+                  <div className={styles.playlistWrapper}>
+                    <TrackList tracks={tracks} />
+                  </div>
                 </>
               ) : !error && emptyState}
             </div>

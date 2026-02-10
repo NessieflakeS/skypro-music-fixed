@@ -11,7 +11,8 @@ interface UserState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
-  favoriteTracks: number[]; 
+  favoriteTracks: number[];
+  theme: 'light' | 'dark'; 
 }
 
 const initialState: UserState = {
@@ -20,6 +21,7 @@ const initialState: UserState = {
   loading: false,
   error: null,
   favoriteTracks: [],
+  theme: 'dark',
 };
 
 const userSlice = createSlice({
@@ -83,6 +85,12 @@ const userSlice = createSlice({
         state.favoriteTracks.push(trackId);
       }
     },
+    setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
+      state.theme = action.payload;
+    },
+    toggleTheme: (state) => {
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
+    },
   },
 });
 
@@ -99,6 +107,8 @@ export const {
   addFavoriteTrack,
   removeFavoriteTrack,
   toggleFavoriteTrack,
+  setTheme,       
+  toggleTheme,    
 } = userSlice.actions;
 
 export default userSlice.reducer;
