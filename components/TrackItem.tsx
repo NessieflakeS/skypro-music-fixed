@@ -14,6 +14,7 @@ interface TrackItemProps {
 }
 
 const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
+  console.log("TrackItem рендерится для трека:", track.id, track.name);
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying } = playerState;
