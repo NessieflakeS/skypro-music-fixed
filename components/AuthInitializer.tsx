@@ -1,72 +1,54 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { usePathname, useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { usePathname } from "next/navigation";
 import { loginSuccess, logout, setFavoriteTracks } from "@/store/userSlice";
-import { RootState } from "@/store/store";
 import { trackService } from "@/services/trackService";
 
 export default function AuthInitializer() {
   const dispatch = useDispatch();
-  const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated } = useSelector((state: RootState) => state.user);
-
-  const clearAuthData = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('menuOpen');
-    
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-  }, []);
 
   const loadFavoriteTracks = useCallback(async () => {
     try {
-      console.log("AuthInitializer: Загрузка избранных треков для Redux...");
-      const tracks = await trackService.getFavoriteTracks();
-      const trackIds = tracks.map(track => track.id || track._id || 0);
-      console.log("AuthInitializer: Загружено ID избранных треков для Redux:", trackIds.length);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      console.log("AuthInitializer: Загрузка избранных треков...");
+      const favoriteTracks = await trackService.getFavoriteTracks();
+      const trackIds = favoriteTracks.map(track => track.id || track._id || 0);
+      console.log("Загружено избранных треков:", trackIds.length);
       dispatch(setFavoriteTracks(trackIds));
     } catch (error) {
-      console.error('AuthInitializer: Ошибка загрузки избранных треков:', error);
+      console.error("Ошибка загрузки избранных треков:", error);
     }
   }, [dispatch]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
+    console.log("AuthInitializer запущен, путь:", pathname);
     
-    if (token && userStr) {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+    
+    if (token && user) {
       try {
-        const user = JSON.parse(userStr);
-        dispatch(loginSuccess(user));
+        const userData = JSON.parse(user);
+        console.log("Восстановление сессии для:", userData.username);
+        dispatch(loginSuccess(userData));
         loadFavoriteTracks();
       } catch (error) {
-        console.error('Ошибка парсинга пользователя:', error);
-        clearAuthData();
+        console.error("Ошибка парсинга user из localStorage:", error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
         dispatch(logout());
-        
-        if (pathname === '/favorites') {
-          router.push('/signin');
-        }
       }
     } else {
+      console.log("Пользователь не авторизован");
       dispatch(logout());
     }
-  }, [dispatch, loadFavoriteTracks, clearAuthData, pathname, router]);
-
-  useEffect(() => {
-    if (!isAuthenticated && pathname === '/favorites') {
-      router.push('/signin');
-    }
-    
-    if (isAuthenticated && (pathname === '/signin' || pathname === '/signup')) {
-      router.push('/');
-    }
-  }, [isAuthenticated, pathname, router]);
+  }, [dispatch, loadFavoriteTracks]);
 
   return null;
 }

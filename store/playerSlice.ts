@@ -7,6 +7,7 @@ interface PlayerTrack {
   album: string;
   track_file?: string;
   time?: string;
+  duration?: number;
 }
 
 interface PlayerState {

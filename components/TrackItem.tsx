@@ -14,7 +14,6 @@ interface TrackItemProps {
 }
 
 const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
-  console.log("TrackItem рендерится для трека:", track.id, track.name);
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying } = playerState;
@@ -29,15 +28,6 @@ const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
     [isCurrent, isPlaying]
   );
 
-  const playlistForPlayer = useMemo(() => playlist.map(t => ({
-    id: t.id,
-    name: t.name,
-    author: t.author,
-    album: t.album,
-    track_file: t.track_file,
-    time: t.time
-  })), [playlist]);
-
   const handleTrackClick = useCallback(() => {
     if (isCurrent) {
       dispatch(togglePlayPause());
@@ -51,10 +41,17 @@ const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
           track_file: track.track_file,
           time: track.time
         },
-        playlist: playlistForPlayer 
+        playlist: playlist.map(t => ({
+          id: t.id,
+          name: t.name,
+          author: t.author,
+          album: t.album,
+          track_file: t.track_file,
+          time: t.time
+        }))
       }));
     }
-  }, [dispatch, isCurrent, track, playlistForPlayer]); 
+  }, [dispatch, isCurrent, track, playlist]);
 
   const itemClassName = useMemo(() => 
     `${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`,
