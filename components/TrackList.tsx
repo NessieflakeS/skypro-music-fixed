@@ -10,6 +10,9 @@ interface TrackListProps {
 }
 
 export default function TrackList({ tracks = [] }: TrackListProps) {
+  console.log("🎵 TrackList компонент рендерится");
+  console.log("🎵 Получено треков в пропсе:", tracks.length);
+  console.log("🎵 Источник компонента:", window.location.pathname);
   const playlistRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   
