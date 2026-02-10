@@ -28,19 +28,19 @@ const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
     [isCurrent, isPlaying]
   );
 
+  const playlistForPlayer = useMemo(() => playlist.map(t => ({
+    id: t.id,
+    name: t.name,
+    author: t.author,
+    album: t.album,
+    track_file: t.track_file,
+    time: t.time
+  })), [playlist]);
+
   const handleTrackClick = useCallback(() => {
     if (isCurrent) {
       dispatch(togglePlayPause());
     } else {
-      const playlistForPlayer = useMemo(() => playlist.map(t => ({
-        id: t.id,
-        name: t.name,
-        author: t.author,
-        album: t.album,
-        track_file: t.track_file,
-        time: t.time
-      })), [playlist]);
-
       dispatch(setCurrentTrack({
         track: {
           id: track.id,
@@ -50,10 +50,10 @@ const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
           track_file: track.track_file,
           time: track.time
         },
-        playlist: playlistForPlayer
+        playlist: playlistForPlayer 
       }));
     }
-  }, [dispatch, isCurrent, track, playlist]);
+  }, [dispatch, isCurrent, track, playlistForPlayer]); 
 
   const itemClassName = useMemo(() => 
     `${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`,
