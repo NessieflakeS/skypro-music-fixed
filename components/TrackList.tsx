@@ -3,22 +3,10 @@
 import { useRef, useState, useEffect } from "react";
 import TrackItem from "./TrackItem";
 import styles from "./TrackList.module.css";
-
-export interface ITrack {
-  id: number;
-  name: string;
-  author: string;
-  album: string;
-  time: string;
-  link?: string;
-  authorLink?: string;
-  albumLink?: string;
-  subtitle?: string;
-  track_file?: string;
-}
+import { ITrackDisplay } from "@/types"; 
 
 interface TrackListProps {
-  tracks?: ITrack[];
+  tracks?: ITrackDisplay[];
 }
 
 export default function TrackList({ tracks = [] }: TrackListProps) {
@@ -61,8 +49,12 @@ export default function TrackList({ tracks = [] }: TrackListProps) {
         ref={playlistRef}
         className={`${styles.content__playlist} ${isScrolledToBottom ? styles.scrolled_to_bottom : ''}`}
       >
-        {tracks.map((track) => (
-          <TrackItem key={track.id} track={track} playlist={tracks} />
+        {tracks.map((track, index) => (
+          <TrackItem 
+            key={track.id ? `${track.id}-${index}` : index} 
+            track={track} 
+            playlist={tracks} 
+          />
         ))}
       </div>
     </div>

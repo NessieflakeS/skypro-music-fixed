@@ -1,12 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Header.module.css";
+import { logout } from "@/store/userSlice";
+import { RootState } from "@/store/store";
+import Cookies from 'js-cookie';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     const savedState = localStorage.getItem('menuOpen');
@@ -21,6 +29,29 @@ export default function Header() {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      dispatch(logout());
+      
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('menuOpen');
+      
+      console.log('Logout successful, redirecting to signin...');
+      
+      router.replace('/signin');
+      
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 100);
+      
+    } catch (error) {
+      console.error('Ошибка при выходе:', error);
+      router.replace('/signin');
+    }
   };
 
   return (
@@ -50,15 +81,40 @@ export default function Header() {
             </Link>
           </li>
           <li className={styles.menu__item}>
-            <Link href="/my-playlist" className={styles.menu__link}>
+            <Link href="/favorites" className={styles.menu__link}>
               Мой плейлист
             </Link>
           </li>
-          <li className={styles.menu__item}>
-            <Link href="/logout" className={styles.menu__link}>
-              Выйти
-            </Link>
-          </li>
+          {isAuthenticated ? (
+            <>
+              <li className={styles.menu__item}>
+                <span className={styles.menu__link}>
+                  Привет, {user?.username}
+                </span>
+              </li>
+              <li className={styles.menu__item}>
+                <button 
+                  onClick={handleLogout} 
+                  className={`${styles.menu__link} ${styles.logoutButton}`}
+                >
+                  Выйти
+                </button>
+              </li>
+            </>
+          ) : (
+            <>
+              <li className={styles.menu__item}>
+                <Link href="/signin" className={styles.menu__link}>
+                  Войти
+                </Link>
+              </li>
+              <li className={styles.menu__item}>
+                <Link href="/signup" className={styles.menu__link}>
+                  Регистрация
+                </Link>
+              </li>
+            </>
+          )}
           <li className={`${styles.menu__item} ${styles.menu__itemIcon}`}>
             <button className={styles.themeToggle} aria-label="Сменить тему">
               <img 

@@ -10,7 +10,7 @@ interface FilterProps {
 }
 
 export default function Filter({ tracks }: FilterProps) {
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<"author" | "year" | "genre" | null>(null);
   const [activeButtonIndex, setActiveButtonIndex] = useState<number | null>(null);
   
   const filterContainerRef = useRef<HTMLDivElement>(null);
@@ -36,7 +36,7 @@ export default function Filter({ tracks }: FilterProps) {
     .filter(year => year !== null)
     .sort((a, b) => (b || 0) - (a || 0)) as number[];
 
-  const handleFilterClick = (filter: string, index: number) => {
+  const handleFilterClick = (filter: "author" | "year" | "genre", index: number) => {
     if (activeFilter === filter) {
       setActiveFilter(null);
       setActiveButtonIndex(null);
@@ -91,6 +91,7 @@ export default function Filter({ tracks }: FilterProps) {
             [styles.active]: activeFilter === "author",
           })}
           onClick={() => handleFilterClick("author", 0)}
+          type="button"
         >
           исполнителю
         </button>
@@ -99,6 +100,7 @@ export default function Filter({ tracks }: FilterProps) {
             [styles.active]: activeFilter === "year",
           })}
           onClick={() => handleFilterClick("year", 1)}
+          type="button"
         >
           году выпуска
         </button>
@@ -107,6 +109,7 @@ export default function Filter({ tracks }: FilterProps) {
             [styles.active]: activeFilter === "genre",
           })}
           onClick={() => handleFilterClick("genre", 2)}
+          type="button"
         >
           жанру
         </button>
