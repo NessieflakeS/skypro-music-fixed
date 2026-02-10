@@ -10,12 +10,16 @@ interface TrackListProps {
 }
 
 export default function TrackList({ tracks = [] }: TrackListProps) {
-  console.log("TrackList получил треков для отображения:", tracks.length);
-  console.log("TrackList треки:", tracks);
   const playlistRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
+  
+  console.log("TrackList получил треков:", tracks.length);
+  if (tracks.length > 0) {
+    console.log("Пример трека:", tracks[0]);
+  }
 
   const filteredTracks = useMemo(() => {
+    console.log("Фильтрация треков в TrackList:", tracks.length);
     return tracks;
   }, [tracks]);
 
@@ -60,13 +64,19 @@ export default function TrackList({ tracks = [] }: TrackListProps) {
         ref={playlistRef}
         className={playlistClassName}
       >
-        {filteredTracks.map((track, index) => (
-          <TrackItem 
-            key={track.id ? `${track.id}-${index}` : index} 
-            track={track} 
-            playlist={filteredTracks} 
-          />
-        ))}
+        {filteredTracks.length > 0 ? (
+          filteredTracks.map((track, index) => (
+            <TrackItem 
+              key={track.id ? `${track.id}-${index}` : index} 
+              track={track} 
+              playlist={filteredTracks} 
+            />
+          ))
+        ) : (
+          <div className={styles.emptyState}>
+            <p>Нет треков для отображения</p>
+          </div>
+        )}
       </div>
     </div>
   );

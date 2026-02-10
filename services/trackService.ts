@@ -266,21 +266,23 @@ export const trackService = {
       let tracks: Track[] = [];
       let data = response.data;
       
-      if (data && data.success && Array.isArray(data.data)) {
+      if (data?.success && Array.isArray(data.data)) {
         tracks = data.data;
-      } 
-      else if (Array.isArray(data)) {
+      } else if (Array.isArray(data)) {
         tracks = data;
-      }
-      else if (data && typeof data === 'object') {
-        if (data.results && Array.isArray(data.results)) {
+      } else if (data && typeof data === 'object') {
+        if (data.favorites && Array.isArray(data.favorites)) {
+          tracks = data.favorites;
+        } else if (data.items && Array.isArray(data.items)) {
+          tracks = data.items;
+        } else if (data.results && Array.isArray(data.results)) {
           tracks = data.results;
         } else if (data.tracks && Array.isArray(data.tracks)) {
           tracks = data.tracks;
-        } else if (data.items && Array.isArray(data.items)) {
-          tracks = data.items;
         } else {
-          const arrays = Object.values(data).filter(val => Array.isArray(val));
+          const arrays = Object.values(data).filter(val => 
+            Array.isArray(val) && val.length > 0 && val[0]?.name
+          );
           if (arrays.length > 0) {
             tracks = arrays[0] as Track[];
           }
@@ -289,22 +291,28 @@ export const trackService = {
       
       console.log(`[API] Получено ${tracks.length} избранных треков`);
       
-      if (tracks.length === 0) {
-        console.log('[API] Сервер вернул 0 избранных треков, проверка альтернативного эндпоинта...');
+      const filteredTracks = tracks.filter(track => {
+        if (track.stared_user && Array.isArray(track.stared_user) && track.stared_user.length > 0) {
+          return true;
+        }
+        return false;
+      });
+      
+      console.log(`[API] После фильтрации по stared_user осталось ${filteredTracks.length} избранных треков`);
+      
+      if (filteredTracks.length === 0 && tracks.length > 0) {
+        console.log('[API] Внимание: ни у одного трека не заполнено stared_user. Возвращаю все полученные треки.');
+        return tracks;
       }
       
-      return tracks;
+      return filteredTracks;
+      
     } catch (error: any) {
       console.error('[API] Ошибка получения избранных треков:', error);
       
       if (error.response?.status === 404 || error.response?.status === 500) {
-        console.log('[API] Пробую альтернативный эндпоинт...');
-        try {
-          const altResponse = await apiClient.get('/user/favorites/');
-          return altResponse.data || [];
-        } catch (altError) {
-          throw new Error('Не удалось загрузить избранные треки');
-        }
+        console.log('[API] Эндпоинт избранных треков не найден, возвращаю пустой массив');
+        return [];
       }
       
       throw new Error('Ошибка загрузки избранных треков');
