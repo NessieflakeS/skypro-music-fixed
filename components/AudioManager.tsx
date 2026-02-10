@@ -3,68 +3,81 @@
 import { useRef, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { setCurrentTime, setDuration, setNextTrack } from "@/store/playerSlice";
+import { setCurrentTime, setDuration, setNextTrack, togglePlayPause } from "@/store/playerSlice";
 
 export default function AudioManager() {
   const dispatch = useDispatch();
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { currentTrack, isPlaying, volume, repeat } = useSelector((state: RootState) => state.player);
+  const { currentTrack, isPlaying, volume, repeat, currentTime } = useSelector((state: RootState) => state.player);
+
+  const handleTimeUpdate = useCallback(() => {
+    if (audioRef.current) {
+      dispatch(setCurrentTime(audioRef.current.currentTime));
+    }
+  }, [dispatch]);
+
+  const handleLoadedMetadata = useCallback(() => {
+    if (audioRef.current) {
+      dispatch(setDuration(audioRef.current.duration));
+    }
+  }, [dispatch]);
+
+  const handleEnded = useCallback(() => {
+    if (repeat && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(console.error);
+    } else {
+      dispatch(setNextTrack());
+    }
+  }, [repeat, dispatch]);
+
+  const handleError = useCallback((error: Event) => {
+    console.error("Ошибка воспроизведения аудио:", error);
+    dispatch(togglePlayPause());
+  }, [dispatch]);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => {
-      dispatch(setCurrentTime(audio.currentTime));
-    };
-
-    const handleLoadedMetadata = () => {
-      dispatch(setDuration(audio.duration));
-    };
-
-    const handleEnded = () => {
-      if (repeat) {
-        audio.currentTime = 0;
-        audio.play();
-      } else {
-        dispatch(setNextTrack());
-      }
-    };
-
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
-  }, [dispatch, repeat]);
+  }, [handleTimeUpdate, handleLoadedMetadata, handleEnded, handleError]);
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !currentTrack?.track_file) return;
+    if (!audio) return;
 
-    const playAudio = async () => {
-      try {
-        if (isPlaying) {
-          await audio.play();
-        } else {
-          audio.pause();
-        }
-      } catch (error) {
-        console.error("Ошибка воспроизведения:", error);
+    if (currentTrack?.track_file) {
+      const isNewTrack = audio.src !== currentTrack.track_file;
+      
+      if (isNewTrack) {
+        audio.src = currentTrack.track_file;
+        audio.load();
       }
-    };
-
-    if (audio.src !== currentTrack.track_file) {
-      audio.src = currentTrack.track_file;
-      audio.load();
+      
+      if (isPlaying) {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Ошибка при попытке воспроизведения:", error);
+            dispatch(togglePlayPause());
+          });
+        }
+      } else {
+        audio.pause();
+      }
     }
-
-    playAudio();
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack, isPlaying, dispatch]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -73,13 +86,12 @@ export default function AudioManager() {
     }
   }, [volume]);
 
-  const { currentTime } = useSelector((state: RootState) => state.player);
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
+    if (audio && currentTrack && Math.abs(audio.currentTime - currentTime) > 0.1) {
       audio.currentTime = currentTime;
     }
-  }, [currentTime]);
+  }, [currentTime, currentTrack]);
 
   return <audio ref={audioRef} preload="metadata" />;
 }

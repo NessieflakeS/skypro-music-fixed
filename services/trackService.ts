@@ -259,12 +259,34 @@ export const trackService = {
     try {
       console.log('[API] Запрашиваю избранные треки...');
       
-      const response = await apiClient.get('/catalog/track/favorite/all/');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       
-      console.log('[API] Ответ избранных треков:', response.data);
+      const response = await fetch(`${API_URL}/catalog/track/favorite/all/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('[API] Ответ избранных треков:', response.status);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.log('[API] Ошибка 401 - неавторизован');
+          throw new Error('Необходима авторизация');
+        }
+        throw new Error(`Ошибка сервера: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('[API] Данные избранных треков:', data);
       
       let tracks: Track[] = [];
-      let data = response.data;
       
       if (data?.success && Array.isArray(data.data)) {
         tracks = data.data;
@@ -275,11 +297,35 @@ export const trackService = {
       
       console.log(`[API] Получено ${tracks.length} избранных треков`);
       
-      return tracks;
+      const normalizedTracks: Track[] = tracks.map((item: any, index: number) => ({
+        id: item.id || item._id || index + 1,
+        name: item.name || item.title || `Трек ${index + 1}`,
+        author: item.author || item.artist || 'Неизвестный исполнитель',
+        album: item.album || 'Без альбома',
+        duration_in_seconds: item.duration_in_seconds || item.duration || 180,
+        track_file: item.track_file || item.audio_file || item.url || '',
+        release_date: item.release_date || '2023-01-01',
+        genre: Array.isArray(item.genre) ? item.genre : 
+               (item.genre ? [item.genre] : ['Не указан']),
+        logo: item.logo || null,
+        stared_user: item.stared_user || []
+      }));
+      
+      return normalizedTracks;
       
     } catch (error: any) {
       console.error('[API] Ошибка получения избранных треков:', error);
-      return []; 
+      
+      if (error.name === 'AbortError') {
+        console.warn('[API] Запрос прерван по таймауту');
+        return []; 
+      }
+      
+      if (error.message === 'Необходима авторизация') {
+        return [];
+      }
+      
+      throw error;
     }
   },
 

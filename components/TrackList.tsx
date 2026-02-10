@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback, memo } from "react";
 import TrackItem from "./TrackItem";
 import styles from "./TrackList.module.css";
 import { ITrackDisplay } from "@/types"; 
@@ -9,17 +9,16 @@ interface TrackListProps {
   tracks?: ITrackDisplay[];
 }
 
-export default function TrackList({ tracks = [] }: TrackListProps) {
+const TrackList = memo(function TrackList({ tracks = [] }: TrackListProps) {
   console.log("TrackList компонент рендерится");
   console.log("Получено треков в пропсе:", tracks.length);
-  console.log("Источник компонента:", window.location.pathname);
+  
   const playlistRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
+  const renderCount = useRef(0);
   
-  console.log("TrackList получил треков:", tracks.length);
-  if (tracks.length > 0) {
-    console.log("Пример трека:", tracks[0]);
-  }
+  renderCount.current += 1;
+  console.log(`TrackList рендер #${renderCount.current}, треков: ${tracks.length}`);
 
   const filteredTracks = useMemo(() => {
     console.log("Фильтрация треков в TrackList:", tracks.length);
@@ -51,6 +50,17 @@ export default function TrackList({ tracks = [] }: TrackListProps) {
     [isScrolledToBottom]
   );
 
+  const trackItems = useMemo(() => 
+    filteredTracks.map((track, index) => (
+      <TrackItem 
+        key={`track-${track.id}-${index}`} 
+        track={track} 
+        playlist={filteredTracks} 
+      />
+    )),
+    [filteredTracks]
+  );
+
   return (
     <div className={styles.centerblock__content}>
       <div className={styles.content__title}>
@@ -68,13 +78,7 @@ export default function TrackList({ tracks = [] }: TrackListProps) {
         className={playlistClassName}
       >
         {filteredTracks.length > 0 ? (
-          filteredTracks.map((track, index) => (
-            <TrackItem 
-              key={track.id ? `${track.id}-${index}` : index} 
-              track={track} 
-              playlist={filteredTracks} 
-            />
-          ))
+          trackItems
         ) : (
           <div className={styles.emptyState}>
             <p>Нет треков для отображения</p>
@@ -83,4 +87,6 @@ export default function TrackList({ tracks = [] }: TrackListProps) {
       </div>
     </div>
   );
-}
+});
+
+export default TrackList;

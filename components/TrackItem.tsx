@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, memo } from "react";
+import { useCallback, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentTrack, togglePlayPause } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
@@ -15,18 +15,10 @@ interface TrackItemProps {
 
 const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
   const dispatch = useDispatch();
-  const playerState = useSelector((state: RootState) => state.player);
-  const { currentTrack, isPlaying } = playerState;
+  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.player);
 
-  const isCurrent = useMemo(() => 
-    currentTrack?.id === track.id,
-    [currentTrack, track.id]
-  );
-
-  const isPlayingCurrent = useMemo(() => 
-    isCurrent && isPlaying,
-    [isCurrent, isPlaying]
-  );
+  const isCurrent = currentTrack?.id === track.id;
+  const isPlayingCurrent = isCurrent && isPlaying;
 
   const handleTrackClick = useCallback(() => {
     if (isCurrent) {
@@ -53,14 +45,9 @@ const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
     }
   }, [dispatch, isCurrent, track, playlist]);
 
-  const itemClassName = useMemo(() => 
-    `${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`,
-    [isCurrent]
-  );
-
   return (
     <div 
-      className={itemClassName}
+      className={`${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`}
       onClick={handleTrackClick}
     >
       <div className={styles.playlist__track}>
