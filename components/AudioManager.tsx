@@ -3,22 +3,25 @@
 import { useRef, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { setCurrentTime, setDuration, setNextTrack, togglePlayPause } from "@/store/playerSlice";
+import { setCurrentTime, setDuration, setNextTrack } from "@/store/playerSlice";
 
 export default function AudioManager() {
   const dispatch = useDispatch();
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { currentTrack, isPlaying, volume, repeat, currentTime } = useSelector((state: RootState) => state.player);
+  const { currentTrack, isPlaying, volume, repeat } = useSelector((state: RootState) => state.player);
+  const isInitializedRef = useRef(false);
 
   const handleTimeUpdate = useCallback(() => {
-    if (audioRef.current) {
-      dispatch(setCurrentTime(audioRef.current.currentTime));
+    const audio = audioRef.current;
+    if (audio) {
+      dispatch(setCurrentTime(audio.currentTime));
     }
   }, [dispatch]);
 
   const handleLoadedMetadata = useCallback(() => {
-    if (audioRef.current) {
-      dispatch(setDuration(audioRef.current.duration));
+    const audio = audioRef.current;
+    if (audio) {
+      dispatch(setDuration(audio.duration));
     }
   }, [dispatch]);
 
@@ -31,53 +34,69 @@ export default function AudioManager() {
     }
   }, [repeat, dispatch]);
 
-  const handleError = useCallback((error: Event) => {
-    console.error("Ошибка воспроизведения аудио:", error);
-    dispatch(togglePlayPause());
-  }, [dispatch]);
-
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || isInitializedRef.current) return;
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
+
+    isInitializedRef.current = true;
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
     };
-  }, [handleTimeUpdate, handleLoadedMetadata, handleEnded, handleError]);
+  }, [handleTimeUpdate, handleLoadedMetadata, handleEnded]);
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !currentTrack?.track_file) return;
 
-    if (currentTrack?.track_file) {
-      const isNewTrack = audio.src !== currentTrack.track_file;
-      
-      if (isNewTrack) {
-        audio.src = currentTrack.track_file;
-        audio.load();
+    const playTrack = async () => {
+      try {
+        if (isPlaying) {
+          await audio.play();
+        } else {
+          audio.pause();
+        }
+      } catch (error) {
+        console.error("Ошибка воспроизведения:", error);
       }
+    };
+
+    const isNewTrack = !audio.src || audio.src !== currentTrack.track_file;
+    
+    if (isNewTrack) {
+      audio.pause();
+      audio.src = currentTrack.track_file;
+      audio.load();
       
-      if (isPlaying) {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("Ошибка при попытке воспроизведения:", error);
-            dispatch(togglePlayPause());
+      const playWhenReady = () => {
+        if (isPlaying) {
+          audio.play().catch(e => {
+            console.log("Трек еще не готов, ждем...");
+            setTimeout(() => {
+              if (isPlaying) {
+                audio.play().catch(console.error);
+              }
+            }, 100);
           });
         }
-      } else {
-        audio.pause();
+      };
+      
+      audio.addEventListener('loadedmetadata', playWhenReady, { once: true });
+      
+      if (audio.readyState >= 1) {
+        playWhenReady();
       }
+    } else {
+      playTrack();
     }
-  }, [currentTrack, isPlaying, dispatch]);
+
+  }, [currentTrack, isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -86,12 +105,13 @@ export default function AudioManager() {
     }
   }, [volume]);
 
+  const { currentTime } = useSelector((state: RootState) => state.player);
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio && currentTrack && Math.abs(audio.currentTime - currentTime) > 0.1) {
+    if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
       audio.currentTime = currentTime;
     }
-  }, [currentTime, currentTrack]);
+  }, [currentTime]);
 
   return <audio ref={audioRef} preload="metadata" />;
 }

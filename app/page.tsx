@@ -40,13 +40,32 @@ export default function Home() {
     return (
       <div className={styles.wrapper}>
         <div className={styles.container}>
-          <div className={styles.errorContainer}>
-            <h2>Ошибка</h2>
-            <p>{error}</p>
-            <button onClick={loadTracks} className={styles.retryButton}>
-              Попробовать снова
-            </button>
-          </div>
+          <main className={styles.main}>
+            <Header />
+            <div className={styles.centerblock}>
+              <SearchBar />
+              <h2 className={styles.centerblock__h2}>Треки</h2>
+              <div className={styles.errorContainer}>
+                <h2>Ошибка загрузки</h2>
+                <p>Не удалось загрузить треки. Проверьте подключение к интернету.</p>
+                <div className={styles.favoritesActions}>
+                  <button onClick={loadTracks} className={styles.retryButton}>
+                    Попробовать снова
+                  </button>
+                  <button 
+                    onClick={() => {
+                      localStorage.removeItem('trackCache');
+                      loadTracks();
+                    }} 
+                    className={styles.refreshButton}
+                  >
+                    Очистить кэш и повторить
+                  </button>
+                </div>
+              </div>
+            </div>
+            <Sidebar />
+          </main>
         </div>
       </div>
     );
