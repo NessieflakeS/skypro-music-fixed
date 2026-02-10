@@ -258,28 +258,56 @@ export const trackService = {
   getFavoriteTracks: async (): Promise<Track[]> => {
     try {
       console.log('[API] Запрашиваю избранные треки...');
-      const response = await api.get('/catalog/track/favorite/all/');
+      
+      const response = await apiClient.get('/catalog/track/favorite/all/');
+      
+      console.log('[API] Ответ избранных треков:', response.data);
       
       let tracks: Track[] = [];
-      if (response.data && Array.isArray(response.data)) {
-        tracks = response.data;
-      } else if (response.data && typeof response.data === 'object') {
-        if (response.data.results && Array.isArray(response.data.results)) {
-          tracks = response.data.results;
-        } else if (response.data.tracks && Array.isArray(response.data.tracks)) {
-          tracks = response.data.tracks;
-        } else if (response.data.items && Array.isArray(response.data.items)) {
-          tracks = response.data.items;
+      let data = response.data;
+      
+      if (data && data.success && Array.isArray(data.data)) {
+        tracks = data.data;
+      } 
+      else if (Array.isArray(data)) {
+        tracks = data;
+      }
+      else if (data && typeof data === 'object') {
+        if (data.results && Array.isArray(data.results)) {
+          tracks = data.results;
+        } else if (data.tracks && Array.isArray(data.tracks)) {
+          tracks = data.tracks;
+        } else if (data.items && Array.isArray(data.items)) {
+          tracks = data.items;
         } else {
-          tracks = Object.values(response.data);
+          const arrays = Object.values(data).filter(val => Array.isArray(val));
+          if (arrays.length > 0) {
+            tracks = arrays[0] as Track[];
+          }
         }
       }
       
-      console.log('[API] Избранных треков:', tracks.length);
+      console.log(`[API] Получено ${tracks.length} избранных треков`);
+      
+      if (tracks.length === 0) {
+        console.log('[API] Сервер вернул 0 избранных треков, проверка альтернативного эндпоинта...');
+      }
+      
       return tracks;
-    } catch (error) {
+    } catch (error: any) {
       console.error('[API] Ошибка получения избранных треков:', error);
-      throw error;
+      
+      if (error.response?.status === 404 || error.response?.status === 500) {
+        console.log('[API] Пробую альтернативный эндпоинт...');
+        try {
+          const altResponse = await apiClient.get('/user/favorites/');
+          return altResponse.data || [];
+        } catch (altError) {
+          throw new Error('Не удалось загрузить избранные треки');
+        }
+      }
+      
+      throw new Error('Ошибка загрузки избранных треков');
     }
   },
 

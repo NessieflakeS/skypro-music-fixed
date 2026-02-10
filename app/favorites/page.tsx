@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import SearchBar from "@/components/SearchBar";
 import TrackList from "@/components/TrackList";
 import { trackService } from "@/services/trackService";
-import { Track, ITrackDisplay } from "@/types";
+import { ITrackDisplay, Track } from "@/types";
 import { RootState } from "@/store/store";
+import { setFavoriteTracks } from "@/store/userSlice";
 import styles from "@/app/page.module.css";
 
 const formatDuration = (seconds: number) => {
@@ -21,19 +22,53 @@ const formatDuration = (seconds: number) => {
 
 export default function FavoritesPage() {
   const router = useRouter();
-  const { isAuthenticated } = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
+  const { isAuthenticated, user, favoriteTracks } = useSelector((state: RootState) => state.user);
   const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allTracks, setAllTracks] = useState<Track[]>([]);
 
-  const loadFavorites = useCallback(async () => {
+  const loadAllTracks = useCallback(async (): Promise<Track[]> => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      const favoriteTracks = await trackService.getFavoriteTracks();
-      
-      const tracksForDisplay: ITrackDisplay[] = favoriteTracks.map((track: Track) => ({
+      const data = await trackService.getAllTracks();
+      setAllTracks(data);
+      return data;
+    } catch (err: any) {
+      console.error('Ошибка загрузки всех треков:', err);
+      throw err;
+    }
+  }, []);
+
+  const filterFavoriteTracks = useCallback((tracks: Track[]): ITrackDisplay[] => {
+    if (favoriteTracks && favoriteTracks.length > 0) {
+      return tracks
+        .filter(track => favoriteTracks.includes(track.id))
+        .map((track: Track) => ({
+          id: track.id || track._id || 0,
+          name: track.name || "Без названия",
+          author: track.author || "Неизвестный исполнитель",
+          album: track.album || "Без альбома",
+          time: formatDuration(track.duration_in_seconds || 0),
+          track_file: track.track_file || "",
+          link: "#",
+          authorLink: "#",
+          albumLink: "#",
+          genre: track.genre || [],
+          release_date: track.release_date || "",
+        }));
+    }
+    
+    return tracks
+      .filter(track => {
+        if (user && track.stared_user && Array.isArray(track.stared_user)) {
+          return track.stared_user.some((u: any) => 
+            u.id === user.id || u._id === user.id || u === user.id
+          );
+        }
+        return false;
+      })
+      .map((track: Track) => ({
         id: track.id || track._id || 0,
         name: track.name || "Без названия",
         author: track.author || "Неизвестный исполнитель",
@@ -46,15 +81,74 @@ export default function FavoritesPage() {
         genre: track.genre || [],
         release_date: track.release_date || "",
       }));
+  }, [favoriteTracks, user]);
+
+  const loadFavorites = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
       
-      setTracks(tracksForDisplay);
+      console.log("Загрузка избранных треков...");
+      console.log("Пользователь:", user);
+      console.log("Избранные ID из Redux:", favoriteTracks);
+      
+      try {
+        const favoriteTracksData = await trackService.getFavoriteTracks();
+        console.log("Получены избранные треки с сервера:", favoriteTracksData.length);
+        
+        const trackIds = favoriteTracksData.map(track => track.id || track._id || 0);
+        dispatch(setFavoriteTracks(trackIds));
+        
+        const tracksForDisplay: ITrackDisplay[] = favoriteTracksData.map((track: Track) => ({
+          id: track.id || track._id || 0,
+          name: track.name || "Без названия",
+          author: track.author || "Неизвестный исполнитель",
+          album: track.album || "Без альбома",
+          time: formatDuration(track.duration_in_seconds || 0),
+          track_file: track.track_file || "",
+          link: "#",
+          authorLink: "#",
+          albumLink: "#",
+          genre: track.genre || [],
+          release_date: track.release_date || "",
+        }));
+        
+        setTracks(tracksForDisplay);
+        
+      } catch (apiError) {
+        console.log("Не удалось получить избранные с сервера, используем альтернативный метод...");
+        
+        const allTracksData = await loadAllTracks();
+        const favoriteTracksData = filterFavoriteTracks(allTracksData);
+        
+        setTracks(favoriteTracksData);
+        
+        const trackIds = favoriteTracksData.map(track => track.id);
+        dispatch(setFavoriteTracks(trackIds));
+      }
+      
     } catch (err: any) {
       console.error('Ошибка загрузки избранного:', err);
       setError(err.message || 'Ошибка загрузки избранных треков');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user, favoriteTracks, dispatch, loadAllTracks, filterFavoriteTracks]);
+
+  const handleUnlike = useCallback(async (trackId: number) => {
+    try {
+      await trackService.dislikeTrack(trackId);
+      
+      setTracks(prev => prev.filter(track => track.id !== trackId));
+      
+      dispatch(setFavoriteTracks(favoriteTracks.filter(id => id !== trackId)));
+      
+      console.log(`Трек ${trackId} удален из избранного`);
+    } catch (err) {
+      console.error('Ошибка удаления из избранного:', err);
+      setError('Не удалось удалить трек из избранного');
+    }
+  }, [favoriteTracks, dispatch]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -63,15 +157,6 @@ export default function FavoritesPage() {
       loadFavorites();
     }
   }, [isAuthenticated, router, loadFavorites]);
-
-  const handleUnlike = useCallback(async (trackId: number) => {
-    try {
-      await trackService.dislikeTrack(trackId);
-      setTracks(prev => prev.filter(track => track.id !== trackId));
-    } catch (err) {
-      console.error('Ошибка удаления из избранного:', err);
-    }
-  }, []);
 
   const emptyState = useMemo(() => (
     <div className={styles.emptyState}>
@@ -126,7 +211,7 @@ export default function FavoritesPage() {
           <Header />
           <div className={styles.centerblock}>
             <SearchBar />
-            <h2 className={styles.centerblock__h2}>Мои треки</h2>
+            <h2 className={styles.centerblock__h2}>Мой плейлист</h2>
             
             <div className={styles.contentContainer}>
               {errorComponent}
