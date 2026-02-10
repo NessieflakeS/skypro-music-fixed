@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Player from "@/components/Player";
 import { RootState } from "@/store/store";
@@ -17,12 +17,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const { currentTrack, currentTime, duration, volume } = playerState;
   const progressBarRef = useRef<HTMLDivElement>(null);
   
-  const formatTime = (seconds: number) => {
+  const formatTime = useCallback((seconds: number) => {
     if (!seconds || isNaN(seconds)) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []);
   
   useEffect(() => {
     if (progressBarRef.current && duration > 0) {
@@ -31,7 +31,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
   }, [currentTime, duration]);
   
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressBarRef.current || !duration) return;
     
     const rect = progressBarRef.current.getBoundingClientRect();
@@ -41,29 +41,44 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const newTime = (percentage / 100) * duration;
     
     dispatch(setCurrentTime(newTime));
-  };
+  }, [dispatch, duration]);
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     dispatch(setVolume(newVolume));
-  };
+  }, [dispatch]);
+
+  const formattedCurrentTime = useMemo(() => 
+    formatTime(currentTime),
+    [currentTime, formatTime]
+  );
+
+  const formattedDuration = useMemo(() => 
+    formatTime(duration),
+    [duration, formatTime]
+  );
+
+  const shouldShowPlayer = useMemo(() => 
+    currentTrack !== null,
+    [currentTrack]
+  );
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
         {children}
         
-        {currentTrack && (
+        {shouldShowPlayer && (
           <div className={styles.bar}>
             <div className={styles.bar__content}>
               <div className={styles.progressContainer}>
-                <div className={styles.timeDisplay}>{formatTime(currentTime)}</div>
+                <div className={styles.timeDisplay}>{formattedCurrentTime}</div>
                 <div 
                   className={styles.bar__playerProgress} 
                   ref={progressBarRef}
                   onClick={handleProgressClick}
                 ></div>
-                <div className={styles.timeDisplay}>{formatTime(duration)}</div>
+                <div className={styles.timeDisplay}>{formattedDuration}</div>
               </div>
               <div className={styles.bar__playerBlock}>
                 <div className={styles.bar__player}>

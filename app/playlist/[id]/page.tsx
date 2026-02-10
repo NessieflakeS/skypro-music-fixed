@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -25,88 +25,57 @@ const SELECTION_NAMES: { [key: number]: string } = {
   3: "Инди-заряд",
 };
 
-const getRandomTracks = (tracks: Track[], count: number, selectionId: number): Track[] => {
-  if (tracks.length === 0) return [];
-  
-  const seed = selectionId;
-  const shuffled = [...tracks].sort((a, b) => {
-    const hashA = (a.id + seed) * 9301 + 49297;
-    const hashB = (b.id + seed) * 9301 + 49297;
-    return (hashA % 233280) - (hashB % 233280);
-  });
-  
-  const trackCount = Math.min(8, tracks.length); 
-  return shuffled.slice(0, trackCount);
-};
-
 export default function PlaylistPage() {
   const params = useParams();
-  const id = params.id ? Number(params.id) : null;
+  const playlistId = params.id ? Number(params.id) : null;
   
   const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
   const [rawTracks, setRawTracks] = useState<Track[]>([]);
-  const [allTracks, setAllTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectionName, setSelectionName] = useState("Подборка");
 
   useEffect(() => {
-    if (id && SELECTION_NAMES[id]) {
-      setSelectionName(SELECTION_NAMES[id]);
-    } else {
-      setSelectionName(`Подборка #${id}`);
+    if (playlistId && SELECTION_NAMES[playlistId]) {
+      setSelectionName(SELECTION_NAMES[playlistId]);
+    } else if (playlistId) {
+      setSelectionName(`Подборка #${playlistId}`);
     }
-  }, [id]);
+  }, [playlistId]);
 
-  useEffect(() => {
-    if (!id) {
-      setError("ID подборки не указан");
-      setLoading(false);
-      return;
-    }
-
-    loadTracks();
-  }, [id]);
-
-  const loadAllTracks = async (): Promise<Track[]> => {
+  const loadAllTracks = useCallback(async (): Promise<Track[]> => {
     try {
       const data = await trackService.getAllTracks();
-      setAllTracks(data);
+      setRawTracks(data);
       return data;
     } catch (err: any) {
       console.error('Ошибка загрузки всех треков:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const loadTracks = async (): Promise<void> => {
+  const loadTracks = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
       
-      const selectionNames: { [key: number]: string } = {
-        1: "Плейлист дня",
-        2: "100 танцевальных хитов", 
-        3: "Инди-заряд",
-      };
-      
-      if (id && selectionNames[id]) {
-        setSelectionName(selectionNames[id]);
-      } else {
-        setSelectionName(`Подборка #${id}`);
+      if (playlistId && SELECTION_NAMES[playlistId]) {
+        setSelectionName(SELECTION_NAMES[playlistId]);
+      } else if (playlistId) {
+        setSelectionName(`Подборка #${playlistId}`);
       }
       
       let tracksData: Track[] = [];
       try {
-        tracksData = await trackService.getSelectionTracks(id!);
+        tracksData = await trackService.getSelectionTracks(playlistId!);
       } catch (apiError) {
         console.log('Не удалось получить треки подборки, используем все треки');
         const allTracks = await trackService.getAllTracks();
-        if (id === 1) {
+        if (playlistId === 1) {
           tracksData = allTracks.slice(0, 8);
-        } else if (id === 2) {
+        } else if (playlistId === 2) {
           tracksData = allTracks.slice(8, 16);
-        } else if (id === 3) {
+        } else if (playlistId === 3) {
           tracksData = allTracks.slice(16, 24);
         } else {
           tracksData = allTracks.slice(0, 8);
@@ -137,7 +106,17 @@ export default function PlaylistPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [playlistId]);
+
+  useEffect(() => {
+    if (!playlistId) {
+      setError("ID подборки не указан");
+      setLoading(false);
+      return;
+    }
+
+    loadTracks();
+  }, [playlistId, loadTracks]);
 
   if (loading) {
     return (

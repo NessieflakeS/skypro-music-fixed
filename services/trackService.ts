@@ -282,4 +282,21 @@ export const trackService = {
       throw error;
     }
   },
+
+  toggleLike: async (trackId: number, isLiked: boolean): Promise<boolean> => {
+    try {
+      if (isLiked) {
+        await apiClient.delete(`/catalog/track/${trackId}/favorite/`);
+        console.log(`Track ${trackId} unliked`);
+        return false;
+      } else {
+        await apiClient.post(`/catalog/track/${trackId}/favorite/`);
+        console.log(`Track ${trackId} liked`);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      throw error;
+    }
+  },
 };

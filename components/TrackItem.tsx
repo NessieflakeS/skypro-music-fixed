@@ -1,9 +1,11 @@
 "use client";
 
+import { useCallback, useMemo, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentTrack, togglePlayPause } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
 import { ITrackDisplay } from "@/types";
+import LikeButton from "./LikeButton";
 import styles from "./TrackItem.module.css";
 
 interface TrackItemProps {
@@ -11,18 +13,34 @@ interface TrackItemProps {
   playlist: ITrackDisplay[];
 }
 
-export default function TrackItem({ track, playlist }: TrackItemProps) {
+const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying } = playerState;
 
-  const isCurrent = currentTrack?.id === track.id;
-  const isPlayingCurrent = isCurrent && isPlaying;
+  const isCurrent = useMemo(() => 
+    currentTrack?.id === track.id,
+    [currentTrack, track.id]
+  );
 
-  const handleTrackClick = () => {
+  const isPlayingCurrent = useMemo(() => 
+    isCurrent && isPlaying,
+    [isCurrent, isPlaying]
+  );
+
+  const handleTrackClick = useCallback(() => {
     if (isCurrent) {
       dispatch(togglePlayPause());
     } else {
+      const playlistForPlayer = useMemo(() => playlist.map(t => ({
+        id: t.id,
+        name: t.name,
+        author: t.author,
+        album: t.album,
+        track_file: t.track_file,
+        time: t.time
+      })), [playlist]);
+
       dispatch(setCurrentTrack({
         track: {
           id: track.id,
@@ -32,21 +50,19 @@ export default function TrackItem({ track, playlist }: TrackItemProps) {
           track_file: track.track_file,
           time: track.time
         },
-        playlist: playlist.map(t => ({
-          id: t.id,
-          name: t.name,
-          author: t.author,
-          album: t.album,
-          track_file: t.track_file,
-          time: t.time
-        }))
+        playlist: playlistForPlayer
       }));
     }
-  };
+  }, [dispatch, isCurrent, track, playlist]);
+
+  const itemClassName = useMemo(() => 
+    `${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`,
+    [isCurrent]
+  );
 
   return (
     <div 
-      className={`${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`}
+      className={itemClassName}
       onClick={handleTrackClick}
     >
       <div className={styles.playlist__track}>
@@ -76,12 +92,18 @@ export default function TrackItem({ track, playlist }: TrackItemProps) {
           </span>
         </div>
         <div className={styles.track__time}>
-          <svg className={styles.track__timeSvg}>
-            <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
-          </svg>
+          <div className={styles.likeButtonWrapper}>
+            <LikeButton 
+              trackId={track.id} 
+              size="small"
+              showCount={false}
+            />
+          </div>
           <span className={styles.track__timeText}>{track.time}</span>
         </div>
       </div>
     </div>
   );
-}
+});
+
+export default TrackItem;

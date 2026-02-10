@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Header.module.css";
 import { logout } from "@/store/userSlice";
 import { RootState } from "@/store/store";
-import Cookies from 'js-cookie';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
@@ -31,28 +31,31 @@ export default function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleLogout = async () => {
+  const clearAuthData = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('menuOpen');
+    
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  }, []);
+
+  const handleLogout = useCallback(async () => {
     try {
       dispatch(logout());
+      clearAuthData();
       
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('menuOpen');
-      
-      console.log('Logout successful, redirecting to signin...');
-      
-      router.replace('/signin');
-      
-      setTimeout(() => {
-        window.location.href = '/signin';
-      }, 100);
-      
+      if (pathname === '/favorites') {
+        router.replace('/');
+      } else {
+        router.refresh();
+      }
     } catch (error) {
       console.error('Ошибка при выходе:', error);
       router.replace('/signin');
     }
-  };
+  }, [dispatch, router, pathname, clearAuthData]);
 
   return (
     <nav className={styles.nav}>

@@ -234,3 +234,9 @@
   color: #4e4e4e;
   opacity: 0.5;
 }
+
+.likeButtonWrapper {
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: middle;
+}

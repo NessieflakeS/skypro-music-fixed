@@ -595,3 +595,25 @@
 .homeButton:hover {
   background-color: #7a7a7a !important;
 }
+
+.favoritesActions {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 15px;
+}
+
+.refreshButton {
+  padding: 10px 20px;
+  background-color: #696969;
+  color: white;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.refreshButton:hover {
+  background-color: #7a7a7a;
+}

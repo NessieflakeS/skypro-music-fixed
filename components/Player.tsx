@@ -1,21 +1,18 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   togglePlayPause, 
   toggleShuffle, 
-  toggleRepeat, 
-  setVolume,
-  setCurrentTime,
-  setDuration,
+  toggleRepeat,
   setNextTrack,
   setPrevTrack
 } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
 import styles from "./Player.module.css";
 
-export default function Player() {
+const Player = memo(function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
@@ -29,72 +26,56 @@ export default function Player() {
     duration 
   } = playerState;
 
-  useEffect(() => {
-    if (audioRef.current && currentTime !== undefined && currentTime !== null) {
-      if (Math.abs(audioRef.current.currentTime - currentTime) > 0.1) {
-        audioRef.current.currentTime = currentTime;
-      }
-    }
-  }, [currentTime]);
-
-  const handleTimeUpdate = () => {
+  const handleTimeUpdate = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
-      dispatch(setCurrentTime(audio.currentTime));
     }
-  };
+  }, []);
 
-  const handleLoadedMetadata = () => {
+  const handleLoadedMetadata = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
-      dispatch(setDuration(audio.duration));
     }
-  };
+  }, []);
 
-  const handleEnded = () => {
-    const audio = audioRef.current;
+  const handleEnded = useCallback(() => {
     if (repeat) {
+      const audio = audioRef.current;
       if (audio) {
         audio.currentTime = 0;
-        dispatch(setCurrentTime(0));
         audio.play();
       }
     } else {
       dispatch(setNextTrack());
     }
-  };
+  }, [repeat, dispatch]);
 
-  const handleError = (e: any) => {
-    console.error("Ошибка воспроизведения аудио:", e);
-  };
-
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     if (!currentTrack) return;
     
     const audio = audioRef.current;
     if (audio && audio.ended) {
       audio.currentTime = 0;
-      dispatch(setCurrentTime(0));
     }
     
     dispatch(togglePlayPause());
-  };
+  }, [currentTrack, dispatch]);
 
-  const handlePrevClick = () => {
+  const handlePrevClick = useCallback(() => {
     dispatch(setPrevTrack());
-  };
+  }, [dispatch]);
 
-  const handleNextClick = () => {
+  const handleNextClick = useCallback(() => {
     dispatch(setNextTrack());
-  };
+  }, [dispatch]);
 
-  const handleRepeatClick = () => {
+  const handleRepeatClick = useCallback(() => {
     dispatch(toggleRepeat());
-  };
+  }, [dispatch]);
 
-  const handleShuffleClick = () => {
+  const handleShuffleClick = useCallback(() => {
     dispatch(toggleShuffle());
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -122,10 +103,7 @@ export default function Player() {
     const loadTrack = async () => {
       try {
         audio.pause();
-        
         audio.src = currentTrack.track_file!;
-        
-        dispatch(setCurrentTime(0));
         
         await new Promise<void>((resolve, reject) => {
           const handleCanPlay = () => {
@@ -155,7 +133,7 @@ export default function Player() {
     };
 
     loadTrack();
-  }, [currentTrack?.id, dispatch, isPlaying]);
+  }, [currentTrack?.id, isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -227,11 +205,12 @@ export default function Player() {
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
-          onError={handleError}
           loop={repeat}
           preload="metadata"
         />
       )}
     </>
   );
-}
+});
+
+export default Player;
