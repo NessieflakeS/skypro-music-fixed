@@ -2,27 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loginStart, loginSuccess, loginFailure, clearError } from '@/store/userSlice';
 import { RootState } from '@/store/store';
-import { authService } from '@/services/authService'; 
+import { authService, setAuthTokens } from '@/services/authService'; 
 import styles from './signin.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
-import Cookies from 'js-cookie';
 
 export default function Signin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/';
+  
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/');
+      router.replace(redirect);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirect]);
 
   useEffect(() => {
     return () => {
@@ -37,12 +39,12 @@ export default function Signin() {
     try {
       const data = await authService.login({ email, password });
       
-      localStorage.setItem('token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
+      setAuthTokens(data.access, data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
       
       dispatch(loginSuccess(data.user));
-      router.replace('/');
+      
+      router.replace(redirect);
     } catch (err: any) {
       dispatch(loginFailure(err.message || 'Ошибка входа'));
     }

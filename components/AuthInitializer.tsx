@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { usePathname } from "next/navigation";
 import { loginSuccess, logout, setFavoriteTracks } from "@/store/userSlice";
 import { trackService } from "@/services/trackService";
+import { syncAuthToCookies } from "@/utils/authSync";
 
 export default function AuthInitializer() {
   const dispatch = useDispatch();
@@ -15,6 +16,7 @@ export default function AuthInitializer() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
+        console.log("Нет токена, пропускаем загрузку избранных треков");
         dispatch(setFavoriteTracks([]));
         return;
       }
@@ -36,6 +38,8 @@ export default function AuthInitializer() {
 
     console.log("AuthInitializer запущен, путь:", pathname);
     
+    syncAuthToCookies();
+    
     const token = localStorage.getItem("token");
     const userStr = localStorage.getItem("user");
     
@@ -47,7 +51,7 @@ export default function AuthInitializer() {
         
         setTimeout(() => {
           loadFavoriteTracks();
-        }, 1000);
+        }, 500);
       } catch (error) {
         console.error("Ошибка парсинга user из localStorage:", error);
         localStorage.removeItem('token');

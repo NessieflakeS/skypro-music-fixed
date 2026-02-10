@@ -21,17 +21,26 @@ const formatDuration = (seconds: number) => {
 
 export default function FavoritesPage() {
   const router = useRouter();
-  const { isAuthenticated, favoriteTracks } = useSelector((state: RootState) => state.user);
+  const { isAuthenticated } = useSelector((state: RootState) => state.user);
   const [tracks, setTracks] = useState<ITrackDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const loadFavorites = useCallback(async () => {
+    if (!isAuthenticated) {
+      console.log('Пользователь не авторизован, редирект на signin');
+      router.push('/signin?redirect=/favorites');
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
       
+      console.log('Загрузка избранных треков...');
       const favoriteTracksData = await trackService.getFavoriteTracks();
+      console.log(`Получено ${favoriteTracksData.length} избранных треков`);
       
       const tracksForDisplay: ITrackDisplay[] = favoriteTracksData.map((track: Track) => ({
         id: track.id || track._id || 0,
@@ -51,61 +60,25 @@ export default function FavoritesPage() {
     } catch (err: any) {
       console.error('Ошибка загрузки избранного:', err);
       setError(err.message || 'Ошибка загрузки избранных треков');
+      
+      if (err.response?.status === 401 || err.message?.includes('Сессия истекла')) {
+        router.push('/signin?redirect=/favorites');
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const handleUnlike = useCallback(async (trackId: number) => {
-    try {
-      setTracks(prev => prev.filter(track => track.id !== trackId));
-    } catch (err) {
-      console.error('Ошибка удаления из избранного:', err);
-    }
-  }, []);
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/signin');
-    } else {
-      loadFavorites();
-    }
-  }, [isAuthenticated, router, loadFavorites]);
+    loadFavorites();
+  }, [loadFavorites, retryCount]); 
 
-  // Синхронизация при изменении favoriteTracks
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadFavorites();
-    }
-  }, [favoriteTracks, isAuthenticated, loadFavorites]);
-
-  const emptyState = useMemo(() => (
-    <div className={styles.emptyState}>
-      <h3>В избранном пока нет треков</h3>
-      <p className={styles.emptyStateText}>
-        Добавляйте треки в избранное, нажимая на значок ♥ рядом с треками
-      </p>
-    </div>
-  ), []);
-
-  const errorComponent = useMemo(() => (
-    error && (
-      <div className={styles.errorContainer}>
-        <h2>Ошибка</h2>
-        <p>{error}</p>
-        <button onClick={loadFavorites} className={styles.retryButton}>
-          Попробовать снова
-        </button>
-      </div>
-    )
-  ), [error, loadFavorites]);
-
-  if (!isAuthenticated) {
+  if (!isAuthenticated && loading) {
     return (
       <div className={styles.wrapper}>
         <div className={styles.container}>
           <div className={styles.loadingContainer}>
-            <p>Перенаправление на страницу входа...</p>
+            <p>Проверка авторизации...</p>
           </div>
         </div>
       </div>
@@ -135,9 +108,21 @@ export default function FavoritesPage() {
             <h2 className={styles.centerblock__h2}>Мои треки</h2>
             
             <div className={styles.contentContainer}>
-              {errorComponent}
-              
-              {!error && tracks.length > 0 ? (
+              {error ? (
+                <div className={styles.errorContainer}>
+                  <h2>Ошибка</h2>
+                  <p>{error}</p>
+                  <button 
+                    onClick={() => {
+                      setRetryCount(prev => prev + 1);
+                      setError(null);
+                    }} 
+                    className={styles.retryButton}
+                  >
+                    Попробовать снова
+                  </button>
+                </div>
+              ) : tracks.length > 0 ? (
                 <>
                   <div className={styles.trackCount}>
                     В избранном {tracks.length} {tracks.length === 1 ? 'трек' : 
@@ -146,7 +131,10 @@ export default function FavoritesPage() {
                   
                   <div className={styles.favoritesActions}>
                     <button 
-                      onClick={() => loadFavorites()}
+                      onClick={() => {
+                        trackService.clearCache();
+                        setRetryCount(prev => prev + 1);
+                      }}
                       className={styles.refreshButton}
                     >
                       Обновить список
@@ -155,7 +143,14 @@ export default function FavoritesPage() {
                   
                   <TrackList tracks={tracks} />
                 </>
-              ) : !error && emptyState}
+              ) : (
+                <div className={styles.emptyState}>
+                  <h3>В избранном пока нет треков</h3>
+                  <p className={styles.emptyStateText}>
+                    Добавляйте треки в избранное, нажимая на значок ♥ рядом с треками
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <Sidebar />

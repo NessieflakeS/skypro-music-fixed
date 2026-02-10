@@ -8,6 +8,7 @@ import Link from "next/link";
 import styles from "./Header.module.css";
 import { logout } from "@/store/userSlice";
 import { RootState } from "@/store/store";
+import { clearAuthCookies } from "@/utils/authSync";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
@@ -31,20 +32,16 @@ export default function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const clearAuthData = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('menuOpen');
-    
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-  }, []);
-
   const handleLogout = useCallback(async () => {
     try {
       dispatch(logout());
-      clearAuthData();
+      
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('menuOpen');
+      
+      clearAuthCookies();
       
       if (pathname === '/favorites') {
         router.replace('/');
@@ -55,7 +52,7 @@ export default function Header() {
       console.error('Ошибка при выходе:', error);
       router.replace('/signin');
     }
-  }, [dispatch, router, pathname, clearAuthData]);
+  }, [dispatch, router, pathname]);
 
   return (
     <nav className={styles.nav}>
