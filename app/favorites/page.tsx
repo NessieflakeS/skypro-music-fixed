@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react"; 
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
@@ -26,13 +26,22 @@ export default function FavoritesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  
+  const isLoadingRef = useRef(false);
 
   const loadFavorites = useCallback(async () => {
+    if (isLoadingRef.current) {
+      console.log('Загрузка уже выполняется, пропускаем...');
+      return;
+    }
+    
     if (!isAuthenticated) {
       console.log('Пользователь не авторизован, редирект на signin');
       router.push('/signin?redirect=/favorites');
       return;
     }
+    
+    isLoadingRef.current = true;
     
     try {
       setLoading(true);
@@ -66,12 +75,13 @@ export default function FavoritesPage() {
       }
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   }, [isAuthenticated, router]);
 
   useEffect(() => {
     loadFavorites();
-  }, [loadFavorites, retryCount]); 
+  }, [loadFavorites, retryCount]);
 
   if (!isAuthenticated && loading) {
     return (

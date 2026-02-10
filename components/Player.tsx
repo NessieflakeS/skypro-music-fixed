@@ -81,7 +81,6 @@ const Player = memo(function Player() {
     dispatch(toggleShuffle());
   }, [dispatch]);
 
-  // Обновление currentTime в аудио при изменении в сторе
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
@@ -89,7 +88,6 @@ const Player = memo(function Player() {
     }
   }, [currentTime]);
 
-  // Воспроизведение/пауза
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack?.track_file) return;
@@ -99,7 +97,9 @@ const Player = memo(function Player() {
         try {
           await audio.play();
         } catch (error) {
-          console.error("Ошибка воспроизведения:", error);
+          if ((error as Error).name !== 'AbortError') {
+            console.error("Ошибка воспроизведения:", error);
+          }
         }
       } else {
         audio.pause();
@@ -109,7 +109,6 @@ const Player = memo(function Player() {
     playAudio();
   }, [isPlaying, currentTrack]);
 
-  // Загрузка трека
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack?.track_file) return;
@@ -149,7 +148,6 @@ const Player = memo(function Player() {
     loadTrack();
   }, [currentTrack?.id, isPlaying]);
 
-  // Громкость
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {

@@ -64,12 +64,6 @@ const LikeButton = memo(function LikeButton({
       
       await trackService.toggleLike(trackId, isLiked);
       
-      if (newLikedState) {
-        await trackService.likeTrack(trackId);
-      } else {
-        await trackService.dislikeTrack(trackId);
-      }
-      
     } catch (err: any) {
       dispatch(toggleFavoriteTrack(trackId));
       setLocalLikeCount(prev => isLiked ? prev + 1 : Math.max(0, prev - 1));

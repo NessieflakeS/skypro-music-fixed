@@ -15,14 +15,16 @@ const TrackList = memo(function TrackList({ tracks = [] }: TrackListProps) {
   
   const playlistRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
-  const renderCount = useRef(0);
   
-  renderCount.current += 1;
-  console.log(`TrackList рендер #${renderCount.current}, треков: ${tracks.length}`);
-
-  const filteredTracks = useMemo(() => {
-    console.log("Фильтрация треков в TrackList:", tracks.length);
-    return tracks;
+  const trackItems = useMemo(() => {
+    console.log("Создание элементов треков для TrackList");
+    return tracks.map((track: ITrackDisplay, index: number) => (
+      <TrackItem 
+        key={`track-${track.id}-${index}`} 
+        track={track} 
+        playlist={tracks} 
+      />
+    ));
   }, [tracks]);
 
   const handleScroll = useCallback(() => {
@@ -50,17 +52,6 @@ const TrackList = memo(function TrackList({ tracks = [] }: TrackListProps) {
     [isScrolledToBottom]
   );
 
-  const trackItems = useMemo(() => 
-    filteredTracks.map((track, index) => (
-      <TrackItem 
-        key={`track-${track.id}-${index}`} 
-        track={track} 
-        playlist={filteredTracks} 
-      />
-    )),
-    [filteredTracks]
-  );
-
   return (
     <div className={styles.centerblock__content}>
       <div className={styles.content__title}>
@@ -77,7 +68,7 @@ const TrackList = memo(function TrackList({ tracks = [] }: TrackListProps) {
         ref={playlistRef}
         className={playlistClassName}
       >
-        {filteredTracks.length > 0 ? (
+        {tracks.length > 0 ? (
           trackItems
         ) : (
           <div className={styles.emptyState}>

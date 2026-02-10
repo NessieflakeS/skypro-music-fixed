@@ -210,7 +210,7 @@ export const trackService = {
   getAllSelections: async (): Promise<Selection[]> => {
     try {
       console.log('[API] Запрашиваем все подборки...');
-      const response = await api.get('/catalog/selection/all/');
+      const response = await apiClient.get('/catalog/selection/all/');
       
       const selectionsData = response.data?.success ? response.data.data : response.data;
       const selectionsArray = Array.isArray(selectionsData) ? selectionsData : [];
@@ -233,7 +233,7 @@ export const trackService = {
   getSelectionInfo: async (selectionId: number): Promise<Selection | null> => {
     try {
       console.log(`[API] Запрашиваем информацию о подборке ${selectionId}...`);
-      const response = await api.get(`/catalog/selection/${selectionId}/`);
+      const response = await apiClient.get(`/catalog/selection/${selectionId}/`);
       
       const selectionData = response.data?.success ? response.data.data : response.data;
       
@@ -255,10 +255,10 @@ export const trackService = {
 
   likeTrack: async (trackId: number): Promise<void> => {
     try {
-      await api.post(`/catalog/track/${trackId}/favorite/`);
+      await apiClient.post(`/catalog/track/${trackId}/favorite/`);
       console.log(`[API] Трек ${trackId} добавлен в избранное`);
       
-      TRACK_CACHE.selections.delete(-1); 
+      TRACK_CACHE.selections.delete(-1);
     } catch (error) {
       console.error('[API] Ошибка добавления в избранное:', error);
       throw error;
@@ -267,7 +267,7 @@ export const trackService = {
 
   dislikeTrack: async (trackId: number): Promise<void> => {
     try {
-      await api.delete(`/catalog/track/${trackId}/favorite/`);
+      await apiClient.delete(`/catalog/track/${trackId}/favorite/`);
       console.log(`[API] Трек ${trackId} удален из избранного`);
       
       TRACK_CACHE.selections.delete(-1);
