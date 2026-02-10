@@ -277,81 +277,77 @@ export const trackService = {
     }
   },
 
-  getFavoriteTracks: async (forceRefresh = false): Promise<Track[]> => {
+  getFavoriteTracks: async (): Promise<Track[]> => {
     try {
-      const now = Date.now();
-      const cachedFavorites = TRACK_CACHE.selections.get(-1);
-      
-      if (!forceRefresh && cachedFavorites) {
-        const isCacheValid = (now - cachedFavorites.timestamp) < CACHE_DURATION;
-        if (isCacheValid) {
-          console.log('[API] Используем кэшированные избранные треки');
-          return cachedFavorites.data;
-        }
-      }
-
-      console.log('[API] Запрашиваем избранные треки...');
+      console.log('[API] Запрашиваю избранные треки...');
       
       const token = localStorage.getItem('token');
+      console.log('[API] Токен для запроса:', token ? 'есть' : 'отсутствует');
+      
       if (!token) {
-        console.log('[API] Токен отсутствует, возвращаем пустой массив');
+        console.error('[API] Нет токена для запроса избранных треков');
         return [];
       }
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 секунд для избранных
-      
-      const response = await fetch(`${API_URL}/catalog/track/favorite/all/`, {
-        method: 'GET',
+      const response = await apiClient.get('/catalog/track/favorite/all/', {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        signal: controller.signal
+          Authorization: `Bearer ${token}`
+        }
       });
       
-      clearTimeout(timeoutId);
+      console.log('[API] Ответ избранных треков:', response.data);
       
-      console.log('[API] Статус ответа избранных треков:', response.status);
+      let tracks: Track[] = [];
+      let data = response.data;
       
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.log('[API] Ошибка 401 - неавторизован');
-          throw new Error('Необходима авторизация');
-        }
-        throw new Error(`Ошибка сервера: ${response.status}`);
+      if (data?.success && Array.isArray(data.data)) {
+        tracks = data.data;
+      } 
+      else if (Array.isArray(data)) {
+        tracks = data;
       }
       
-      const data = await response.json();
-      const rawTracks = extractTracksFromResponse(data);
+      console.log(`[API] Получено ${tracks.length} избранных треков`);
       
-      console.log(`[API] Получено ${rawTracks.length} избранных треков`);
-      
-      const normalizedTracks = rawTracks.map(normalizeTrack);
-      
-      TRACK_CACHE.selections.set(-1, {
-        data: normalizedTracks,
-        timestamp: now
-      });
-      
-      return normalizedTracks;
+      return tracks;
       
     } catch (error: any) {
       console.error('[API] Ошибка получения избранных треков:', error);
       
-      const cachedFavorites = TRACK_CACHE.selections.get(-1);
-      if (cachedFavorites) {
-        console.log('[API] Используем кэшированные избранные треки из-за ошибки');
-        return cachedFavorites.data;
-      }
-      
-      if (error.name === 'AbortError') {
-        console.warn('[API] Запрос прерван по таймауту');
-        return []; 
-      }
-      
-      if (error.message === 'Необходима авторизация') {
-        return [];
+      if (error.response?.status === 401) {
+        console.error('[API] Ошибка 401 - токен недействителен');
+        try {
+          const refreshToken = localStorage.getItem('refresh_token');
+          if (refreshToken) {
+            const refreshResponse = await axios.post(`${API_URL}/user/token/refresh/`, {
+              refresh: refreshToken
+            });
+            
+            const newAccessToken = refreshResponse.data.access;
+            localStorage.setItem('token', newAccessToken);
+            
+            const retryResponse = await apiClient.get('/catalog/track/favorite/all/', {
+              headers: {
+                Authorization: `Bearer ${newAccessToken}`
+              }
+            });
+            
+            let tracks: Track[] = [];
+            let data = retryResponse.data;
+            
+            if (data?.success && Array.isArray(data.data)) {
+              tracks = data.data;
+            } 
+            else if (Array.isArray(data)) {
+              tracks = data;
+            }
+            
+            console.log(`[API] Получено ${tracks.length} избранных треков после обновления токена`);
+            return tracks;
+          }
+        } catch (refreshError) {
+          console.error('[API] Не удалось обновить токен:', refreshError);
+        }
       }
       
       return []; 

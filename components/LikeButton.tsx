@@ -37,11 +37,24 @@ const LikeButton = memo(function LikeButton({
   );
   
   const handleLike = useCallback(async () => {
+    console.log('LikeButton: проверка авторизации...');
+    
     if (!isAuthenticated) {
+      console.log('LikeButton: пользователь не авторизован');
       setError('Войдите в аккаунт, чтобы ставить лайки');
       setTimeout(() => setError(null), 3000);
       return;
     }
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('LikeButton: токен отсутствует в localStorage');
+      setError('Ошибка авторизации');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    
+    console.log(`LikeButton: обработка лайка для трека ${trackId}`);
     
     setIsLoading(true);
     setError(null);
@@ -58,11 +71,19 @@ const LikeButton = memo(function LikeButton({
       await trackService.toggleLike(trackId, isLiked);
       
     } catch (err: any) {
+      console.error('LikeButton: ошибка:', err);
+      
       dispatch(toggleFavoriteTrack(trackId));
       setLocalLikeCount(prev => isLiked ? prev + 1 : Math.max(0, prev - 1));
       
-      setError(err.message || 'Ошибка при обновлении лайка');
-      console.error('Like error:', err);
+      if (err.response?.status === 401) {
+        setError('Сессия истекла. Войдите заново.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+      } else {
+        setError(err.message || 'Ошибка при обновлении лайка');
+      }
     } finally {
       setIsLoading(false);
     }
