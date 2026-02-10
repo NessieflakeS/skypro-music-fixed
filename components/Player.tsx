@@ -7,7 +7,9 @@ import {
   toggleShuffle, 
   toggleRepeat,
   setNextTrack,
-  setPrevTrack
+  setPrevTrack,
+  setCurrentTime,
+  setDuration
 } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
 import styles from "./Player.module.css";
@@ -142,6 +144,14 @@ const Player = memo(function Player() {
     }
   }, [volume]);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && currentTrack) {
+      audio.currentTime = currentTime;
+    }
+  }, [currentTime, currentTrack]);
+
+
   return (
     <>
       <div className={styles.player}>
@@ -201,9 +211,20 @@ const Player = memo(function Player() {
       {currentTrack && currentTrack.track_file && (
         <audio
           ref={audioRef}
-          src={currentTrack.track_file}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
+          src={currentTrack?.track_file}
+          onTimeUpdate={() => {
+            if (audioRef.current) {
+              dispatch(setCurrentTime(audioRef.current.currentTime));
+              if (!duration && audioRef.current.duration) {
+                dispatch(setDuration(audioRef.current.duration));
+              }
+            }
+          }}
+          onLoadedMetadata={() => {
+            if (audioRef.current) {
+              dispatch(setDuration(audioRef.current.duration));
+            }
+          }}
           onEnded={handleEnded}
           loop={repeat}
           preload="metadata"

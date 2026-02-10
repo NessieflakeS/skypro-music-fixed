@@ -3,8 +3,9 @@
 import { ReactNode, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Player from "@/components/Player";
+import LikeButton from "@/components/LikeButton";
 import { RootState } from "@/store/store";
-import { setCurrentTime, setVolume } from "@/store/playerSlice";
+import { setCurrentTime, setDuration, setVolume } from "@/store/playerSlice";
 import styles from "@/app/page.module.css";
 
 interface AppLayoutProps {
@@ -14,7 +15,7 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
-  const { currentTrack, currentTime, duration, volume } = playerState;
+  const { currentTrack, currentTime, duration, volume, isPlaying } = playerState;
   const progressBarRef = useRef<HTMLDivElement>(null);
   
   const formatTime = useCallback((seconds: number) => {
@@ -89,29 +90,35 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         <svg className={styles.trackPlay__svg}>
                           <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
                         </svg>
+                        {isPlaying && (
+                          <div className={styles.track__titleDot}></div>
+                        )}
                       </div>
                       <div className={styles.trackPlay__author}>
-                        <span className={styles.trackPlay__authorLink} title={currentTrack?.name}>
+                        <span 
+                          className={styles.trackPlay__authorLink} 
+                          title={currentTrack?.name}
+                        >
                           {currentTrack?.name || "Трек не выбран"}
                         </span>
                       </div>
                       <div className={styles.trackPlay__album}>
-                        <span className={styles.trackPlay__albumLink} title={currentTrack?.author}>
+                        <span 
+                          className={styles.trackPlay__albumLink} 
+                          title={currentTrack?.author}
+                        >
                           {currentTrack?.author || "Исполнитель не выбран"}
                         </span>
                       </div>
                     </div>
                     <div className={styles.trackPlay__likeDis}>
-                      <div className={styles.trackPlay__like}>
-                        <svg className={styles.trackPlay__likeSvg}>
-                          <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
-                        </svg>
-                      </div>
-                      <div className={styles.trackPlay__dislike}>
-                        <svg className={styles.trackPlay__dislikeSvg}>
-                          <use xlinkHref="/img/icon/sprite.svg#icon-dislike"></use>
-                        </svg>
-                      </div>
+                      {currentTrack && (
+                        <LikeButton 
+                          trackId={currentTrack.id} 
+                          size="small"
+                          showCount={false}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -132,7 +139,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         value={volume}
                         onChange={handleVolumeChange}
                         aria-label="Громкость"
-                        placeholder="Громкость"
                       />
                     </div>
                   </div>
