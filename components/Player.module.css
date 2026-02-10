@@ -9,6 +9,7 @@
   display: flex;
   flex-direction: row;
   padding: 0 27px 0 31px;
+  align-items: center;
 }
 
 .player__btnPrev,
@@ -20,6 +21,17 @@
   display: flex;
   align-items: center;
   cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: opacity 0.2s ease;
+}
+
+.player__btnPrev:hover,
+.player__btnPlay:hover,
+.player__btnNext:hover,
+.player__btnRepeat:hover,
+.player__btnShuffle:hover {
+  opacity: 0.8;
 }
 
 .player__btnPrev {
@@ -62,11 +74,6 @@
   height: 12px;
   fill: transparent;
   stroke: #696969;
-}
-
-.player__btnRepeat:hover .player__btnRepeatSvg,
-.player__btnShuffle:hover .player__btnShuffleSvg {
-  stroke: #acacac;
 }
 
 .player__btnShuffleSvg {

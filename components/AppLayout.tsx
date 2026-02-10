@@ -2,18 +2,11 @@
 
 import { ReactNode, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import AudioManager from "@/components/AudioManager";
+import Player from "@/components/Player";
 import LikeButton from "@/components/LikeButton";
 import { RootState } from "@/store/store";
-import { 
-  togglePlayPause, 
-  setVolume, 
-  toggleShuffle, 
-  toggleRepeat,
-  setCurrentTime,
-  setNextTrack,
-  setPrevTrack 
-} from "@/store/playerSlice";
+import { setCurrentTime, setVolume } from "@/store/playerSlice";
+import { toggleFavoriteTrack } from "@/store/userSlice";
 import styles from "@/app/page.module.css";
 
 interface AppLayoutProps {
@@ -23,8 +16,12 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
-  const { currentTrack, isPlaying, volume, shuffle, repeat, currentTime, duration } = playerState;
+  const userState = useSelector((state: RootState) => state.user);
+  const { currentTrack, currentTime, duration, volume } = playerState;
+  const { isAuthenticated } = userState;
+  
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   
   const formatTime = useCallback((seconds: number) => {
     if (!seconds || isNaN(seconds)) return "0:00";
@@ -50,12 +47,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const newTime = (percentage / 100) * duration;
     
     dispatch(setCurrentTime(newTime));
+    
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
   }, [dispatch, duration]);
 
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     dispatch(setVolume(newVolume));
   }, [dispatch]);
+
+  const handleLikeClick = useCallback(() => {
+    if (!currentTrack || !isAuthenticated) return;
+    dispatch(toggleFavoriteTrack(currentTrack.id));
+  }, [currentTrack, isAuthenticated, dispatch]);
 
   const formattedCurrentTime = useMemo(() => 
     formatTime(currentTime),
@@ -72,25 +78,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
     [currentTrack]
   );
 
-  const handlePlayPause = useCallback(() => {
-    dispatch(togglePlayPause());
-  }, [dispatch]);
-
-  const handleNextTrack = useCallback(() => {
-    dispatch(setNextTrack());
-  }, [dispatch]);
-
-  const handlePrevTrack = useCallback(() => {
-    dispatch(setPrevTrack());
-  }, [dispatch]);
-
-  const handleToggleRepeat = useCallback(() => {
-    dispatch(toggleRepeat());
-  }, [dispatch]);
-
-  const handleToggleShuffle = useCallback(() => {
-    dispatch(toggleShuffle());
-  }, [dispatch]);
+  const isTrackLiked = useMemo(() => {
+    if (!currentTrack || !isAuthenticated) return false;
+    return userState.favoriteTracks.includes(currentTrack.id);
+  }, [currentTrack, isAuthenticated, userState.favoriteTracks]);
 
   return (
     <div className={styles.wrapper}>
@@ -100,7 +91,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {shouldShowPlayer && (
           <div className={styles.bar}>
             <div className={styles.bar__content}>
-              {/* Прогресс-бар */}
               <div className={styles.progressContainer}>
                 <div className={styles.timeDisplay}>{formattedCurrentTime}</div>
                 <div 
@@ -110,105 +100,37 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 ></div>
                 <div className={styles.timeDisplay}>{formattedDuration}</div>
               </div>
-              
               <div className={styles.bar__playerBlock}>
                 <div className={styles.bar__player}>
+                  <Player />
                   <div className={styles.trackPlay}>
                     <div className={styles.trackPlay__contain}>
                       <div className={styles.trackPlay__image}>
                         <svg className={styles.trackPlay__svg}>
                           <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
                         </svg>
-                        {isPlaying && (
-                          <div className={styles.track__titleDot}></div>
-                        )}
                       </div>
                       <div className={styles.trackPlay__author}>
-                        <span 
-                          className={styles.trackPlay__authorLink} 
-                          title={currentTrack?.name}
-                        >
+                        <span className={styles.trackPlay__authorLink} title={currentTrack?.name}>
                           {currentTrack?.name || "Трек не выбран"}
                         </span>
                       </div>
                       <div className={styles.trackPlay__album}>
-                        <span 
-                          className={styles.trackPlay__albumLink} 
-                          title={currentTrack?.author}
-                        >
+                        <span className={styles.trackPlay__albumLink} title={currentTrack?.author}>
                           {currentTrack?.author || "Исполнитель не выбран"}
                         </span>
                       </div>
                     </div>
-                    
                     <div className={styles.trackPlay__likeDis}>
-                      {currentTrack && (
-                        <LikeButton 
-                          trackId={currentTrack.id} 
-                          size="small"
-                          showCount={false}
-                        />
-                      )}
-                    </div>
-                    
-                    <div className={styles.player__controls}>
-                      <button 
-                        onClick={handlePrevTrack}
-                        className={styles.player__btnPrev}
-                        aria-label="Предыдущий трек"
-                      >
-                        <svg className={styles.player__btnPrevSvg}>
-                          <use xlinkHref="/img/icon/sprite.svg#icon-prev"></use>
-                        </svg>
-                      </button>
-                      
-                      <button 
-                        onClick={handlePlayPause}
-                        className={styles.player__btnPlay}
-                        aria-label={isPlaying ? "Пауза" : "Воспроизвести"}
-                      >
-                        <svg className={styles.player__btnPlaySvg}>
-                          {isPlaying ? (
-                            <use xlinkHref="/img/icon/sprite.svg#icon-pause"></use>
-                          ) : (
-                            <use xlinkHref="/img/icon/sprite.svg#icon-play"></use>
-                          )}
-                        </svg>
-                      </button>
-                      
-                      <button 
-                        onClick={handleNextTrack}
-                        className={styles.player__btnNext}
-                        aria-label="Следующий трек"
-                      >
-                        <svg className={styles.player__btnNextSvg}>
-                          <use xlinkHref="/img/icon/sprite.svg#icon-next"></use>
-                        </svg>
-                      </button>
-                      
-                      <button 
-                        onClick={handleToggleRepeat}
-                        className={`${styles.player__btnRepeat} ${repeat ? styles.player__btnRepeat_active : ''}`}
-                        aria-label="Повтор"
-                      >
-                        <svg className={styles.player__btnRepeatSvg}>
-                          <use xlinkHref="/img/icon/sprite.svg#icon-repeat"></use>
-                        </svg>
-                      </button>
-                      
-                      <button 
-                        onClick={handleToggleShuffle}
-                        className={`${styles.player__btnShuffle} ${shuffle ? styles.player__btnShuffle_active : ''}`}
-                        aria-label="Перемешать"
-                      >
-                        <svg className={styles.player__btnShuffleSvg}>
-                          <use xlinkHref="/img/icon/sprite.svg#icon-shuffle"></use>
-                        </svg>
-                      </button>
+                      <LikeButton 
+                        trackId={currentTrack?.id || 0}
+                        size="medium"
+                        showCount={false}
+                        initialLiked={isTrackLiked}
+                      />
                     </div>
                   </div>
                 </div>
-                
                 <div className={styles.bar__volumeBlock}>
                   <div className={styles.volume__content}>
                     <div className={styles.volume__image}>
@@ -236,7 +158,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
         )}
         <footer className={styles.footer}></footer>
       </div>
-      <AudioManager />
     </div>
   );
 }

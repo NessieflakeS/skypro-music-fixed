@@ -231,35 +231,6 @@
   margin-left: 26%;
 }
 
-.trackPlay__like,
-.trackPlay__dislike {
-  padding: 5px;
-  cursor: pointer;
-}
-
-.trackPlay__likeSvg {
-  width: 14px;
-  height: 12px;
-  fill: transparent;
-  stroke: #696969;
-}
-
-.trackPlay__dislike {
-  margin-left: 28.5px;
-}
-
-.trackPlay__dislikeSvg {
-  width: 14.34px;
-  height: 13px;
-  fill: transparent;
-  stroke: #696969;
-}
-
-.trackPlay__like:hover .trackPlay__likeSvg,
-.trackPlay__dislike:hover .trackPlay__dislikeSvg {
-  stroke: #d9b6ff;
-}
-
 .volume__content {
   display: flex;
   flex-direction: row;
@@ -317,44 +288,6 @@
   height: 20px;
 }
 
-.bar__playerProgress {
-  width: 100%;
-  height: 5px;
-  background: #2e2e2e;
-  position: relative;
-  cursor: pointer;
-}
-
-.bar__playerProgress::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: var(--progress, 0%);
-  background: #ad61ff;
-  transition: width 0.1s linear;
-}
-
-.player__progress {
-  width: 100%;
-  height: 5px;
-  background: #2e2e2e;
-  position: relative;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.player__progressBar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: var(--progress, 0%);
-  background: #ad61ff;
-  transition: width 0.1s linear;
-}
-
 .playlist__item {
   width: 100%;
   display: block;
@@ -369,58 +302,6 @@
 
 .playlist__item_current {
   background-color: rgba(173, 97, 255, 0.1);
-}
-
-.track__titleDot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: #ad61ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: pulse 2s infinite;
-}
-
-.track__titleDot_playing {
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.track__titleImage {
-  position: relative;
-}
-
-.bar__playerProgress {
-  width: 100%;
-  height: 5px;
-  background: #2e2e2e;
-  cursor: pointer;
-  position: relative;
-}
-
-.player__progress {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: #ad61ff;
-  width: var(--progress, 0%);
-  transition: width 0.1s linear;
 }
 
 .loadingContainer {
@@ -483,72 +364,6 @@
   background-color: #d9b6ff;
 }
 
-.emptyPlaylistContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 300px;
-  color: #696969;
-  text-align: center;
-  padding: 20px;
-}
-
-.emptyPlaylistTitle {
-  color: #ffffff;
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.emptyPlaylistText {
-  margin-bottom: 20px;
-  font-size: 16px;
-  max-width: 400px;
-}
-
-.emptyPlaylistButton {
-  padding: 10px 20px;
-  background-color: #ad61ff;
-  color: white;
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 500;
-  transition: background-color 0.3s;
-  border: none;
-  cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
-}
-
-.emptyPlaylistButton:hover {
-  background-color: #d9b6ff;
-}
-
-.selectionInfo {
-  color: white;
-  text-align: center;
-  margin-top: 5px;
-  font-size: 14px;
-}
-
-.headerImage {
-  width: 20px;
-  height: 20px;
-}
-
-.headerLink {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.trackCount {
-  margin-bottom: 20px;
-  color: #696969;
-  font-size: 14px;
-}
-
 .emptyState {
   text-align: center;
   padding: 40px 20px;
@@ -596,6 +411,12 @@
   background-color: #7a7a7a !important;
 }
 
+.trackCount {
+  margin-bottom: 20px;
+  color: #696969;
+  font-size: 14px;
+}
+
 .favoritesActions {
   margin-bottom: 20px;
   display: flex;
@@ -616,20 +437,4 @@
 
 .refreshButton:hover {
   background-color: #7a7a7a;
-}
-
-.track__titleDot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #ad61ff;
-  animation: pulse 2s infinite;
-}
-
-.track__titleDot_playing {
-  animation: pulse 1s infinite;
 }

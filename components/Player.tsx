@@ -81,13 +81,15 @@ const Player = memo(function Player() {
     dispatch(toggleShuffle());
   }, [dispatch]);
 
+  // Обновление currentTime в аудио при изменении в сторе
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio && currentTrack && Math.abs(audio.currentTime - currentTime) > 0.1) {
+    if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
       audio.currentTime = currentTime;
     }
-  }, [currentTime, currentTrack]);
+  }, [currentTime]);
 
+  // Воспроизведение/пауза
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack?.track_file) return;
@@ -107,6 +109,7 @@ const Player = memo(function Player() {
     playAudio();
   }, [isPlaying, currentTrack]);
 
+  // Загрузка трека
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack?.track_file) return;
@@ -146,20 +149,13 @@ const Player = memo(function Player() {
     loadTrack();
   }, [currentTrack?.id, isPlaying]);
 
+  // Громкость
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
       audio.volume = volume;
     }
   }, [volume]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio && currentTrack) {
-      audio.currentTime = currentTime;
-    }
-  }, [currentTime, currentTrack]);
-
 
   return (
     <>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, memo } from "react";
+import { useCallback, useMemo, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentTrack, togglePlayPause } from "@/store/playerSlice";
 import { RootState } from "@/store/store";
@@ -15,10 +15,27 @@ interface TrackItemProps {
 
 const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
   const dispatch = useDispatch();
-  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.player);
+  const playerState = useSelector((state: RootState) => state.player);
+  const { currentTrack, isPlaying } = playerState;
 
-  const isCurrent = currentTrack?.id === track.id;
-  const isPlayingCurrent = isCurrent && isPlaying;
+  const isCurrent = useMemo(() => 
+    currentTrack?.id === track.id,
+    [currentTrack, track.id]
+  );
+
+  const isPlayingCurrent = useMemo(() => 
+    isCurrent && isPlaying,
+    [isCurrent, isPlaying]
+  );
+
+  const playlistForPlayer = useMemo(() => playlist.map(t => ({
+    id: t.id,
+    name: t.name,
+    author: t.author,
+    album: t.album,
+    track_file: t.track_file,
+    time: t.time
+  })), [playlist]);
 
   const handleTrackClick = useCallback(() => {
     if (isCurrent) {
@@ -33,21 +50,19 @@ const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
           track_file: track.track_file,
           time: track.time
         },
-        playlist: playlist.map(t => ({
-          id: t.id,
-          name: t.name,
-          author: t.author,
-          album: t.album,
-          track_file: t.track_file,
-          time: t.time
-        }))
+        playlist: playlistForPlayer
       }));
     }
-  }, [dispatch, isCurrent, track, playlist]);
+  }, [dispatch, isCurrent, track, playlistForPlayer]);
+
+  const itemClassName = useMemo(() => 
+    `${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`,
+    [isCurrent]
+  );
 
   return (
     <div 
-      className={`${styles.playlist__item} ${isCurrent ? styles.playlist__item_current : ''}`}
+      className={itemClassName}
       onClick={handleTrackClick}
     >
       <div className={styles.playlist__track}>
