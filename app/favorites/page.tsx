@@ -21,6 +21,8 @@ const formatDuration = (seconds: number) => {
 };
 
 export default function FavoritesPage() {
+  console.log("🎯 FavoritesPage рендерится");
+  console.log("🎯 Текущий путь:", window.location.pathname);
   const router = useRouter();
   const dispatch = useDispatch();
   const { isAuthenticated, user, favoriteTracks } = useSelector((state: RootState) => state.user);

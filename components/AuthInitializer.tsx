@@ -25,11 +25,13 @@ export default function AuthInitializer() {
 
   const loadFavoriteTracks = useCallback(async () => {
     try {
+      console.log("AuthInitializer: Загрузка избранных треков для Redux...");
       const tracks = await trackService.getFavoriteTracks();
       const trackIds = tracks.map(track => track.id || track._id || 0);
+      console.log("AuthInitializer: Загружено ID избранных треков для Redux:", trackIds.length);
       dispatch(setFavoriteTracks(trackIds));
     } catch (error) {
-      console.error('Ошибка загрузки избранных треков:', error);
+      console.error('AuthInitializer: Ошибка загрузки избранных треков:', error);
     }
   }, [dispatch]);
 
