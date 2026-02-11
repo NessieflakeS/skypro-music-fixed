@@ -7,6 +7,13 @@ import playerReducer from "@/store/playerSlice";
 import TrackItem from "@/components/TrackItem";
 import { ITrackDisplay } from "@/types";
 
+jest.mock('react-redux', () => ({
+  ...jest.requireActual('react-redux'),
+  useDispatch: jest.fn(),
+}));
+
+import { useDispatch } from 'react-redux';
+
 const mockTrack: ITrackDisplay = {
   id: 1,
   name: "Test Track",

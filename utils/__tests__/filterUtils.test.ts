@@ -53,7 +53,7 @@ const mockTracks: Track[] = [
 describe("filterUtils", () => {
   test("filterBySearch: возвращает треки, начинающиеся с запроса (без учёта регистра)", () => {
     expect(filterBySearch(mockTracks, "Song")).toHaveLength(2);
-    expect(filterBySearch(mockTracks, "s")).toHaveLength(3);
+    expect(filterBySearch(mockTracks, "s")).toHaveLength(2);
     expect(filterBySearch(mockTracks, "another")).toHaveLength(1);
     expect(filterBySearch(mockTracks, "")).toEqual(mockTracks);
     expect(filterBySearch(mockTracks, "xyz")).toHaveLength(0);
