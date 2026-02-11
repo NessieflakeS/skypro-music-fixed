@@ -36,18 +36,18 @@
 }
 
 .playlist__track {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 41% 29% 10% 15%;
   align-items: center;
+  width: 100%;
+  gap: 8px;
 }
 
 .track__title {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  width: 447px;
 }
+
 
 .track__titleImage {
   width: 51px;
@@ -139,12 +139,6 @@
   color: #4e4e4e;
 }
 
-.track__author {
-  width: 321px;
-  display: flex;
-  justify-content: flex-start;
-}
-
 .track__authorLink {
   font-style: normal;
   font-weight: 400;
@@ -167,10 +161,6 @@
 .track__authorLink_disabled:hover {
   color: #696969;
   text-decoration: none;
-}
-
-.track__album {
-  width: 245px;
 }
 
 .track__albumLink {
@@ -198,12 +188,8 @@
 }
 
 .track__time {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;  
-  padding-right: 8px;         
-  width: 100%;               
-  box-sizing: border-box;    
+  justify-self: end;
+  padding-right: 8px;           
 }
 
 
