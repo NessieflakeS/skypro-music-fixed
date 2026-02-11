@@ -1,42 +1,37 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import classNames from "classnames";
-import styles from "./Filter.module.css";
-import { Track } from "@/types";
+import { useState, useRef, useEffect } from 'react';
+import classNames from 'classnames';
+import styles from './Filter.module.css';
 
 interface FilterProps {
-  tracks: Track[];
+  authors: string[];
+  genres: string[];
+  selectedAuthors: string[];
+  selectedGenres: string[];
+  sortBy: 'none' | 'asc' | 'desc';
+  onToggleAuthor: (author: string) => void;
+  onToggleGenre: (genre: string) => void;
+  onSortChange: (sort: 'none' | 'asc' | 'desc') => void;
 }
 
-export default function Filter({ tracks }: FilterProps) {
-  const [activeFilter, setActiveFilter] = useState<"author" | "year" | "genre" | null>(null);
+type ActiveFilter = 'author' | 'year' | 'genre' | null;
+
+export default function Filter({
+  authors,
+  genres,
+  selectedAuthors,
+  selectedGenres,
+  sortBy,
+  onToggleAuthor,
+  onToggleGenre,
+  onSortChange,
+}: FilterProps) {
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>(null);
   const [activeButtonIndex, setActiveButtonIndex] = useState<number | null>(null);
-  
   const filterContainerRef = useRef<HTMLDivElement>(null);
 
-  const authors = Array.from(
-    new Set(tracks.map(track => track.author))
-  ).filter(author => author && author !== "-");
-
-  const genres = Array.from(
-    new Set(tracks.flatMap(track => track.genre))
-  ).filter(genre => genre && genre.trim() !== "");
-
-  const years = Array.from(
-    new Set(tracks.map(track => {
-      try {
-        const year = new Date(track.release_date).getFullYear();
-        return isNaN(year) ? null : year;
-      } catch {
-        return null;
-      }
-    }))
-  )
-    .filter(year => year !== null)
-    .sort((a, b) => (b || 0) - (a || 0)) as number[];
-
-  const handleFilterClick = (filter: "author" | "year" | "genre", index: number) => {
+  const handleFilterClick = (filter: ActiveFilter, index: number) => {
     if (activeFilter === filter) {
       setActiveFilter(null);
       setActiveButtonIndex(null);
@@ -46,41 +41,37 @@ export default function Filter({ tracks }: FilterProps) {
     }
   };
 
-  const getFilterData = () => {
-    switch (activeFilter) {
-      case "author":
-        return authors;
-      case "genre":
-        return genres;
-      case "year":
-        return years;
-      default:
-        return [];
-    }
+  const handleYearClick = () => {
+    let newSort: 'none' | 'asc' | 'desc';
+    if (sortBy === 'none') newSort = 'desc';
+    else if (sortBy === 'desc') newSort = 'asc';
+    else newSort = 'none';
+    onSortChange(newSort);
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (filterContainerRef.current && !filterContainerRef.current.contains(event.target as Node)) {
+      if (
+        filterContainerRef.current &&
+        !filterContainerRef.current.contains(event.target as Node)
+      ) {
         setActiveFilter(null);
         setActiveButtonIndex(null);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const filterData = getFilterData();
 
   const getWindowClass = () => {
     if (activeButtonIndex === 0) return styles.filter__window_author;
     if (activeButtonIndex === 1) return styles.filter__window_year;
     if (activeButtonIndex === 2) return styles.filter__window_genre;
-    return "";
+    return '';
   };
+
+  const isAuthorSelected = (author: string) => selectedAuthors.includes(author);
+  const isGenreSelected = (genre: string) => selectedGenres.includes(genre);
 
   return (
     <div className={styles.centerblock__filter} ref={filterContainerRef}>
@@ -88,39 +79,74 @@ export default function Filter({ tracks }: FilterProps) {
       <div className={styles.filter__buttons}>
         <button
           className={classNames(styles.filter__button, {
-            [styles.active]: activeFilter === "author",
+            [styles.active]: activeFilter === 'author' || selectedAuthors.length > 0,
           })}
-          onClick={() => handleFilterClick("author", 0)}
+          onClick={() => handleFilterClick('author', 0)}
           type="button"
         >
           исполнителю
+          {selectedAuthors.length > 0 && (
+            <span className={styles.filter__counter}>{selectedAuthors.length}</span>
+          )}
         </button>
         <button
           className={classNames(styles.filter__button, {
-            [styles.active]: activeFilter === "year",
+            [styles.active]: activeFilter === 'year' || sortBy !== 'none',
           })}
-          onClick={() => handleFilterClick("year", 1)}
+          onClick={handleYearClick}
           type="button"
         >
           году выпуска
+          {sortBy !== 'none' && (
+            <span className={styles.filter__icon}>
+              {sortBy === 'desc' ? '↓' : '↑'}
+            </span>
+          )}
         </button>
         <button
           className={classNames(styles.filter__button, {
-            [styles.active]: activeFilter === "genre",
+            [styles.active]: activeFilter === 'genre' || selectedGenres.length > 0,
           })}
-          onClick={() => handleFilterClick("genre", 2)}
+          onClick={() => handleFilterClick('genre', 2)}
           type="button"
         >
           жанру
+          {selectedGenres.length > 0 && (
+            <span className={styles.filter__counter}>{selectedGenres.length}</span>
+          )}
         </button>
       </div>
 
-      {activeFilter && filterData.length > 0 && (
+      {activeFilter === 'author' && authors.length > 0 && (
         <div className={`${styles.filter__window} ${getWindowClass()}`}>
           <div className={styles.filter__list}>
-            {filterData.map((item, index) => (
-              <div key={index} className={styles.filter__item}>
-                {item.toString()}
+            {authors.map((author) => (
+              <div
+                key={author}
+                className={classNames(styles.filter__item, {
+                  [styles.filter__item_selected]: isAuthorSelected(author),
+                })}
+                onClick={() => onToggleAuthor(author)}
+              >
+                {author}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeFilter === 'genre' && genres.length > 0 && (
+        <div className={`${styles.filter__window} ${getWindowClass()}`}>
+          <div className={styles.filter__list}>
+            {genres.map((genre) => (
+              <div
+                key={genre}
+                className={classNames(styles.filter__item, {
+                  [styles.filter__item_selected]: isGenreSelected(genre),
+                })}
+                onClick={() => onToggleGenre(genre)}
+              >
+                {genre}
               </div>
             ))}
           </div>

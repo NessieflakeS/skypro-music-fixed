@@ -3,26 +3,22 @@
 import { useRef, useState, useEffect, useMemo, useCallback, memo } from "react";
 import TrackItem from "./TrackItem";
 import styles from "./TrackList.module.css";
-import { ITrackDisplay } from "@/types"; 
+import { ITrackDisplay } from "@/types";
 
 interface TrackListProps {
   tracks?: ITrackDisplay[];
 }
 
 const TrackList = memo(function TrackList({ tracks = [] }: TrackListProps) {
-  console.log("TrackList компонент рендерится");
-  console.log("Получено треков в пропсе:", tracks.length);
-  
   const playlistRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
-  
+
   const trackItems = useMemo(() => {
-    console.log("Создание элементов треков для TrackList");
-    return tracks.map((track: ITrackDisplay, index: number) => (
-      <TrackItem 
-        key={`track-${track.id}-${index}`} 
-        track={track} 
-        playlist={tracks} 
+    return tracks.map((track, index) => (
+      <TrackItem
+        key={`track-${track.id}-${index}`}
+        track={track}
+        playlist={tracks}
       />
     ));
   }, [tracks]);
@@ -40,15 +36,12 @@ const TrackList = memo(function TrackList({ tracks = [] }: TrackListProps) {
     if (element) {
       element.addEventListener('scroll', handleScroll);
       handleScroll();
-      
-      return () => {
-        element.removeEventListener('scroll', handleScroll);
-      };
+      return () => element.removeEventListener('scroll', handleScroll);
     }
   }, [handleScroll]);
 
-  const playlistClassName = useMemo(() => 
-    `${styles.content__playlist} ${isScrolledToBottom ? styles.scrolled_to_bottom : ''}`,
+  const playlistClassName = useMemo(
+    () => `${styles.content__playlist} ${isScrolledToBottom ? styles.scrolled_to_bottom : ''}`,
     [isScrolledToBottom]
   );
 
@@ -64,10 +57,7 @@ const TrackList = memo(function TrackList({ tracks = [] }: TrackListProps) {
           </svg>
         </div>
       </div>
-      <div 
-        ref={playlistRef}
-        className={playlistClassName}
-      >
+      <div ref={playlistRef} className={playlistClassName}>
         {tracks.length > 0 ? (
           trackItems
         ) : (
