@@ -28,6 +28,15 @@
   transition: opacity 0.2s ease;
 }
 
+.player__btnPlay:active,
+.player__btnPrev:active,
+.player__btnNext:active,
+.player__btnRepeat:active,
+.player__btnShuffle:active {
+  transform: scale(0.92);
+  transition: transform 0.1s;
+}
+
 .player__btnPlay::after,
 .player__btnPrev::after,
 .player__btnNext::after,
@@ -136,4 +145,10 @@
 .player__btnShuffle_active .player__btnShuffleSvg {
   stroke: #ad61ff;
   fill: #ad61ff;
+}
+
+.player__btnRepeat_active svg,
+.player__btnShuffle_active svg {
+  filter: drop-shadow(0 0 6px rgba(173, 97, 255, 0.7));
+  transition: filter 0.2s;
 }

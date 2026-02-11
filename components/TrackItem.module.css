@@ -75,7 +75,6 @@
 
 .track__titleDot {
   position: absolute;
-  left: -12px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -201,9 +200,12 @@
 .track__time {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  width: 60px;
+  justify-content: flex-end;  
+  padding-right: 8px;         
+  width: 100%;               
+  box-sizing: border-box;    
 }
+
 
 .track__timeSvg {
   width: 14px;
@@ -226,6 +228,7 @@
   line-height: 24px;
   text-align: right;
   color: #696969;
+  white-space: nowrap;
 }
 
 .track__timeText_disabled {
