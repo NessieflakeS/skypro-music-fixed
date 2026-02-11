@@ -259,29 +259,32 @@
 
 .volume__progressLine {
   width: 100%;
-  height: 2px;
+  height: 4px; 
   appearance: none;
-  background: #797979;
-  border-radius: 5px;
+  background: #4e4e4e;
+  border-radius: 2px;
   outline: none;
   cursor: pointer;
+  transition: height 0.2s;
 }
 
-.volume__progressLine::-webkit-slider-runnable-track {
-  height: 2px;
-  background: #797979;
-  border-radius: 5px;
+.volume__progressLine:hover {
+  height: 6px;
 }
 
 .volume__progressLine::-webkit-slider-thumb {
   appearance: none;
-  width: 16px;
-  height: 16px;
-  background: #1a1a1a;
-  border: 2px solid white;
+  width: 14px;
+  height: 14px;
+  background: #ad61ff;
   border-radius: 50%;
-  position: relative;
-  margin-top: -7px;
+  box-shadow: 0 0 10px #ad61ff;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.volume__progressLine::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px #d9b6ff;
 }
 
 .footer {

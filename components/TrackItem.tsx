@@ -72,7 +72,11 @@ const TrackItem = memo(function TrackItem({ track, playlist }: TrackItemProps) {
               <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
             </svg>
             {isCurrent && (
-              <div className={`${styles.track__titleDot} ${isPlayingCurrent ? styles.track__titleDot_playing : ''}`}></div>
+              <div className={styles.track__titleDot}>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
             )}
           </div>
           <div className={styles.track__titleText}>

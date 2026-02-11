@@ -1,4 +1,16 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .playlist__item {
+  animation: fadeIn 0.3s ease-out;
   width: 100%;
   display: block;
   margin-bottom: 12px;
@@ -62,47 +74,33 @@
 }
 
 .track__titleDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #ad61ff;
   position: absolute;
+  left: -12px;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: pulse 2s infinite;
-}
-
-.track__titleDot_playing {
-  animation: pulse 1s infinite;
-}
-
-.track__titleDisabled {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.track__titleDisabledSvg {
+  transform: translateY(-50%);
+  display: flex;
+  gap: 2px;
   width: 16px;
   height: 16px;
-  fill: #696969;
+  align-items: center;
+  justify-content: center;
 }
 
-@keyframes pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0.7;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
+.track__titleDot span {
+  width: 3px;
+  height: 6px;
+  background: #ad61ff;
+  border-radius: 1px;
+  animation: wave 1s ease-in-out infinite;
+}
+
+.track__titleDot span:nth-child(1) { animation-delay: 0s; }
+.track__titleDot span:nth-child(2) { animation-delay: 0.2s; }
+.track__titleDot span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes wave {
+  0%, 100% { height: 6px; }
+  50% { height: 14px; }
 }
 
 .track__titleText {
