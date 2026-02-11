@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import StoreProvider from "@/components/StoreProvider";
-import { AuthInitializer } from "@/components/AuthInitializer";
+import AuthInitializer from "@/components/AuthInitializer";
 import AppLayout from "@/components/AppLayout";
 import "./globals.css";
 

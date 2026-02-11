@@ -1,10 +1,12 @@
 "use client";
 
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Player from "@/components/Player";
+import LikeButton from "@/components/LikeButton";
 import { RootState } from "@/store/store";
 import { setCurrentTime, setVolume } from "@/store/playerSlice";
+import { toggleFavoriteTrack } from "@/store/userSlice";
 import styles from "@/app/page.module.css";
 
 interface AppLayoutProps {
@@ -14,15 +16,19 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
+  const userState = useSelector((state: RootState) => state.user);
   const { currentTrack, currentTime, duration, volume } = playerState;
-  const progressBarRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated } = userState;
   
-  const formatTime = (seconds: number) => {
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  
+  const formatTime = useCallback((seconds: number) => {
     if (!seconds || isNaN(seconds)) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []);
   
   useEffect(() => {
     if (progressBarRef.current && duration > 0) {
@@ -31,7 +37,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
   }, [currentTime, duration]);
   
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressBarRef.current || !duration) return;
     
     const rect = progressBarRef.current.getBoundingClientRect();
@@ -41,29 +47,58 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const newTime = (percentage / 100) * duration;
     
     dispatch(setCurrentTime(newTime));
-  };
+    
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
+  }, [dispatch, duration]);
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     dispatch(setVolume(newVolume));
-  };
+  }, [dispatch]);
+
+  const handleLikeClick = useCallback(() => {
+    if (!currentTrack || !isAuthenticated) return;
+    dispatch(toggleFavoriteTrack(currentTrack.id));
+  }, [currentTrack, isAuthenticated, dispatch]);
+
+  const formattedCurrentTime = useMemo(() => 
+    formatTime(currentTime),
+    [currentTime, formatTime]
+  );
+
+  const formattedDuration = useMemo(() => 
+    formatTime(duration),
+    [duration, formatTime]
+  );
+
+  const shouldShowPlayer = useMemo(() => 
+    currentTrack !== null,
+    [currentTrack]
+  );
+
+  const isTrackLiked = useMemo(() => {
+    if (!currentTrack || !isAuthenticated) return false;
+    return userState.favoriteTracks.includes(currentTrack.id);
+  }, [currentTrack, isAuthenticated, userState.favoriteTracks]);
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
         {children}
         
-        {currentTrack && (
+        {shouldShowPlayer && (
           <div className={styles.bar}>
             <div className={styles.bar__content}>
               <div className={styles.progressContainer}>
-                <div className={styles.timeDisplay}>{formatTime(currentTime)}</div>
+                <div className={styles.timeDisplay}>{formattedCurrentTime}</div>
                 <div 
                   className={styles.bar__playerProgress} 
                   ref={progressBarRef}
                   onClick={handleProgressClick}
                 ></div>
-                <div className={styles.timeDisplay}>{formatTime(duration)}</div>
+                <div className={styles.timeDisplay}>{formattedDuration}</div>
               </div>
               <div className={styles.bar__playerBlock}>
                 <div className={styles.bar__player}>
@@ -87,16 +122,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                       </div>
                     </div>
                     <div className={styles.trackPlay__likeDis}>
-                      <div className={styles.trackPlay__like}>
-                        <svg className={styles.trackPlay__likeSvg}>
-                          <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
-                        </svg>
-                      </div>
-                      <div className={styles.trackPlay__dislike}>
-                        <svg className={styles.trackPlay__dislikeSvg}>
-                          <use xlinkHref="/img/icon/sprite.svg#icon-dislike"></use>
-                        </svg>
-                      </div>
+                      <LikeButton 
+                        trackId={currentTrack?.id || 0}
+                        size="medium"
+                        showCount={false}
+                        initialLiked={isTrackLiked}
+                      />
                     </div>
                   </div>
                 </div>
@@ -117,7 +148,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         value={volume}
                         onChange={handleVolumeChange}
                         aria-label="Громкость"
-                        placeholder="Громкость"
                       />
                     </div>
                   </div>

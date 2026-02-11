@@ -1,37 +1,49 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback, memo } from "react";
 import TrackItem from "./TrackItem";
 import styles from "./TrackList.module.css";
-import { ITrackDisplay } from "@/types"; 
+import { ITrackDisplay } from "@/types";
 
 interface TrackListProps {
   tracks?: ITrackDisplay[];
 }
 
-export default function TrackList({ tracks = [] }: TrackListProps) {
+const TrackList = memo(function TrackList({ tracks = [] }: TrackListProps) {
   const playlistRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
 
-  const handleScroll = () => {
+  const trackItems = useMemo(() => {
+    return tracks.map((track, index) => (
+      <TrackItem
+        key={`track-${track.id}-${index}`}
+        track={track}
+        playlist={tracks}
+      />
+    ));
+  }, [tracks]);
+
+  const handleScroll = useCallback(() => {
     if (playlistRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = playlistRef.current;
       const isBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 1;
       setIsScrolledToBottom(isBottom);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const element = playlistRef.current;
     if (element) {
       element.addEventListener('scroll', handleScroll);
       handleScroll();
-      
-      return () => {
-        element.removeEventListener('scroll', handleScroll);
-      };
+      return () => element.removeEventListener('scroll', handleScroll);
     }
-  }, []);
+  }, [handleScroll]);
+
+  const playlistClassName = useMemo(
+    () => `${styles.content__playlist} ${isScrolledToBottom ? styles.scrolled_to_bottom : ''}`,
+    [isScrolledToBottom]
+  );
 
   return (
     <div className={styles.centerblock__content}>
@@ -45,18 +57,17 @@ export default function TrackList({ tracks = [] }: TrackListProps) {
           </svg>
         </div>
       </div>
-      <div 
-        ref={playlistRef}
-        className={`${styles.content__playlist} ${isScrolledToBottom ? styles.scrolled_to_bottom : ''}`}
-      >
-        {tracks.map((track, index) => (
-          <TrackItem 
-            key={track.id ? `${track.id}-${index}` : index} 
-            track={track} 
-            playlist={tracks} 
-          />
-        ))}
+      <div ref={playlistRef} className={playlistClassName}>
+        {tracks.length > 0 ? (
+          trackItems
+        ) : (
+          <div className={styles.emptyState}>
+            <p>Нет треков для отображения</p>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+});
+
+export default TrackList;

@@ -125,3 +125,24 @@
   color: #b672ff;
   text-decoration: underline;
 }
+
+.filter__counter {
+  margin-left: 5px;
+  background-color: #ad61ff;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.filter__icon {
+  margin-left: 5px;
+  font-size: 14px;
+}
+
+.filter__item_selected {
+  color: #ad61ff;
+  font-weight: 600;
+  background-color: rgba(173, 97, 255, 0.1);
+}

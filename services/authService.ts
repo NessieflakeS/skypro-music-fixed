@@ -164,3 +164,16 @@ export const authService = {
     }
   },
 };
+
+export const setAuthTokens = (accessToken: string, refreshToken: string): void => {
+  if (typeof window === 'undefined') return;
+  
+  localStorage.setItem('token', accessToken);
+  localStorage.setItem('refresh_token', refreshToken);
+  
+  const maxAge = 7 * 24 * 60 * 60; 
+  document.cookie = `token=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  
+  console.log('[setAuthTokens] Токены сохранены в localStorage и cookies');
+};

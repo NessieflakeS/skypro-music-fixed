@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Header.module.css";
 import { logout } from "@/store/userSlice";
 import { RootState } from "@/store/store";
-import Cookies from 'js-cookie';
+import { clearAuthCookies } from "@/utils/authSync";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       dispatch(logout());
       
@@ -40,19 +41,18 @@ export default function Header() {
       localStorage.removeItem('user');
       localStorage.removeItem('menuOpen');
       
-      console.log('Logout successful, redirecting to signin...');
+      clearAuthCookies();
       
-      router.replace('/signin');
-      
-      setTimeout(() => {
-        window.location.href = '/signin';
-      }, 100);
-      
+      if (pathname === '/favorites') {
+        router.replace('/');
+      } else {
+        router.refresh();
+      }
     } catch (error) {
       console.error('Ошибка при выходе:', error);
       router.replace('/signin');
     }
-  };
+  }, [dispatch, router, pathname]);
 
   return (
     <nav className={styles.nav}>

@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
-import { registerStart, registerSuccess, registerFailure, clearError } from '@/store/userSlice';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { registerStart, registerSuccess, registerFailure, clearError,setFavoriteTracks } from '@/store/userSlice';
 import { RootState } from '@/store/store';
-import { authService } from '@/services/authService'; 
+import { authService, setAuthTokens } from '@/services/authService';
+import { trackService } from '@/services/trackService';
 import styles from './signup.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
-import Cookies from 'js-cookie';
 
 export default function SignUp() {
   const [username, setUsername] = useState('');
@@ -20,13 +20,16 @@ export default function SignUp() {
   
   const dispatch = useDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/';
+  
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/');
+      router.replace(redirect);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirect]);
 
   useEffect(() => {
     return () => {
@@ -64,12 +67,22 @@ export default function SignUp() {
     try {
       const data = await authService.register({ email, password, username });
       
-      localStorage.setItem('token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
+      setAuthTokens(data.access, data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
       
       dispatch(registerSuccess(data.user));
-      router.replace('/');
+      
+      try {
+        console.log('Загрузка избранных треков после регистрации...');
+        const favoriteTracksData = await trackService.getFavoriteTracks();
+        const trackIds = favoriteTracksData.map(track => track.id || track._id || 0);
+        dispatch(setFavoriteTracks(trackIds));
+      } catch (favError) {
+        console.error('Ошибка загрузки избранных треков после регистрации:', favError);
+        dispatch(setFavoriteTracks([]));
+      }
+      
+      router.replace(redirect);
     } catch (err: any) {
       dispatch(registerFailure(err.message || 'Ошибка регистрации'));
     }

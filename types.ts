@@ -23,6 +23,8 @@ export interface ITrackDisplay {
   authorLink?: string;
   albumLink?: string;
   subtitle?: string;
+  genre?: string[];
+  release_date?: string;
 }
 
 export interface User {

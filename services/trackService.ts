@@ -4,6 +4,18 @@ import { apiClient } from './apiClient';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com';
 
+const TRACK_CACHE: {
+  allTracks: Track[] | null;
+  allTracksTimestamp: number | null;
+  selections: Map<number, { data: Track[]; timestamp: number }>;
+} = {
+  allTracks: null,
+  allTracksTimestamp: null,
+  selections: new Map(),
+};
+
+const CACHE_DURATION = 5 * 60 * 1000;
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -66,100 +78,122 @@ api.interceptors.response.use(
   }
 );
 
-export const trackService = {
-  getAllTracks: async (): Promise<Track[]> => {
-    try {
-      console.log('[API] Запрашиваю все треки...');
-      const response = await apiClient.get('/catalog/track/all/');
-      console.log('[API] Сырой ответ (все треки):', response.data);
+const normalizeTrack = (item: any, index: number): Track => ({
+  id: item.id || item._id || index + 1,
+  name: item.name || item.title || `Трек ${index + 1}`,
+  author: item.author || item.artist || 'Неизвестный исполнитель',
+  album: item.album || 'Без альбома',
+  duration_in_seconds: item.duration_in_seconds || item.duration || 180,
+  track_file: item.track_file || item.audio_file || item.url || '',
+  release_date: item.release_date || '2023-01-01',
+  genre: Array.isArray(item.genre) ? item.genre : 
+         (item.genre ? [item.genre] : ['Не указан']),
+  logo: item.logo || null,
+  stared_user: item.stared_user || []
+});
 
-      let rawTracks: any[] = [];
+const extractTracksFromResponse = (data: any): any[] => {
+  if (data?.success && Array.isArray(data.data)) {
+    return data.data;
+  } else if (Array.isArray(data)) {
+    return data;
+  }
+  return [];
+};
+
+export const trackService = {
+  getAllTracks: async (forceRefresh = false): Promise<Track[]> => {
+    try {
+      const now = Date.now();
       
-      if (response.data?.success && Array.isArray(response.data.data)) {
-        rawTracks = response.data.data;
-        console.log(`[API] Нашел ${rawTracks.length} треков в data`);
-      } else if (Array.isArray(response.data)) {
-        rawTracks = response.data;
-        console.log(`[API] Нашел ${rawTracks.length} треков (прямой массив)`);
+      if (!forceRefresh && 
+          TRACK_CACHE.allTracks && 
+          TRACK_CACHE.allTracksTimestamp && 
+          (now - TRACK_CACHE.allTracksTimestamp) < CACHE_DURATION) {
+        console.log('[API] Используем кэшированные треки');
+        return TRACK_CACHE.allTracks;
       }
 
-      const normalizedTracks: Track[] = rawTracks.map((item: any, index: number) => {
-        if (index === 0) {
-          console.log('[API] Пример сырого трека:', item);
-        }
-        
-        return {
-          id: item.id || item._id || index + 1,
-          name: item.name || item.title || `Трек ${index + 1}`,
-          author: item.author || item.artist || 'Неизвестный исполнитель',
-          album: item.album || 'Без альбома',
-          duration_in_seconds: item.duration_in_seconds || item.duration || 180,
-          track_file: item.track_file || item.audio_file || item.url || '',
-          release_date: item.release_date || '2023-01-01',
-          genre: Array.isArray(item.genre) ? item.genre : 
-                 (item.genre ? [item.genre] : ['Не указан']),
-          logo: item.logo || null,
-          stared_user: item.stared_user || []
-        };
-      });
+      console.log('[API] Запрашиваем все треки...');
+      const response = await apiClient.get('/catalog/track/all/');
+      
+      const rawTracks = extractTracksFromResponse(response.data);
+      console.log(`[API] Найдено ${rawTracks.length} треков`);
+
+      const normalizedTracks = rawTracks.map(normalizeTrack);
 
       console.log(`[API] Нормализовано треков: ${normalizedTracks.length}`);
       
-      const tracksWithAudio = normalizedTracks.filter(t => t.track_file && t.track_file.trim() !== '');
-      console.log(`[API] Треков с аудиофайлами: ${tracksWithAudio.length}`);
+      TRACK_CACHE.allTracks = normalizedTracks;
+      TRACK_CACHE.allTracksTimestamp = now;
       
-      if (tracksWithAudio.length === 0 && normalizedTracks.length > 0) {
-        console.warn('[API] ВНИМАНИЕ: У треков нет поля track_file! Воспроизведение невозможно.');
-      }
-
       return normalizedTracks;
     } catch (error: any) {
       console.error('[API] Ошибка получения всех треков:', error);
+      
+      if (TRACK_CACHE.allTracks) {
+        console.log('[API] Используем кэш из-за ошибки');
+        return TRACK_CACHE.allTracks;
+      }
+      
       throw new Error('Не удалось загрузить треки');
     }
   },
 
-  getSelectionTracks: async (selectionId: number): Promise<Track[]> => {
+  getSelectionTracks: async (selectionId: number, forceRefresh = false): Promise<Track[]> => {
     try {
-      console.log(`[API] Запрашиваю подборку #${selectionId}...`);
-      const response = await apiClient.get(`/catalog/selection/${selectionId}/`);
-      console.log(`[API] Сырой ответ подборки #${selectionId}:`, response.data);
+      const now = Date.now();
+      const cachedSelection = TRACK_CACHE.selections.get(selectionId);
+      
+      if (!forceRefresh && cachedSelection) {
+        const isCacheValid = (now - cachedSelection.timestamp) < CACHE_DURATION;
+        if (isCacheValid) {
+          console.log(`[API] Используем кэшированную подборку #${selectionId}`);
+          return cachedSelection.data;
+        }
+      }
 
+      console.log(`[API] Запрашиваем подборку #${selectionId}...`);
+      const response = await apiClient.get(`/catalog/selection/${selectionId}/`);
+      
       if (response.data?.data === null) {
-        console.log(`[API] Подборка #${selectionId} существует, но пуста (data: null)`);
+        console.log(`[API] Подборка #${selectionId} пуста`);
+        TRACK_CACHE.selections.set(selectionId, { data: [], timestamp: now });
         return [];
       }
 
       const selectionData = response.data?.data;
       const itemIds: number[] = selectionData?.items || [];
       
-      console.log(`[API] Подборка "${selectionData?.name || 'Без названия'}" содержит ${itemIds.length} ID треков:`, itemIds);
+      console.log(`[API] Подборка "${selectionData?.name || 'Без названия'}" содержит ${itemIds.length} ID треков`);
       
       if (itemIds.length === 0) {
-        console.warn(`[API] Подборка #${selectionId} не содержит ID треков.`);
+        console.warn(`[API] Подборка #${selectionId} не содержит ID треков`);
+        TRACK_CACHE.selections.set(selectionId, { data: [], timestamp: now });
         return [];
       }
 
-      const allTracks = await trackService.getAllTracks();
-      console.log(`[API] Получил ${allTracks.length} всех треков с сервера`);
+      const allTracks = TRACK_CACHE.allTracks || await trackService.getAllTracks();
+      console.log(`[API] Получено ${allTracks.length} треков`);
 
-      const tracksForSelection = allTracks.filter((track) => {
-        const found = itemIds.includes(track.id);
-        return found;
-      });
-
+      const tracksForSelection = allTracks.filter(track => itemIds.includes(track.id));
       console.log(`[API] Для подборки #${selectionId} найдено ${tracksForSelection.length} треков`);
       
-      if (tracksForSelection.length === 0 && allTracks.length > 0) {
-        console.warn('[API] Не удалось сопоставить ID треков. Проверьте соответствие:');
-        console.warn('[API] ID в подборке:', itemIds);
-        console.warn('[API] ID всех доступных треков:', allTracks.map(t => t.id));
-      }
+      TRACK_CACHE.selections.set(selectionId, { 
+        data: tracksForSelection, 
+        timestamp: now 
+      });
 
       return tracksForSelection;
 
     } catch (error: any) {
       console.error(`[API] Ошибка загрузки подборки ${selectionId}:`, error);
+      
+      const cachedSelection = TRACK_CACHE.selections.get(selectionId);
+      if (cachedSelection) {
+        console.log(`[API] Используем кэшированную подборку #${selectionId} из-за ошибки`);
+        return cachedSelection.data;
+      }
       
       if (error.response?.status === 404) {
         throw new Error(`Подборка ${selectionId} не найдена`);
@@ -175,29 +209,20 @@ export const trackService = {
 
   getAllSelections: async (): Promise<Selection[]> => {
     try {
-      console.log('[API] Запрашиваю все подборки...');
-      const response = await api.get('/catalog/selection/all/');
-      console.log('[API] Ответ подборок:', response.data);
+      console.log('[API] Запрашиваем все подборки...');
+      const response = await apiClient.get('/catalog/selection/all/');
       
-      let selections: Selection[] = [];
+      const selectionsData = response.data?.success ? response.data.data : response.data;
+      const selectionsArray = Array.isArray(selectionsData) ? selectionsData : [];
       
-      if (response.data && response.data.success && response.data.data) {
-        selections = response.data.data.map((selection: any): Selection => ({
-          id: selection.id || selection._id || 0,
-          name: selection.name || `Подборка`,
-          items: selection.items || [],
-          tracks: selection.tracks || []
-        }));
-      } else if (Array.isArray(response.data)) {
-        selections = response.data.map((selection: any): Selection => ({
-          id: selection.id || selection._id || 0,
-          name: selection.name || `Подборка`,
-          items: selection.items || [],
-          tracks: selection.tracks || []
-        }));
-      }
+      const selections: Selection[] = selectionsArray.map((selection: any) => ({
+        id: selection.id || selection._id || 0,
+        name: selection.name || `Подборка`,
+        items: selection.items || [],
+        tracks: selection.tracks || []
+      }));
       
-      console.log(`[API] Успешно получено ${selections.length} подборок`);
+      console.log(`[API] Получено ${selections.length} подборок`);
       return selections;
     } catch (error: any) {
       console.error('[API] Ошибка получения подборок:', error);
@@ -207,17 +232,10 @@ export const trackService = {
 
   getSelectionInfo: async (selectionId: number): Promise<Selection | null> => {
     try {
-      console.log(`[API] Запрашиваю информацию о подборке ${selectionId}...`);
-      const response = await api.get(`/catalog/selection/${selectionId}/`);
-      console.log('[API] Информация о подборке:', response.data);
+      console.log(`[API] Запрашиваем информацию о подборке ${selectionId}...`);
+      const response = await apiClient.get(`/catalog/selection/${selectionId}/`);
       
-      let selectionData: any = null;
-      
-      if (response.data && response.data.success && response.data.data) {
-        selectionData = response.data.data;
-      } else if (response.data) {
-        selectionData = response.data;
-      }
+      const selectionData = response.data?.success ? response.data.data : response.data;
       
       if (selectionData) {
         return {
@@ -237,8 +255,10 @@ export const trackService = {
 
   likeTrack: async (trackId: number): Promise<void> => {
     try {
-      await api.post(`/catalog/track/${trackId}/favorite/`);
+      await apiClient.post(`/catalog/track/${trackId}/favorite/`);
       console.log(`[API] Трек ${trackId} добавлен в избранное`);
+      
+      TRACK_CACHE.selections.delete(-1);
     } catch (error) {
       console.error('[API] Ошибка добавления в избранное:', error);
       throw error;
@@ -247,8 +267,10 @@ export const trackService = {
 
   dislikeTrack: async (trackId: number): Promise<void> => {
     try {
-      await api.delete(`/catalog/track/${trackId}/favorite/`);
+      await apiClient.delete(`/catalog/track/${trackId}/favorite/`);
       console.log(`[API] Трек ${trackId} удален из избранного`);
+      
+      TRACK_CACHE.selections.delete(-1);
     } catch (error) {
       console.error('[API] Ошибка удаления из избранного:', error);
       throw error;
@@ -258,28 +280,112 @@ export const trackService = {
   getFavoriteTracks: async (): Promise<Track[]> => {
     try {
       console.log('[API] Запрашиваю избранные треки...');
-      const response = await api.get('/catalog/track/favorite/all/');
+      
+      const token = localStorage.getItem('token');
+      console.log('[API] Токен для запроса:', token ? 'есть' : 'отсутствует');
+      
+      if (!token) {
+        console.error('[API] Нет токена для запроса избранных треков');
+        return [];
+      }
+      
+      const response = await apiClient.get('/catalog/track/favorite/all/', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      console.log('[API] Ответ избранных треков:', response.data);
       
       let tracks: Track[] = [];
-      if (response.data && Array.isArray(response.data)) {
-        tracks = response.data;
-      } else if (response.data && typeof response.data === 'object') {
-        if (response.data.results && Array.isArray(response.data.results)) {
-          tracks = response.data.results;
-        } else if (response.data.tracks && Array.isArray(response.data.tracks)) {
-          tracks = response.data.tracks;
-        } else if (response.data.items && Array.isArray(response.data.items)) {
-          tracks = response.data.items;
-        } else {
-          tracks = Object.values(response.data);
+      let data = response.data;
+      
+      if (data?.success && Array.isArray(data.data)) {
+        tracks = data.data;
+      } 
+      else if (Array.isArray(data)) {
+        tracks = data;
+      }
+      
+      console.log(`[API] Получено ${tracks.length} избранных треков`);
+      
+      return tracks;
+      
+    } catch (error: any) {
+      console.error('[API] Ошибка получения избранных треков:', error);
+      
+      if (error.response?.status === 401) {
+        console.error('[API] Ошибка 401 - токен недействителен');
+        try {
+          const refreshToken = localStorage.getItem('refresh_token');
+          if (refreshToken) {
+            const refreshResponse = await axios.post(`${API_URL}/user/token/refresh/`, {
+              refresh: refreshToken
+            });
+            
+            const newAccessToken = refreshResponse.data.access;
+            localStorage.setItem('token', newAccessToken);
+            
+            const retryResponse = await apiClient.get('/catalog/track/favorite/all/', {
+              headers: {
+                Authorization: `Bearer ${newAccessToken}`
+              }
+            });
+            
+            let tracks: Track[] = [];
+            let data = retryResponse.data;
+            
+            if (data?.success && Array.isArray(data.data)) {
+              tracks = data.data;
+            } 
+            else if (Array.isArray(data)) {
+              tracks = data;
+            }
+            
+            console.log(`[API] Получено ${tracks.length} избранных треков после обновления токена`);
+            return tracks;
+          }
+        } catch (refreshError) {
+          console.error('[API] Не удалось обновить токен:', refreshError);
         }
       }
       
-      console.log('[API] Избранных треков:', tracks.length);
-      return tracks;
+      return []; 
+    }
+  },
+
+  toggleLike: async (trackId: number, isLiked: boolean): Promise<boolean> => {
+    try {
+      if (isLiked) {
+        await trackService.dislikeTrack(trackId);
+        console.log(`Track ${trackId} unliked`);
+        return false;
+      } else {
+        await trackService.likeTrack(trackId);
+        console.log(`Track ${trackId} liked`);
+        return true;
+      }
     } catch (error) {
-      console.error('[API] Ошибка получения избранных треков:', error);
+      console.error('Error toggling like:', error);
       throw error;
     }
   },
+
+  clearCache: (): void => {
+    TRACK_CACHE.allTracks = null;
+    TRACK_CACHE.allTracksTimestamp = null;
+    TRACK_CACHE.selections.clear();
+    console.log('[API] Кэш очищен');
+  },
+
+  invalidateSelectionCache: (selectionId: number): void => {
+    TRACK_CACHE.selections.delete(selectionId);
+    console.log(`[API] Кэш подборки #${selectionId} очищен`);
+  },
+
+  invalidateAllTracksCache: (): void => {
+    TRACK_CACHE.allTracks = null;
+    TRACK_CACHE.allTracksTimestamp = null;
+    console.log('[API] Кэш всех треков очищен');
+  }
 };

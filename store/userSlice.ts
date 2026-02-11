@@ -11,6 +11,8 @@ interface UserState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  favoriteTracks: number[];
+  theme: 'light' | 'dark'; 
 }
 
 const initialState: UserState = {
@@ -18,6 +20,8 @@ const initialState: UserState = {
   isAuthenticated: false,
   loading: false,
   error: null,
+  favoriteTracks: [],
+  theme: 'dark',
 };
 
 const userSlice = createSlice({
@@ -56,9 +60,36 @@ const userSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.favoriteTracks = []; 
     },
     clearError: (state) => {
       state.error = null;
+    },
+    setFavoriteTracks: (state, action: PayloadAction<number[]>) => {
+      state.favoriteTracks = action.payload;
+    },
+    addFavoriteTrack: (state, action: PayloadAction<number>) => {
+      if (!state.favoriteTracks.includes(action.payload)) {
+        state.favoriteTracks.push(action.payload);
+      }
+    },
+    removeFavoriteTrack: (state, action: PayloadAction<number>) => {
+      state.favoriteTracks = state.favoriteTracks.filter(id => id !== action.payload);
+    },
+    toggleFavoriteTrack: (state, action: PayloadAction<number>) => {
+      const trackId = action.payload;
+      const index = state.favoriteTracks.indexOf(trackId);
+      if (index >= 0) {
+        state.favoriteTracks.splice(index, 1);
+      } else {
+        state.favoriteTracks.push(trackId);
+      }
+    },
+    setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
+      state.theme = action.payload;
+    },
+    toggleTheme: (state) => {
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
     },
   },
 });
@@ -72,6 +103,12 @@ export const {
   registerFailure,
   logout,
   clearError,
+  setFavoriteTracks,
+  addFavoriteTrack,
+  removeFavoriteTrack,
+  toggleFavoriteTrack,
+  setTheme,       
+  toggleTheme,    
 } = userSlice.actions;
 
 export default userSlice.reducer;

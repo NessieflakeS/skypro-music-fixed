@@ -1,0 +1,144 @@
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.likeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.likeButton:hover {
+  background-color: rgba(173, 97, 255, 0.1);
+}
+
+.likeButton.small {
+  width: 20px;
+  height: 20px;
+}
+
+.likeButton.medium {
+  width: 24px;
+  height: 24px;
+}
+
+.likeButton.large {
+  width: 28px;
+  height: 28px;
+}
+
+.icon {
+  width: 100%;
+  height: 100%;
+  transition: all 0.2s ease;
+}
+
+.liked .icon {
+  fill: #ad61ff;
+  stroke: #ad61ff;
+  animation: like 0.3s ease;
+}
+
+.pulse {
+  animation: pulse 0.5s ease;
+}
+
+@keyframes like {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(173, 97, 255, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(173, 97, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(173, 97, 255, 0); }
+}
+
+.count {
+  margin-left: 4px;
+  font-size: 12px;
+  color: #696969;
+}
+
+.errorTooltip {
+  background-color: #ff4d4d;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.2s ease;
+  pointer-events: none;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.errorTooltipArrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #ff4d4d;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(173, 97, 255, 0.3);
+  border-top-color: #ad61ff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .errorTooltip {
+    white-space: normal;
+    width: 200px;
+    text-align: center;
+  }
+}
