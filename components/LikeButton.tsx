@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, useMemo, memo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { toggleFavoriteTrack } from '@/store/userSlice';
@@ -33,10 +34,42 @@ const LikeButton = memo(function LikeButton({
   const [localLikeCount, setLocalLikeCount] = useState(likeCount);
   const [animationClass, setAnimationClass] = useState('');
   
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ top: number; left: number } | null>(null);
+  
   const isLiked = useMemo(() => 
     favoriteTracks.includes(trackId) || initialLiked,
     [favoriteTracks, trackId, initialLiked]
   );
+  
+  const updateTooltipPosition = useCallback(() => {
+    if (buttonRef.current && error) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top + window.scrollY - 40, 
+        left: rect.left + window.scrollX + rect.width / 2,
+      });
+    }
+  }, [error]);
+  
+  useEffect(() => {
+    if (error) {
+      updateTooltipPosition();
+      
+      const handleScroll = () => updateTooltipPosition();
+      const handleResize = () => updateTooltipPosition();
+      
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('resize', handleResize);
+      
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleResize);
+      };
+    } else {
+      setTooltipPosition(null);
+    }
+  }, [error, updateTooltipPosition]);
   
   const handleLike = useCallback(async () => {
     if (!isAuthenticated) {
@@ -91,6 +124,7 @@ const LikeButton = memo(function LikeButton({
   return (
     <div className={styles.container}>
       <button
+        ref={buttonRef}
         className={buttonClasses}
         onClick={handleLike}
         disabled={isLoading}
@@ -111,16 +145,27 @@ const LikeButton = memo(function LikeButton({
         )}
       </button>
       
-      {error && (
-        <div className={styles.errorTooltip}>
-          {error}
-        </div>
-      )}
-      
       {isLoading && (
         <div className={styles.loading}>
           <div className={styles.spinner}></div>
         </div>
+      )}
+      
+      {error && tooltipPosition && typeof window !== 'undefined' && createPortal(
+        <div 
+          className={styles.errorTooltip}
+          style={{
+            position: 'absolute',
+            top: tooltipPosition.top,
+            left: tooltipPosition.left,
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+          }}
+        >
+          {error}
+          <div className={styles.errorTooltipArrow} />
+        </div>,
+        document.body
       )}
     </div>
   );
