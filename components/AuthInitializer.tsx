@@ -11,13 +11,20 @@ export default function AuthInitializer() {
   const dispatch = useDispatch();
   const pathname = usePathname();
   const initializedRef = useRef(false);
+  const favoritesLoadedRef = useRef(false);
 
   const loadFavoriteTracks = useCallback(async () => {
+    if (favoritesLoadedRef.current) {
+      console.log("Избранные треки уже загружены, пропускаем");
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         console.log("Нет токена, пропускаем загрузку избранных треков");
         dispatch(setFavoriteTracks([]));
+        favoritesLoadedRef.current = true;
         return;
       }
 
@@ -26,6 +33,7 @@ export default function AuthInitializer() {
       const trackIds = favoriteTracks.map(track => track.id || track._id || 0);
       console.log("Загружено избранных треков:", trackIds.length);
       dispatch(setFavoriteTracks(trackIds));
+      favoritesLoadedRef.current = true;
     } catch (error) {
       console.error("Ошибка загрузки избранных треков:", error);
       dispatch(setFavoriteTracks([]));
@@ -62,6 +70,7 @@ export default function AuthInitializer() {
     } else {
       console.log("Пользователь не авторизован");
       dispatch(logout());
+      dispatch(setFavoriteTracks([]));
     }
   }, [dispatch, loadFavoriteTracks, pathname]);
 

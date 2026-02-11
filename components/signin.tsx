@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { loginStart, loginSuccess, loginFailure, clearError } from '@/store/userSlice';
+import { loginStart, loginSuccess, loginFailure, clearError, setFavoriteTracks } from '@/store/userSlice';
 import { RootState } from '@/store/store';
-import { authService, setAuthTokens } from '@/services/authService'; 
+import { authService, setAuthTokens } from '@/services/authService';
+import { trackService } from '@/services/trackService';
 import styles from './signin.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
@@ -43,6 +44,16 @@ export default function Signin() {
       localStorage.setItem('user', JSON.stringify(data.user));
       
       dispatch(loginSuccess(data.user));
+      
+      try {
+        console.log('Загрузка избранных треков после входа...');
+        const favoriteTracksData = await trackService.getFavoriteTracks();
+        const trackIds = favoriteTracksData.map(track => track.id || track._id || 0);
+        dispatch(setFavoriteTracks(trackIds));
+        console.log(`Избранные треки загружены: ${trackIds.length}`);
+      } catch (favError) {
+        console.error('Ошибка загрузки избранных треков после входа:', favError);
+      }
       
       router.replace(redirect);
     } catch (err: any) {

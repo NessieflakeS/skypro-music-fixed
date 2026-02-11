@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { registerStart, registerSuccess, registerFailure, clearError } from '@/store/userSlice';
+import { registerStart, registerSuccess, registerFailure, clearError,setFavoriteTracks } from '@/store/userSlice';
 import { RootState } from '@/store/store';
-import { authService, setAuthTokens } from '@/services/authService'; 
+import { authService, setAuthTokens } from '@/services/authService';
+import { trackService } from '@/services/trackService';
 import styles from './signup.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
@@ -70,6 +71,17 @@ export default function SignUp() {
       localStorage.setItem('user', JSON.stringify(data.user));
       
       dispatch(registerSuccess(data.user));
+      
+      try {
+        console.log('Загрузка избранных треков после регистрации...');
+        const favoriteTracksData = await trackService.getFavoriteTracks();
+        const trackIds = favoriteTracksData.map(track => track.id || track._id || 0);
+        dispatch(setFavoriteTracks(trackIds));
+      } catch (favError) {
+        console.error('Ошибка загрузки избранных треков после регистрации:', favError);
+        dispatch(setFavoriteTracks([]));
+      }
+      
       router.replace(redirect);
     } catch (err: any) {
       dispatch(registerFailure(err.message || 'Ошибка регистрации'));

@@ -112,7 +112,7 @@ const LikeButton = memo(function LikeButton({
       </button>
       
       {error && (
-        <div className={styles.error}>
+        <div className={styles.errorTooltip}>
           {error}
         </div>
       )}
