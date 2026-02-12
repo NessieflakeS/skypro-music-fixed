@@ -17,6 +17,8 @@
 .player__btnNext,
 .player__btnRepeat,
 .player__btnShuffle {
+  position: relative;
+  overflow: hidden;
   padding: 5px;
   display: flex;
   align-items: center;
@@ -24,6 +26,46 @@
   background: transparent;
   border: none;
   transition: opacity 0.2s ease;
+  border-radius: 50%;
+}
+
+.player__btnPlay:active,
+.player__btnPrev:active,
+.player__btnNext:active,
+.player__btnRepeat:active,
+.player__btnShuffle:active {
+  transform: scale(0.92);
+  transition: transform 0.1s;
+  border-radius: 50%;
+}
+
+.player__btnPlay::after,
+.player__btnPrev::after,
+.player__btnNext::after,
+.player__btnRepeat::after,
+.player__btnShuffle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s, opacity 0.4s;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.player__btnPlay:active::after,
+.player__btnPrev:active::after,
+.player__btnNext:active::after,
+.player__btnRepeat:active::after,
+.player__btnShuffle:active::after {
+  width: 100px;
+  height: 100px;
+  opacity: 1;
 }
 
 .player__btnPrev:hover,
@@ -105,4 +147,10 @@
 .player__btnShuffle_active .player__btnShuffleSvg {
   stroke: #ad61ff;
   fill: #ad61ff;
+}
+
+.player__btnRepeat_active svg,
+.player__btnShuffle_active svg {
+  filter: drop-shadow(0 0 6px rgba(173, 97, 255, 0.7));
+  transition: filter 0.2s;
 }
