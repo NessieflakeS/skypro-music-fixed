@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
-import { Track } from '@/types';
+import { Track } from '@/types/index';
 import {
   applyFilters,
   getUniqueAuthors,

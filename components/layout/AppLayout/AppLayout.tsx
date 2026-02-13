@@ -1,0 +1,166 @@
+"use client";
+
+import { ReactNode, useEffect, useRef, useCallback, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import Player from "@/components/player/Player/Player";
+import LikeButton from "@/components/ui/LikeButton/LikeButton";
+import { RootState } from "@/store/store";
+import { setCurrentTime, setVolume } from "@/store/slices/playerSlice";
+import { toggleFavoriteTrack } from "@/store/slices/userSlice";
+import styles from "./AppLayout.module.css";
+import { formatTime } from "@/utils/formatTime";
+import AuthInitializer from "@/components/providers/AuthInitializer/AuthInitializer";
+import ProgressBar from "@/components/player/ProgressBar/ProgressBar";
+
+interface AppLayoutProps {
+  children: ReactNode;
+}
+
+export default function AppLayout({ children }: AppLayoutProps) {
+  const dispatch = useDispatch();
+  const playerState = useSelector((state: RootState) => state.player);
+  const userState = useSelector((state: RootState) => state.user);
+  const { currentTrack, currentTime, duration, volume } = playerState;
+  const { isAuthenticated } = userState;
+  
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  
+  const formatTime = useCallback((seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }, []);
+  
+  useEffect(() => {
+    if (progressBarRef.current && duration > 0) {
+      const progressPercentage = (currentTime / duration) * 100;
+      progressBarRef.current.style.setProperty('--progress', `${progressPercentage}%`);
+    }
+  }, [currentTime, duration]);
+  
+  const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current || !duration) return;
+    
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const clickPosition = e.clientX - rect.left;
+    const progressBarWidth = rect.width;
+    const percentage = (clickPosition / progressBarWidth) * 100;
+    const newTime = (percentage / 100) * duration;
+    
+    dispatch(setCurrentTime(newTime));
+    
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
+  }, [dispatch, duration]);
+
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    dispatch(setVolume(newVolume));
+  }, [dispatch]);
+
+  const handleLikeClick = useCallback(() => {
+    if (!currentTrack || !isAuthenticated) return;
+    dispatch(toggleFavoriteTrack(currentTrack.id));
+  }, [currentTrack, isAuthenticated, dispatch]);
+
+  const formattedCurrentTime = useMemo(() => 
+    formatTime(currentTime),
+    [currentTime, formatTime]
+  );
+
+  const formattedDuration = useMemo(() => 
+    formatTime(duration),
+    [duration, formatTime]
+  );
+
+  const shouldShowPlayer = useMemo(() => 
+    currentTrack !== null,
+    [currentTrack]
+  );
+
+  const isTrackLiked = useMemo(() => {
+    if (!currentTrack || !isAuthenticated) return false;
+    return userState.favoriteTracks.includes(currentTrack.id);
+  }, [currentTrack, isAuthenticated, userState.favoriteTracks]);
+
+  return (
+    <div className={styles.wrapper}>
+      <div className={styles.container}>
+        {children}
+        
+        {shouldShowPlayer && (
+          <div className={styles.bar}>
+            <div className={styles.bar__content}>
+              <div className={styles.progressContainer}>
+                <div className={styles.timeDisplay}>{formattedCurrentTime}</div>
+                <div 
+                  className={styles.bar__playerProgress} 
+                  ref={progressBarRef}
+                  onClick={handleProgressClick}
+                ></div>
+                <div className={styles.timeDisplay}>{formattedDuration}</div>
+              </div>
+              <div className={styles.bar__playerBlock}>
+                <div className={styles.bar__player}>
+                  <Player />
+                  <div className={styles.trackPlay}>
+                    <div className={styles.trackPlay__contain}>
+                      <div className={styles.trackPlay__image}>
+                        <svg className={styles.trackPlay__svg}>
+                          <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
+                        </svg>
+                      </div>
+                      <div className={styles.trackPlay__author}>
+                        <span className={styles.trackPlay__authorLink} title={currentTrack?.name}>
+                          {currentTrack?.name || "Трек не выбран"}
+                        </span>
+                      </div>
+                      <div className={styles.trackPlay__album}>
+                        <span className={styles.trackPlay__albumLink} title={currentTrack?.author}>
+                          {currentTrack?.author || "Исполнитель не выбран"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.trackPlay__likeDis}>
+                      <LikeButton 
+                        trackId={currentTrack?.id || 0}
+                        size="medium"
+                        showCount={false}
+                        initialLiked={isTrackLiked}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.bar__volumeBlock}>
+                  <div className={styles.volume__content}>
+                    <div className={styles.volume__image}>
+                      <svg className={styles.volume__svg}>
+                        <use xlinkHref="/img/icon/sprite.svg#icon-volume"></use>
+                      </svg>
+                    </div>
+                    <div className={styles.volume__progress}>
+                      <input
+                        className={styles.volume__progressLine}
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={volume}
+                        onChange={handleVolumeChange}
+                        aria-label="Громкость"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        <footer className={styles.footer}></footer>
+      </div>
+    </div>
+  );
+}

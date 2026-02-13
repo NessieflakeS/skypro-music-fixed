@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from "@testing-library/react";
-import SearchBar from "@/components/SearchBar";
+import SearchBar from "@/components/ui/SearchBar/SearchBar";
 
 describe("SearchBar", () => {
   test("отображает поле ввода с placeholder", () => {
