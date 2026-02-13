@@ -9,7 +9,7 @@ export interface Track {
   album: string;
   logo: string | null;
   track_file: string;
-  stared_user: any[];
+  stared_user: number[];
 }
 
 export interface ITrackDisplay {
@@ -38,6 +38,6 @@ export type FilterType = "author" | "year" | "genre" | null;
 export interface Selection {
   id: number;
   name: string;
-  items: Track[];
+  items: number[];
   tracks?: Track[];
 }

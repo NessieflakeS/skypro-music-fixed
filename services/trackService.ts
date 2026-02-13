@@ -2,6 +2,25 @@ import axios from 'axios';
 import { Track, Selection } from '@/types/index';
 import { apiClient } from './apiClient';
 
+interface RawTrack {
+  id?: number;
+  _id?: number;
+  name?: string;
+  title?: string;
+  author?: string;
+  artist?: string;
+  album?: string;
+  duration_in_seconds?: number;
+  duration?: number;
+  track_file?: string;
+  audio_file?: string;
+  url?: string;
+  release_date?: string;
+  genre?: string | string[];
+  logo?: string | null;
+  stared_user?: number[];
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com';
 
 const TRACK_CACHE: {
@@ -78,24 +97,60 @@ api.interceptors.response.use(
   }
 );
 
-const normalizeTrack = (item: any, index: number): Track => ({
-  id: item.id || item._id || index + 1,
-  name: item.name || item.title || `Трек ${index + 1}`,
-  author: item.author || item.artist || 'Неизвестный исполнитель',
-  album: item.album || 'Без альбома',
-  duration_in_seconds: item.duration_in_seconds || item.duration || 180,
-  track_file: item.track_file || item.audio_file || item.url || '',
-  release_date: item.release_date || '2023-01-01',
-  genre: Array.isArray(item.genre) ? item.genre : 
-         (item.genre ? [item.genre] : ['Не указан']),
-  logo: item.logo || null,
-  stared_user: item.stared_user || []
-});
+const normalizeTrack = (item: RawTrack, index: number): Track => {
+  if (!item) {
+    return {
+      id: index + 1,
+      name: 'Неизвестный трек',
+      author: 'Неизвестный исполнитель',
+      album: 'Неизвестный альбом',
+      duration_in_seconds: 0,
+      track_file: '',
+      release_date: '',
+      genre: [],
+      logo: null,
+      stared_user: [],
+    };
+  }
 
-const extractTracksFromResponse = (data: any): any[] => {
-  if (data?.success && Array.isArray(data.data)) {
+  return {
+    id: item.id ?? item._id ?? index + 1,
+    name: item.name ?? item.title ?? `Трек ${index + 1}`,
+    author: item.author ?? item.artist ?? 'Неизвестный исполнитель',
+    album: item.album ?? 'Без альбома',
+    duration_in_seconds: item.duration_in_seconds ?? item.duration ?? 0,
+    track_file: item.track_file ?? item.audio_file ?? item.url ?? '',
+    release_date: item.release_date ?? '2023-01-01',
+    genre: Array.isArray(item.genre)
+      ? item.genre
+      : item.genre
+      ? [item.genre]
+      : ['Не указан'],
+    logo: item.logo ?? null,
+    stared_user: Array.isArray(item.stared_user) ? item.stared_user : [],
+  };
+};
+
+function isTrackArray(data: unknown): data is RawTrack[] {
+  return Array.isArray(data);
+}
+
+function isSuccessResponse(data: unknown): data is { success: true; data: RawTrack[] } {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'success' in data &&
+    (data as any).success === true &&
+    'data' in data &&
+    Array.isArray((data as any).data)
+  );
+}
+
+const extractTracksFromResponse = (data: unknown): RawTrack[] => {
+  if (isSuccessResponse(data)) {
     return data.data;
-  } else if (Array.isArray(data)) {
+  }
+  if (isTrackArray(data)) {
     return data;
   }
   return [];
@@ -120,7 +175,7 @@ export const trackService = {
       const rawTracks = extractTracksFromResponse(response.data);
       console.log(`[API] Найдено ${rawTracks.length} треков`);
 
-      const normalizedTracks = rawTracks.map(normalizeTrack);
+      const normalizedTracks = rawTracks.map((item, index) => normalizeTrack(item, index));
 
       console.log(`[API] Нормализовано треков: ${normalizedTracks.length}`);
       
