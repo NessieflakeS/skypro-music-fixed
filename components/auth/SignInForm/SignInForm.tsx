@@ -1,29 +1,30 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import classNames from "classnames";
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import classNames from 'classnames';
 
-import { loginStart, loginSuccess, loginFailure, clearError, setFavoriteTracks } from "@/store/slices/userSlice";
-import { RootState } from "@/store/store";
-import { authService } from "@/services/authService";
-import { setTokens, setUser } from "@/services/tokenManager";
-import { trackService } from "@/services/trackService";
+import { loginStart, loginSuccess, loginFailure, clearError } from '@/store/slices/userSlice';
+import { RootState } from '@/store/store';
+import { authService } from '@/services/authService';
+import { setTokens, setUser } from '@/services/tokenManager';
+import { useLoadFavorites } from '@/hooks/useLoadFavorites';
 
-import styles from "./SignInForm.module.css";
+import styles from './SignInForm.module.css';
 
 export default function SignInForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const redirect = searchParams.get('redirect') || '/';
 
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.user);
+  const loadFavorites = useLoadFavorites();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -49,19 +50,15 @@ export default function SignInForm() {
 
       dispatch(loginSuccess(data.user));
 
-      try {
-        console.log("Загрузка избранных треков после входа...");
-        const favoriteTracksData = await trackService.getFavoriteTracks();
-        const trackIds = favoriteTracksData.map((track) => track.id || track._id || 0);
-        dispatch(setFavoriteTracks(trackIds));
-        console.log(`Избранные треки загружены: ${trackIds.length}`);
-      } catch (favError) {
-        console.error("Ошибка загрузки избранных треков после входа:", favError);
-      }
+      await loadFavorites();
 
       router.replace(redirect);
-    } catch (err: any) {
-      dispatch(loginFailure(err.message || "Ошибка входа"));
+    } catch (err: unknown) {
+      let message = 'Ошибка входа';
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      dispatch(loginFailure(message));
     }
   };
 
@@ -99,7 +96,7 @@ export default function SignInForm() {
               {error && <p className={styles.errorText}>{error}</p>}
             </div>
             <button type="submit" className={styles.modal__btnEnter} disabled={loading}>
-              {loading ? "Загрузка..." : "Войти"}
+              {loading ? 'Загрузка...' : 'Войти'}
             </button>
             <Link href="/signup" className={styles.modal__btnSignup}>
               Зарегистрироваться

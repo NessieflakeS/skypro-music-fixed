@@ -1,52 +1,40 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useRouter, usePathname } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
 
-import styles from "./Header.module.css";
-import { logout } from "@/store/slices/userSlice";
-import { RootState } from "@/store/store";
-import { clearTokens } from "@/services/tokenManager";
+import styles from './Header.module.css';
+import { logout } from '@/store/slices/userSlice';
+import { RootState } from '@/store/store';
+import { useLogout } from '@/hooks/useLogout';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const dispatch = useDispatch();
-  const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
+  const handleLogout = useLogout();
 
   useEffect(() => {
-    const savedState = localStorage.getItem("menuOpen");
+    const savedState = localStorage.getItem('menuOpen');
     if (savedState !== null) {
-      setIsMenuOpen(savedState === "true");
+      setIsMenuOpen(savedState === 'true');
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("menuOpen", isMenuOpen.toString());
+    localStorage.setItem('menuOpen', isMenuOpen.toString());
   }, [isMenuOpen]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  const handleLogout = useCallback(async () => {
-    try {
-      dispatch(logout());
-      clearTokens();
-      localStorage.removeItem("menuOpen");
-
-      if (pathname === "/favorites") {
-        router.replace("/");
-      } else {
-        router.refresh();
-      }
-    } catch (error) {
-      console.error("Ошибка при выходе:", error);
-      router.replace("/signin");
-    }
-  }, [dispatch, router, pathname]);
+  const onLogoutClick = () => {
+    const redirectTo = pathname === '/favorites' ? '/' : undefined;
+    handleLogout(redirectTo);
+  };
 
   return (
     <nav className={styles.nav}>
@@ -68,7 +56,7 @@ export default function Header() {
         <span className={styles.burger__line}></span>
       </div>
       <div
-        className={`${styles.nav__menu} ${isMenuOpen ? styles.nav__menu_active : ""}`}
+        className={`${styles.nav__menu} ${isMenuOpen ? styles.nav__menu_active : ''}`}
       >
         <ul className={styles.menu__list}>
           <li className={styles.menu__item}>
@@ -88,7 +76,7 @@ export default function Header() {
               </li>
               <li className={styles.menu__item}>
                 <button
-                  onClick={handleLogout}
+                  onClick={onLogoutClick}
                   className={`${styles.menu__link} ${styles.logoutButton}`}
                 >
                   Выйти

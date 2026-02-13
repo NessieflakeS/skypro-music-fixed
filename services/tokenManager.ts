@@ -1,3 +1,5 @@
+import { User } from '@/types/index';
+
 const TOKEN_KEY = 'token';
 const REFRESH_KEY = 'refresh_token';
 const USER_KEY = 'user';
@@ -15,7 +17,6 @@ export const getRefreshToken = (): string | null => {
 export const setTokens = (access: string, refresh: string): void => {
   localStorage.setItem(TOKEN_KEY, access);
   localStorage.setItem(REFRESH_KEY, refresh);
-
   document.cookie = `${TOKEN_KEY}=${access}; path=/; max-age=604800; SameSite=Lax`;
   document.cookie = `${REFRESH_KEY}=${refresh}; path=/; max-age=604800; SameSite=Lax`;
 };
@@ -24,27 +25,25 @@ export const clearTokens = (): void => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
-
   document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   document.cookie = `${REFRESH_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 };
 
-export const getUser = (): any | null => {
+export const getUser = (): User | null => {
   const userStr = localStorage.getItem(USER_KEY);
   if (!userStr) return null;
   try {
-    return JSON.parse(userStr);
+    return JSON.parse(userStr) as User;
   } catch {
     return null;
   }
 };
 
-export const setUser = (user: any): void => {
+export const setUser = (user: User): void => {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
 export const clearAuthCookies = clearTokens;
-
 export const setAccessToken = (token: string): void => {
   const refresh = getRefreshToken();
   if (refresh) {

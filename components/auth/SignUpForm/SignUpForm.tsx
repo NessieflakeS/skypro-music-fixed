@@ -1,32 +1,33 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import classNames from "classnames";
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import classNames from 'classnames';
 
-import { registerStart, registerSuccess, registerFailure, clearError, setFavoriteTracks } from "@/store/slices/userSlice";
-import { RootState } from "@/store/store";
-import { authService } from "@/services/authService";
-import { setTokens, setUser } from "@/services/tokenManager";
-import { trackService } from "@/services/trackService";
+import { registerStart, registerSuccess, registerFailure, clearError } from '@/store/slices/userSlice';
+import { RootState } from '@/store/store';
+import { authService } from '@/services/authService';
+import { setTokens, setUser } from '@/services/tokenManager';
+import { useLoadFavorites } from '@/hooks/useLoadFavorites';
 
-import styles from "./SignUpForm.module.css";
+import styles from './SignUpForm.module.css';
 
 export default function SignUpForm() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const redirect = searchParams.get('redirect') || '/';
 
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.user);
+  const loadFavorites = useLoadFavorites();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,14 +43,14 @@ export default function SignUpForm() {
 
   const validateForm = () => {
     if (password !== confirmPassword) {
-      setPasswordError("Пароли не совпадают");
+      setPasswordError('Пароли не совпадают');
       return false;
     }
     if (password.length < 6) {
-      setPasswordError("Пароль должен содержать минимум 6 символов");
+      setPasswordError('Пароль должен содержать минимум 6 символов');
       return false;
     }
-    setPasswordError("");
+    setPasswordError('');
     return true;
   };
 
@@ -67,19 +68,15 @@ export default function SignUpForm() {
 
       dispatch(registerSuccess(data.user));
 
-      try {
-        console.log("Загрузка избранных треков после регистрации...");
-        const favoriteTracksData = await trackService.getFavoriteTracks();
-        const trackIds = favoriteTracksData.map((track) => track.id || track._id || 0);
-        dispatch(setFavoriteTracks(trackIds));
-      } catch (favError) {
-        console.error("Ошибка загрузки избранных треков после регистрации:", favError);
-        dispatch(setFavoriteTracks([]));
-      }
+      await loadFavorites();
 
       router.replace(redirect);
-    } catch (err: any) {
-      dispatch(registerFailure(err.message || "Ошибка регистрации"));
+    } catch (err: unknown) {
+      let message = 'Ошибка регистрации';
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      dispatch(registerFailure(message));
     }
   };
 
@@ -139,7 +136,7 @@ export default function SignUpForm() {
               )}
             </div>
             <button type="submit" className={styles.modal__btnSignupEnt} disabled={loading}>
-              {loading ? "Загрузка..." : "Зарегистрироваться"}
+              {loading ? 'Загрузка...' : 'Зарегистрироваться'}
             </button>
           </form>
         </div>

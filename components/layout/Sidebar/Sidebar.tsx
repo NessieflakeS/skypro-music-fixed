@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useLogout } from '@/hooks/useLogout';
 
 import styles from "./Sidebar.module.css";
 import { RootState } from "@/store/store";
@@ -33,17 +34,7 @@ export default function Sidebar() {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
 
-  const handleLogout = async () => {
-    try {
-      dispatch(logout());
-      clearTokens();
-      localStorage.removeItem("menuOpen");
-      router.replace("/signin");
-    } catch (error) {
-      console.error("Ошибка при выходе:", error);
-      router.replace("/signin");
-    }
-  };
+  const handleLogout = useLogout();
 
   return (
     <div className={styles.sidebar}>
@@ -51,7 +42,7 @@ export default function Sidebar() {
         <p className={styles.sidebar__personalName}>
           {isAuthenticated ? user?.username || "Пользователь" : "Гость"}
         </p>
-        <div className={styles.sidebar__icon} onClick={handleLogout}>
+        <div className={styles.sidebar__icon} onClick={() => handleLogout()}>
           <svg>
             <use xlinkHref="/img/icon/sprite.svg#logout"></use>
           </svg>

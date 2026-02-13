@@ -1,12 +1,10 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://webdev-music-003b5b991590.herokuapp.com";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com';
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
 export interface LoginCredentials {
@@ -38,12 +36,12 @@ export interface TokenResponse {
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
-      const tokenResponse = await api.post<TokenResponse>("/user/token/", {
+      const tokenResponse = await api.post<TokenResponse>('/user/token/', {
         email: credentials.email,
         password: credentials.password,
       });
 
-      const userResponse = await api.post("/user/login/", {
+      const userResponse = await api.post('/user/login/', {
         email: credentials.email,
         password: credentials.password,
       });
@@ -57,35 +55,44 @@ export const authService = {
           username: userResponse.data.username,
         },
       };
-    } catch (error: any) {
-      console.error("Login error:", error);
-      if (error.response) {
-        const status = error.response.status;
+    } catch (error: unknown) {
+      console.error('Login error:', error);
+
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const data = error.response?.data as any; // здесь можно дополнительно типизировать, но для простоты оставим any
+
         if (status === 401) {
-          throw new Error("Пользователь с таким email или паролем не найден");
-        } else if (status === 400) {
+          throw new Error('Пользователь с таким email или паролем не найден');
+        }
+        if (status === 400) {
           const message =
-            error.response.data?.message ||
-            error.response.data?.email?.[0] ||
-            error.response.data?.password?.[0] ||
-            "Неверный формат данных";
+            data?.message ||
+            data?.email?.[0] ||
+            data?.password?.[0] ||
+            'Неверный формат данных';
           throw new Error(message);
         }
       }
-      throw new Error("Ошибка входа. Проверьте подключение к интернету.");
+
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+
+      throw new Error('Ошибка входа. Проверьте подключение к интернету.');
     }
   },
 
   register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
     try {
-      const registerResponse = await api.post("/user/signup/", {
+      const registerResponse = await api.post('/user/signup/', {
         email: credentials.email,
         password: credentials.password,
         username: credentials.username,
       });
 
       if (registerResponse.status === 201 && registerResponse.data.success) {
-        const tokenResponse = await api.post<TokenResponse>("/user/token/", {
+        const tokenResponse = await api.post<TokenResponse>('/user/token/', {
           email: credentials.email,
           password: credentials.password,
         });
@@ -100,25 +107,34 @@ export const authService = {
           },
         };
       } else {
-        throw new Error(registerResponse.data?.message || "Ошибка регистрации");
+        throw new Error(registerResponse.data?.message || 'Ошибка регистрации');
       }
-    } catch (error: any) {
-      console.error("Register error:", error);
-      if (error.response) {
-        const status = error.response.status;
+    } catch (error: unknown) {
+      console.error('Register error:', error);
+
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const data = error.response?.data as any;
+
         if (status === 403) {
-          throw new Error(error.response.data?.message || "Email уже занят");
-        } else if (status === 400) {
+          throw new Error(data?.message || 'Email уже занят');
+        }
+        if (status === 400) {
           const message =
-            error.response.data?.message ||
-            error.response.data?.email?.[0] ||
-            error.response.data?.username?.[0] ||
-            error.response.data?.password?.[0] ||
-            "Неверный формат данных";
+            data?.message ||
+            data?.email?.[0] ||
+            data?.username?.[0] ||
+            data?.password?.[0] ||
+            'Неверный формат данных';
           throw new Error(message);
         }
       }
-      throw new Error("Ошибка регистрации. Проверьте введенные данные.");
+
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+
+      throw new Error('Ошибка регистрации. Проверьте введенные данные.');
     }
   },
 };

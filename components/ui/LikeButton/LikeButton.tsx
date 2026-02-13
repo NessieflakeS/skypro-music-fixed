@@ -1,5 +1,6 @@
 "use client";
 
+import axios from 'axios';
 import { useState, useCallback, useMemo, memo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -77,37 +78,37 @@ const LikeButton = memo(function LikeButton({
       setTimeout(() => setError(null), 3000);
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const newLikedState = !isLiked;
-      
+
       dispatch(toggleFavoriteTrack(trackId));
-      
-      if (onToggle) {
-        onToggle(trackId, newLikedState);
-      }
-      
-      setLocalLikeCount(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1));
-      
+      if (onToggle) onToggle(trackId, newLikedState);
+      setLocalLikeCount((prev) => (newLikedState ? prev + 1 : Math.max(0, prev - 1)));
       setAnimationClass(styles.pulse);
       setTimeout(() => setAnimationClass(''), 500);
-      
+
       await trackService.toggleLike(trackId, isLiked);
-      
-    } catch (err: any) {
+    } catch (err: unknown) {
       dispatch(toggleFavoriteTrack(trackId));
-      setLocalLikeCount(prev => isLiked ? prev + 1 : Math.max(0, prev - 1));
-      
-      const errorMessage = err.response?.status === 401 
-        ? 'Сессия истекла. Пожалуйста, войдите снова.' 
-        : err.message || 'Ошибка при обновлении лайка';
-      
+      setLocalLikeCount((prev) => (isLiked ? prev + 1 : Math.max(0, prev - 1)));
+
+      let errorMessage = 'Ошибка при обновлении лайка';
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          errorMessage = 'Сессия истекла. Пожалуйста, войдите снова.';
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       setError(errorMessage);
       console.error('Like error:', err);
-      
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsLoading(false);
