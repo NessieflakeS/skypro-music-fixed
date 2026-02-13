@@ -2,10 +2,10 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import userReducer from "@/store/userSlice";
-import playerReducer from "@/store/playerSlice";
-import TrackItem from "@/components/TrackItem";
-import { ITrackDisplay } from "@/types";
+import userReducer from "@/store/slices/userSlice";
+import playerReducer from "@/store/slices/playerSlice";
+import TrackItem from "@/components/track/TrackItem/TrackItem";
+import { ITrackDisplay } from "@/types/index";
 
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),

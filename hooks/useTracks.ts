@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Track, ITrackDisplay } from '@/types';
+import { Track, ITrackDisplay } from '@/types/index';
 import { trackService } from '@/services/trackService';
 
 export const useTracks = () => {

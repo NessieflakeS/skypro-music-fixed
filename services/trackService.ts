@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Track, Selection } from '@/types';
+import { Track, Selection } from '@/types/index';
 import { apiClient } from './apiClient';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com';

@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { getTokenFromCookies } from '@/utils/authSync';
-
+import { getAccessToken, setAccessToken, clearTokens } from "./tokenManager";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com';
 
 export const apiClient = axios.create({
@@ -16,7 +15,7 @@ apiClient.interceptors.request.use((config) => {
     let token = localStorage.getItem('token');
     
     if (!token) {
-      token = getTokenFromCookies();
+      let token = getAccessToken();
       if (token) {
         localStorage.setItem('token', token);
       }
