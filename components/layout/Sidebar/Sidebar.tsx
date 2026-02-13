@@ -1,36 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+
 import styles from "./Sidebar.module.css";
 import { RootState } from "@/store/store";
 import { logout } from "@/store/slices/userSlice";
 import { clearTokens } from "@/services/tokenManager";
 
-interface Selection {
-  id: number;
-  name: string;
-  image: string;
-}
-
 const FIXED_PLAYLISTS = [
-  { 
-    id: 1,  
-    name: "Плейлист дня", 
-    image: "/img/playlist01.png"
+  {
+    id: 1,
+    name: "Плейлист дня",
+    image: "/img/playlist01.png",
   },
-  { 
-    id: 2,  
-    name: "100 танцевальных хитов", 
-    image: "/img/playlist02.png"
+  {
+    id: 2,
+    name: "100 танцевальных хитов",
+    image: "/img/playlist02.png",
   },
-  { 
-    id: 3,  
-    name: "Инди-заряд", 
-    image: "/img/playlist03.png"
+  {
+    id: 3,
+    name: "Инди-заряд",
+    image: "/img/playlist03.png",
   },
 ];
 
@@ -43,12 +37,12 @@ export default function Sidebar() {
     try {
       dispatch(logout());
       clearTokens();
-      localStorage.removeItem('menuOpen');
-      router.replace('/signin');
-      } catch (error) {
-      console.error('Ошибка при выходе:', error);
-      router.replace('/signin');
-      }
+      localStorage.removeItem("menuOpen");
+      router.replace("/signin");
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      router.replace("/signin");
+    }
   };
 
   return (

@@ -7,7 +7,7 @@ import LikeButton from "@/components/ui/LikeButton/LikeButton";
 import { RootState } from "@/store/store";
 import { setCurrentTime, setVolume } from "@/store/slices/playerSlice";
 import { toggleFavoriteTrack } from "@/store/slices/userSlice";
-import styles from "./AppLayout.module.css";
+import styles from "./Layout.module.css";
 import { formatTime } from "@/utils/formatTime";
 import AuthInitializer from "@/components/providers/AuthInitializer/AuthInitializer";
 

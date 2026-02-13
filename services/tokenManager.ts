@@ -15,6 +15,7 @@ export const getRefreshToken = (): string | null => {
 export const setTokens = (access: string, refresh: string): void => {
   localStorage.setItem(TOKEN_KEY, access);
   localStorage.setItem(REFRESH_KEY, refresh);
+
   document.cookie = `${TOKEN_KEY}=${access}; path=/; max-age=604800; SameSite=Lax`;
   document.cookie = `${REFRESH_KEY}=${refresh}; path=/; max-age=604800; SameSite=Lax`;
 };
@@ -23,14 +24,16 @@ export const clearTokens = (): void => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
+
   document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   document.cookie = `${REFRESH_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 };
 
 export const getUser = (): any | null => {
   const userStr = localStorage.getItem(USER_KEY);
+  if (!userStr) return null;
   try {
-    return userStr ? JSON.parse(userStr) : null;
+    return JSON.parse(userStr);
   } catch {
     return null;
   }
@@ -41,9 +44,13 @@ export const setUser = (user: any): void => {
 };
 
 export const clearAuthCookies = clearTokens;
-export const syncTokens = () => {
-};
-export const setAccessToken = (token: string) => {
-  localStorage.setItem(TOKEN_KEY, token);
-  document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=604800; SameSite=Lax`;
+
+export const setAccessToken = (token: string): void => {
+  const refresh = getRefreshToken();
+  if (refresh) {
+    setTokens(token, refresh);
+  } else {
+    localStorage.setItem(TOKEN_KEY, token);
+    document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=604800; SameSite=Lax`;
+  }
 };

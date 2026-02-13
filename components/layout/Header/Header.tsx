@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+
 import styles from "./Header.module.css";
 import { logout } from "@/store/slices/userSlice";
 import { RootState } from "@/store/store";
@@ -18,39 +19,32 @@ export default function Header() {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
-    const savedState = localStorage.getItem('menuOpen');
+    const savedState = localStorage.getItem("menuOpen");
     if (savedState !== null) {
-      setIsMenuOpen(savedState === 'true');
+      setIsMenuOpen(savedState === "true");
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('menuOpen', isMenuOpen.toString());
+    localStorage.setItem("menuOpen", isMenuOpen.toString());
   }, [isMenuOpen]);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleLogout = useCallback(async () => {
     try {
       dispatch(logout());
-      
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('menuOpen');
-      
       clearTokens();
-      
-      if (pathname === '/favorites') {
-        router.replace('/');
+      localStorage.removeItem("menuOpen");
+
+      if (pathname === "/favorites") {
+        router.replace("/");
       } else {
         router.refresh();
       }
     } catch (error) {
-      console.error('Ошибка при выходе:', error);
-      router.replace('/signin');
+      console.error("Ошибка при выходе:", error);
+      router.replace("/signin");
     }
   }, [dispatch, router, pathname]);
 
@@ -73,7 +67,9 @@ export default function Header() {
         <span className={styles.burger__line}></span>
         <span className={styles.burger__line}></span>
       </div>
-      <div className={`${styles.nav__menu} ${isMenuOpen ? styles.nav__menu_active : ''}`}>
+      <div
+        className={`${styles.nav__menu} ${isMenuOpen ? styles.nav__menu_active : ""}`}
+      >
         <ul className={styles.menu__list}>
           <li className={styles.menu__item}>
             <Link href="/" className={styles.menu__link}>
@@ -88,13 +84,11 @@ export default function Header() {
           {isAuthenticated ? (
             <>
               <li className={styles.menu__item}>
-                <span className={styles.menu__link}>
-                  Привет, {user?.username}
-                </span>
+                <span className={styles.menu__link}>Привет, {user?.username}</span>
               </li>
               <li className={styles.menu__item}>
-                <button 
-                  onClick={handleLogout} 
+                <button
+                  onClick={handleLogout}
                   className={`${styles.menu__link} ${styles.logoutButton}`}
                 >
                   Выйти
@@ -117,9 +111,9 @@ export default function Header() {
           )}
           <li className={`${styles.menu__item} ${styles.menu__itemIcon}`}>
             <button className={styles.themeToggle} aria-label="Сменить тему">
-              <img 
-                src="/img/icon/day-night.svg" 
-                alt="Сменить тему" 
+              <img
+                src="/img/icon/day-night.svg"
+                alt="Сменить тему"
                 className={styles.themeToggle__icon}
               />
             </button>

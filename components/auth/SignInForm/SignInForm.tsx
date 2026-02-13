@@ -1,24 +1,28 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { loginStart, loginSuccess, loginFailure, clearError, setFavoriteTracks } from '@/store/slices/userSlice';
-import { RootState } from '@/store/store';
-import { authService, setAuthTokens } from '@/services/authService';
-import { trackService } from '@/services/trackService';
-import styles from './SignInForm.module.css';
-import classNames from 'classnames';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import classNames from "classnames";
 
-export default function Signin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+import { loginStart, loginSuccess, loginFailure, clearError, setFavoriteTracks } from "@/store/slices/userSlice";
+import { RootState } from "@/store/store";
+import { authService } from "@/services/authService";
+import { setTokens, setUser } from "@/services/tokenManager";
+import { trackService } from "@/services/trackService";
+
+import styles from "./SignInForm.module.css";
+
+export default function SignInForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/';
-  
+  const redirect = searchParams.get("redirect") || "/";
+
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
@@ -39,76 +43,70 @@ export default function Signin() {
 
     try {
       const data = await authService.login({ email, password });
-      
-      setAuthTokens(data.access, data.refresh);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
+
+      setTokens(data.access, data.refresh);
+      setUser(data.user);
+
       dispatch(loginSuccess(data.user));
-      
+
       try {
-        console.log('Загрузка избранных треков после входа...');
+        console.log("Загрузка избранных треков после входа...");
         const favoriteTracksData = await trackService.getFavoriteTracks();
-        const trackIds = favoriteTracksData.map(track => track.id || track._id || 0);
+        const trackIds = favoriteTracksData.map((track) => track.id || track._id || 0);
         dispatch(setFavoriteTracks(trackIds));
         console.log(`Избранные треки загружены: ${trackIds.length}`);
       } catch (favError) {
-        console.error('Ошибка загрузки избранных треков после входа:', favError);
+        console.error("Ошибка загрузки избранных треков после входа:", favError);
       }
-      
+
       router.replace(redirect);
     } catch (err: any) {
-      dispatch(loginFailure(err.message || 'Ошибка входа'));
+      dispatch(loginFailure(err.message || "Ошибка входа"));
     }
   };
 
   return (
-    <>
-      <div className={styles.wrapper}>
-        <div className={styles.containerEnter}>
-          <div className={styles.modal__block}>
-            <form className={styles.modal__form} onSubmit={handleSubmit}>
-              <Link href="/">
-                <div className={styles.modal__logo}>
-                  <img src="/img/logo_modal.png" alt="logo" />
-                </div>
-              </Link>
-              <input
-                className={classNames(styles.modal__input, styles.login)}
-                type="email"
-                name="email"
-                placeholder="Почта"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required
-              />
-              <input
-                className={classNames(styles.modal__input)}
-                type="password"
-                name="password"
-                placeholder="Пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required
-              />
-              <div className={styles.errorContainer}>
-                {error && <p className={styles.errorText}>{error}</p>}
+    <div className={styles.wrapper}>
+      <div className={styles.containerEnter}>
+        <div className={styles.modal__block}>
+          <form className={styles.modal__form} onSubmit={handleSubmit}>
+            <Link href="/">
+              <div className={styles.modal__logo}>
+                <img src="/img/logo_modal.png" alt="logo" />
               </div>
-              <button 
-                type="submit" 
-                className={styles.modal__btnEnter}
-                disabled={loading}
-              >
-                {loading ? 'Загрузка...' : 'Войти'}
-              </button>
-              <Link href="/signup" className={styles.modal__btnSignup}>
-                Зарегистрироваться
-              </Link>
-            </form>
-          </div>
+            </Link>
+            <input
+              className={classNames(styles.modal__input, styles.login)}
+              type="email"
+              name="email"
+              placeholder="Почта"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+            <input
+              className={classNames(styles.modal__input)}
+              type="password"
+              name="password"
+              placeholder="Пароль"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+            <div className={styles.errorContainer}>
+              {error && <p className={styles.errorText}>{error}</p>}
+            </div>
+            <button type="submit" className={styles.modal__btnEnter} disabled={loading}>
+              {loading ? "Загрузка..." : "Войти"}
+            </button>
+            <Link href="/signup" className={styles.modal__btnSignup}>
+              Зарегистрироваться
+            </Link>
+          </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }
