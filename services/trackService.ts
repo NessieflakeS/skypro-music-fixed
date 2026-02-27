@@ -4,6 +4,8 @@ import { apiClient } from './apiClient';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://webdev-music-003b5b991590.herokuapp.com';
 
+const FAVORITE_CACHE_KEY = 'favorite';
+
 interface RawTrack {
   id?: number;
   _id?: number;
@@ -184,24 +186,22 @@ export const trackService = {
   likeTrack: async (trackId: number): Promise<void> => {
     try {
       await apiClient.post(`/catalog/track/${trackId}/favorite/`);
+      console.log(`[API] Трек ${trackId} добавлен в избранное`);
       TRACK_CACHE.selections.delete(-1);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Ошибка добавления в избранное');
-      }
-      throw new Error('Ошибка добавления в избранное');
+    } catch (error) {
+      console.error('[API] Ошибка добавления в избранное:', error);
+      throw error;
     }
   },
 
   dislikeTrack: async (trackId: number): Promise<void> => {
     try {
       await apiClient.delete(`/catalog/track/${trackId}/favorite/`);
+      console.log(`[API] Трек ${trackId} удален из избранного`);
       TRACK_CACHE.selections.delete(-1);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Ошибка удаления из избранного');
-      }
-      throw new Error('Ошибка удаления из избранного');
+    } catch (error) {
+      console.error('[API] Ошибка удаления из избранного:', error);
+      throw error;
     }
   },
 

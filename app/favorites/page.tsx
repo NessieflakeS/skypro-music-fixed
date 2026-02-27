@@ -65,11 +65,14 @@ export default function FavoritesPage() {
 
   useEffect(() => {
     if (prevFavoriteIdsRef.current.length !== favoriteIds.length) {
-      loadFavorites();
+      const timer = setTimeout(() => {
+        loadFavorites();
+      }, 300);
       prevFavoriteIdsRef.current = favoriteIds;
+      return () => clearTimeout(timer);
     }
   }, [favoriteIds, loadFavorites]);
-
+  
   useEffect(() => {
     loadFavorites();
   }, [loadFavorites, retryCount]);

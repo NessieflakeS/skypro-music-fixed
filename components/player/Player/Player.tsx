@@ -47,7 +47,7 @@ const Player = memo(function Player() {
       const audio = audioRef.current;
       if (audio) {
         audio.currentTime = 0;
-        audio.play();
+        audio.play().catch(console.error);
       }
     } else {
       dispatch(setNextTrack());
