@@ -21,7 +21,8 @@ const Player = memo(function Player() {
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying, volume, repeat, shuffle, currentTime, duration } = playerState;
 
-  console.log('Player render, currentTrack:', currentTrack?.name, 'isPlaying:', isPlaying);
+  const lastTimeRef = useRef<number>(0);
+  const stallCheckIntervalRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -57,15 +58,13 @@ const Player = memo(function Player() {
 
         if (isPlaying) {
           await audio.play();
-          console.log('▶️ Воспроизведение началось');
         } else {
           audio.pause();
         }
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
-          console.log('⏸️ Воспроизведение прервано (нормально)');
         } else {
-          console.error('❌ Ошибка воспроизведения:', error);
+          console.error('Ошибка воспроизведения:', error);
           dispatch(setNextTrack());
         }
       }
@@ -89,12 +88,11 @@ const Player = memo(function Player() {
       if (currentTrack) {
         dispatch(updateTrackDuration({ id: currentTrack.id, duration: realDuration }));
       }
-      console.log('📀 Метаданные загружены, длительность:', realDuration);
     }
   }, [dispatch, currentTrack]);
 
   const handleEnded = useCallback(() => {
-    console.log('✅ Событие ended, переключаем трек');
+    console.log('✅ Трек закончился (событие ended)');
     if (repeat) {
       const audio = audioRef.current;
       if (audio) {
@@ -107,23 +105,48 @@ const Player = memo(function Player() {
   }, [repeat, dispatch]);
 
   const handleError = useCallback(() => {
-    const error = audioRef.current?.error;
-    console.error('❌ Ошибка аудио:', error);
+    console.error('❌ Ошибка аудио, переключаем трек');
     dispatch(setNextTrack());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (duration > 0 && currentTime >= duration - 1.0) {
-      const timer = setTimeout(() => {
-        const audio = audioRef.current;
-        if (audio && !audio.ended && audio.currentTime >= duration - 1.0) {
-          console.log('⏱️ Таймер: принудительное переключение');
-          handleEnded();
-        }
-      }, 1000);
-      return () => clearTimeout(timer);
+  const handleStalled = useCallback(() => {
+    console.log('⚠️ Загрузка остановилась (stalled), возможно, конец потока');
+    if (isPlaying) {
+      dispatch(setNextTrack());
     }
-  }, [currentTime, duration, handleEnded]);
+  }, [isPlaying, dispatch]);
+
+  useEffect(() => {
+    if (!isPlaying) {
+      if (stallCheckIntervalRef.current) {
+        clearInterval(stallCheckIntervalRef.current);
+      }
+      return;
+    }
+
+    stallCheckIntervalRef.current = setInterval(() => {
+      const audio = audioRef.current;
+      if (!audio || audio.ended) return;
+
+      const current = audio.currentTime;
+      if (current === lastTimeRef.current) {
+        setTimeout(() => {
+          if (audio.currentTime === lastTimeRef.current && isPlaying) {
+            console.log('⚠️ Трек завис, принудительное переключение');
+            dispatch(setNextTrack());
+          }
+        }, 2000);
+      } else {
+        lastTimeRef.current = current;
+      }
+    }, 3000);
+
+    return () => {
+      if (stallCheckIntervalRef.current) {
+        clearInterval(stallCheckIntervalRef.current);
+      }
+    };
+  }, [isPlaying, dispatch]);
 
   const handlePlayPause = useCallback(() => {
     if (!currentTrack) return;
@@ -180,6 +203,7 @@ const Player = memo(function Player() {
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
           onError={handleError}
+          onStalled={handleStalled}
           preload="metadata"
         />
       )}
