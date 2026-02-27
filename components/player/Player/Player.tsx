@@ -2,14 +2,14 @@
 
 import { useRef, useEffect, useCallback, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { 
-  togglePlayPause, 
-  toggleShuffle, 
+import {
+  togglePlayPause,
+  toggleShuffle,
   toggleRepeat,
   setNextTrack,
   setPrevTrack,
   setCurrentTime,
-  setDuration
+  setDuration,
 } from "@/store/slices/playerSlice";
 import { RootState } from "@/store/store";
 import styles from "./Player.module.css";
@@ -18,15 +18,53 @@ const Player = memo(function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
-  const { 
-    currentTrack, 
-    isPlaying, 
-    volume, 
-    shuffle, 
-    repeat,
-    currentTime,
-    duration 
-  } = playerState;
+  const { currentTrack, isPlaying, volume, repeat, shuffle, currentTime, duration } = playerState;
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
+      audio.currentTime = currentTime;
+    }
+  }, [currentTime]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    const trackFile = currentTrack?.track_file;
+    if (!audio || !trackFile) return;
+
+    const loadAndPlay = async () => {
+      try {
+        if (audio.src !== trackFile) {
+          audio.src = trackFile;
+          audio.load();
+          await new Promise<void>((resolve) => {
+            const onLoaded = () => {
+              audio.removeEventListener('loadedmetadata', onLoaded);
+              resolve();
+            };
+            audio.addEventListener('loadedmetadata', onLoaded, { once: true });
+          });
+        }
+
+        if (isPlaying) {
+          await audio.play();
+        } else {
+          audio.pause();
+        }
+      } catch (error) {
+        console.error('Ошибка воспроизведения:', error);
+      }
+    };
+
+    loadAndPlay();
+  }, [currentTrack, isPlaying]);
 
   const handleTimeUpdate = useCallback(() => {
     const audio = audioRef.current;
@@ -43,6 +81,7 @@ const Player = memo(function Player() {
   }, [dispatch]);
 
   const handleEnded = useCallback(() => {
+    console.log('Трек закончился, repeat =', repeat);
     if (repeat) {
       const audio = audioRef.current;
       if (audio) {
@@ -54,171 +93,67 @@ const Player = memo(function Player() {
     }
   }, [repeat, dispatch]);
 
-  const handlePlayPause = useCallback(() => {
-    if (!currentTrack) return;
-    
-    const audio = audioRef.current;
-    if (audio && audio.ended) {
-      audio.currentTime = 0;
-    }
-    
-    dispatch(togglePlayPause());
-  }, [currentTrack, dispatch]);
-
-  const handlePrevClick = useCallback(() => {
-    dispatch(setPrevTrack());
-  }, [dispatch]);
-
-  const handleNextClick = useCallback(() => {
+  const handleError = useCallback(() => {
+    const error = audioRef.current?.error;
+    console.error('Ошибка аудио:', error);
     dispatch(setNextTrack());
   }, [dispatch]);
 
-  const handleRepeatClick = useCallback(() => {
-    dispatch(toggleRepeat());
-  }, [dispatch]);
+  const handlePlayPause = useCallback(() => {
+    if (!currentTrack) return;
+    dispatch(togglePlayPause());
+  }, [currentTrack, dispatch]);
 
-  const handleShuffleClick = useCallback(() => {
-    dispatch(toggleShuffle());
-  }, [dispatch]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
-      audio.currentTime = currentTime;
-    }
-  }, [currentTime]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack?.track_file) return;
-
-    const playAudio = async () => {
-      if (isPlaying) {
-        try {
-          await audio.play();
-        } catch (error) {
-          if ((error as Error).name !== 'AbortError') {
-            console.error("Ошибка воспроизведения:", error);
-          }
-        }
-      } else {
-        audio.pause();
-      }
-    };
-
-    playAudio();
-  }, [isPlaying, currentTrack]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack?.track_file) return;
-
-    const loadTrack = async () => {
-      try {
-        audio.pause();
-        audio.src = currentTrack.track_file!;
-        
-        await new Promise<void>((resolve, reject) => {
-          const handleCanPlay = () => {
-            audio.removeEventListener('canplay', handleCanPlay);
-            audio.removeEventListener('error', handleErrorCallback);
-            resolve();
-          };
-          
-          const handleErrorCallback = (e: Event) => {
-            audio.removeEventListener('canplay', handleCanPlay);
-            audio.removeEventListener('error', handleErrorCallback);
-            reject(e);
-          };
-          
-          audio.addEventListener('canplay', handleCanPlay);
-          audio.addEventListener('error', handleErrorCallback);
-          
-          audio.load();
-        });
-        
-        if (isPlaying) {
-          await audio.play();
-        }
-      } catch (error) {
-        console.error("Ошибка загрузки трека:", error);
-      }
-    };
-
-    loadTrack();
-  }, [currentTrack?.id, isPlaying]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.volume = volume;
-    }
-  }, [volume]);
+  const handlePrevClick = useCallback(() => dispatch(setPrevTrack()), [dispatch]);
+  const handleNextClick = useCallback(() => dispatch(setNextTrack()), [dispatch]);
+  const handleRepeatClick = useCallback(() => dispatch(toggleRepeat()), [dispatch]);
+  const handleShuffleClick = useCallback(() => dispatch(toggleShuffle()), [dispatch]);
 
   return (
     <>
       <div className={styles.player}>
         <div className={styles.player__controls}>
-          <div 
-            className={styles.player__btnPrev} 
-            aria-label="Предыдущий трек"
-            onClick={handlePrevClick}
-          >
+          <div className={styles.player__btnPrev} onClick={handlePrevClick}>
             <svg className={styles.player__btnPrevSvg}>
-              <use xlinkHref="/img/icon/sprite.svg#icon-prev"></use>
+              <use xlinkHref="/img/icon/sprite.svg#icon-prev" />
             </svg>
           </div>
-          <div 
-            className={styles.player__btnPlay} 
-            aria-label={isPlaying ? "Пауза" : "Воспроизвести"}
-            onClick={handlePlayPause}
-          >
+          <div className={styles.player__btnPlay} onClick={handlePlayPause}>
             <svg className={styles.player__btnPlaySvg}>
-              {isPlaying ? (
-                <use xlinkHref="/img/icon/sprite.svg#icon-pause"></use>
-              ) : (
-                <use xlinkHref="/img/icon/sprite.svg#icon-play"></use>
-              )}
+              <use xlinkHref={isPlaying ? "/img/icon/sprite.svg#icon-pause" : "/img/icon/sprite.svg#icon-play"} />
             </svg>
           </div>
-          <div 
-            className={styles.player__btnNext} 
-            aria-label="Следующий трек"
-            onClick={handleNextClick}
-          >
+          <div className={styles.player__btnNext} onClick={handleNextClick}>
             <svg className={styles.player__btnNextSvg}>
-              <use xlinkHref="/img/icon/sprite.svg#icon-next"></use>
+              <use xlinkHref="/img/icon/sprite.svg#icon-next" />
             </svg>
           </div>
-          <div 
-            className={`${styles.player__btnRepeat} ${repeat ? styles.player__btnRepeat_active : ''}`} 
-            aria-label="Повтор"
+          <div
+            className={`${styles.player__btnRepeat} ${repeat ? styles.player__btnRepeat_active : ''}`}
             onClick={handleRepeatClick}
           >
             <svg className={styles.player__btnRepeatSvg}>
-              <use xlinkHref="/img/icon/sprite.svg#icon-repeat"></use>
+              <use xlinkHref="/img/icon/sprite.svg#icon-repeat" />
             </svg>
           </div>
-          <div 
-            className={`${styles.player__btnShuffle} ${shuffle ? styles.player__btnShuffle_active : ''}`} 
-            aria-label="Перемешать"
+          <div
+            className={`${styles.player__btnShuffle} ${shuffle ? styles.player__btnShuffle_active : ''}`}
             onClick={handleShuffleClick}
           >
             <svg className={styles.player__btnShuffleSvg}>
-              <use xlinkHref="/img/icon/sprite.svg#icon-shuffle"></use>
+              <use xlinkHref="/img/icon/sprite.svg#icon-shuffle" />
             </svg>
           </div>
         </div>
       </div>
-      
+
       {currentTrack && currentTrack.track_file && (
         <audio
           ref={audioRef}
-          src={currentTrack.track_file}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
-          loop={repeat}
+          onError={handleError}
           preload="metadata"
         />
       )}
