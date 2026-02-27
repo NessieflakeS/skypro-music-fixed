@@ -73,20 +73,20 @@ const playerSlice = createSlice({
     },
     setNextTrack: (state) => {
       if (!state.currentTrack || state.playlist.length === 0) return;
-
+      console.log('setNextTrack: currentTrack id', state.currentTrack.id);
       const currentIndex = state.playlist.findIndex(track => track.id === state.currentTrack?.id);
+      console.log('currentIndex', currentIndex, 'playlist length', state.playlist.length);
       let nextIndex = currentIndex + 1;
-
       if (state.shuffle) {
         nextIndex = Math.floor(Math.random() * state.playlist.length);
       } else if (nextIndex >= state.playlist.length) {
         nextIndex = 0;
       }
-
       state.currentTrack = state.playlist[nextIndex];
       state.currentTime = 0;
       state.duration = 0;
       state.isPlaying = true;
+      console.log('new track id', state.currentTrack.id);
     },
     setPrevTrack: (state) => {
       if (!state.currentTrack || state.playlist.length === 0) return;
