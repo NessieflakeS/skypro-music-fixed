@@ -18,6 +18,9 @@ import styles from "@/app/page.module.css";
 export default function FavoritesPage() {
   const router = useRouter();
   const { isAuthenticated } = useSelector((state: RootState) => state.user);
+  const favoriteIds = useSelector((state: RootState) => state.user.favoriteTracks);
+  const prevFavoriteIdsRef = useRef(favoriteIds);
+
   const [rawTracks, setRawTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +62,13 @@ export default function FavoritesPage() {
       isLoadingRef.current = false;
     }
   }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (prevFavoriteIdsRef.current.length !== favoriteIds.length) {
+      loadFavorites();
+      prevFavoriteIdsRef.current = favoriteIds;
+    }
+  }, [favoriteIds, loadFavorites]);
 
   useEffect(() => {
     loadFavorites();

@@ -20,7 +20,7 @@ interface RawTrack {
   release_date?: string;
   genre?: string | string[];
   logo?: string | null;
-  stared_user?: number[];
+  stared_user?: string[];
 }
 
 interface ApiSelection {
@@ -58,9 +58,9 @@ const normalizeTrack = (item: RawTrack, index: number): Track => ({
 
 const extractTracksFromResponse = (data: unknown): RawTrack[] => {
   if (data && typeof data === 'object' && 'success' in data && Array.isArray((data as any).data)) {
-    return (data as any).data;
+    return (data as any).data as RawTrack[];
   } else if (Array.isArray(data)) {
-    return data;
+    return data as RawTrack[];
   }
   return [];
 };
