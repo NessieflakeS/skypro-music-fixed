@@ -8,11 +8,9 @@ export const useLoadFavorites = () => {
 
   const loadFavorites = useCallback(async () => {
     try {
-      console.log('Загрузка избранных треков...');
       const favoriteTracks = await trackService.getFavoriteTracks();
       const trackIds = favoriteTracks.map((track) => track.id || track._id || 0);
       dispatch(setFavoriteTracks(trackIds));
-      console.log(`Избранные треки загружены: ${trackIds.length}`);
       return trackIds;
     } catch (error) {
       console.error('Ошибка загрузки избранных треков:', error);

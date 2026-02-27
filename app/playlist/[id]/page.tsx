@@ -61,7 +61,6 @@ export default function PlaylistPage() {
       try {
         tracksData = await trackService.getSelectionTracks(playlistId);
       } catch (apiError) {
-        console.log("Не удалось получить треки подборки, используем заглушку");
         const allTracks = await trackService.getAllTracks();
         if (playlistId === 1) {
           tracksData = allTracks.slice(0, 8);

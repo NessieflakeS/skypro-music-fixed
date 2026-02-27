@@ -77,7 +77,6 @@ export default function AudioManager() {
       const playWhenReady = () => {
         if (isPlaying) {
           audio.play().catch(e => {
-            console.log("Трек еще не готов, ждем...");
             setTimeout(() => {
               if (isPlaying) {
                 audio.play().catch(console.error);

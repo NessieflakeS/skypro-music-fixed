@@ -89,7 +89,6 @@ const Player = memo(function Player() {
   }, [dispatch, currentTrack]);
 
   const handleEnded = useCallback(() => {
-    console.log('✅ Трек закончился (событие ended)');
     if (repeat) {
       const audio = audioRef.current;
       if (audio) {
@@ -114,13 +113,11 @@ const Player = memo(function Player() {
       if (!audio) return;
 
       if (audio.ended) {
-        console.log('⏱️ Обнаружено audio.ended, переключаем');
         handleEnded();
         return;
       }
 
       if (duration > 0 && audio.currentTime >= duration - 0.5) {
-        console.log('⏱️ Достигнут конец по таймеру, переключаем');
         handleEnded();
       }
     }, 2000);

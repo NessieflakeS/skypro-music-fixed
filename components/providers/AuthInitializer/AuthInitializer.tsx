@@ -18,17 +18,13 @@ export default function AuthInitializer() {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    console.log('AuthInitializer запущен, путь:', pathname);
-
     const token = getAccessToken();
     const user = getUser();
 
     if (token && user) {
-      console.log('Восстановление сессии для:', user.username);
       dispatch(loginSuccess(user));
       loadFavorites(); 
     } else {
-      console.log('Пользователь не авторизован');
       dispatch(logout());
       dispatch(setFavoriteTracks([]));
     }

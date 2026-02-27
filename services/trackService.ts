@@ -193,7 +193,6 @@ export const trackService = {
   likeTrack: async (trackId: number): Promise<void> => {
     try {
       await apiClient.post(`/catalog/track/${trackId}/favorite/`);
-      console.log(`[API] Трек ${trackId} добавлен в избранное`);
       TRACK_CACHE.selections.delete(-1);
     } catch (error) {
       console.error('[API] Ошибка добавления в избранное:', error);
@@ -204,7 +203,6 @@ export const trackService = {
   dislikeTrack: async (trackId: number): Promise<void> => {
     try {
       await apiClient.delete(`/catalog/track/${trackId}/favorite/`);
-      console.log(`[API] Трек ${trackId} удален из избранного`);
       TRACK_CACHE.selections.delete(-1);
     } catch (error) {
       console.error('[API] Ошибка удаления из избранного:', error);

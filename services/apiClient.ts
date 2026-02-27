@@ -16,9 +16,7 @@ apiClient.interceptors.request.use((config) => {
     const token = getAccessToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("[apiClient] Токен добавлен в заголовок");
     } else {
-      console.log("[apiClient] Токен не найден");
     }
   }
   return config;
@@ -35,7 +33,6 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      console.log("[apiClient] Получена 401, пытаюсь обновить токен...");
 
       try {
         const refreshToken = localStorage.getItem("refresh_token");
@@ -52,7 +49,6 @@ apiClient.interceptors.response.use(
         setTokens(newAccessToken, refreshToken);
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        console.log("[apiClient] Токен обновлен, повторяю запрос");
         return apiClient(originalRequest);
       } catch (refreshError) {
         console.error("[apiClient] Не удалось обновить токен:", refreshError);
