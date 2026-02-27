@@ -10,6 +10,7 @@ import {
   setPrevTrack,
   setCurrentTime,
   setDuration,
+  updateTrackDuration,
 } from "@/store/slices/playerSlice";
 import { RootState } from "@/store/store";
 import styles from "./Player.module.css";
@@ -19,6 +20,9 @@ const Player = memo(function Player() {
   const dispatch = useDispatch();
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying, volume, repeat, shuffle, currentTime, duration } = playerState;
+
+  const lastTimeRef = useRef<number>(0);
+  const stallTimerRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -36,18 +40,17 @@ const Player = memo(function Player() {
 
   useEffect(() => {
     const audio = audioRef.current;
-    const trackFile = currentTrack?.track_file;
-    if (!audio || !trackFile) return;
+    if (!audio || !currentTrack?.track_file) return;
 
     const loadAndPlay = async () => {
       try {
-        if (audio.src !== trackFile) {
-          audio.src = trackFile;
+        if (audio.src !== currentTrack.track_file) {
+          audio.src = currentTrack.track_file!;
           audio.load();
-          await new Promise<void>((resolve) => {
+          await new Promise((resolve) => {
             const onLoaded = () => {
               audio.removeEventListener('loadedmetadata', onLoaded);
-              resolve();
+              resolve(null);
             };
             audio.addEventListener('loadedmetadata', onLoaded, { once: true });
           });
@@ -67,23 +70,32 @@ const Player = memo(function Player() {
   }, [currentTrack, isPlaying]);
 
   const handleTimeUpdate = useCallback(() => {
-  const audio = audioRef.current;
-  if (audio) {
-    console.log('⏱️ время:', audio.currentTime, 'длит:', audio.duration);
-    dispatch(setCurrentTime(audio.currentTime));
-  }
-}, [dispatch]);
+    const audio = audioRef.current;
+    if (audio) {
+      const current = audio.currentTime;
+      dispatch(setCurrentTime(current));
+
+      if (duration > 0 && current >= duration - 1.0 && Math.abs(current - lastTimeRef.current) < 0.1) {
+        console.log('⚠️ Принудительное завершение трека (зависание)');
+        handleEnded();
+      }
+      lastTimeRef.current = current;
+    }
+  }, [dispatch, duration]);
 
   const handleLoadedMetadata = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
-      dispatch(setDuration(audio.duration));
+      const realDuration = audio.duration;
+      dispatch(setDuration(realDuration));
+      if (currentTrack) {
+        dispatch(updateTrackDuration({ id: currentTrack.id, duration: realDuration }));
+      }
     }
-  }, [dispatch]);
+  }, [dispatch, currentTrack]);
 
   const handleEnded = useCallback(() => {
-      console.log('🔥 Трек закончился! repeat =', repeat);
-      console.log('Текущее время:', audioRef.current?.currentTime, 'длительность:', audioRef.current?.duration);
+    console.log('🔥 Трек закончился, repeat =', repeat);
     if (repeat) {
       const audio = audioRef.current;
       if (audio) {
@@ -98,9 +110,21 @@ const Player = memo(function Player() {
 
   const handleError = useCallback(() => {
     const error = audioRef.current?.error;
-    console.error('Ошибка аудио:', error);
+    console.error('❌ Ошибка аудио:', error);
     dispatch(setNextTrack());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (duration > 0 && currentTime >= duration - 0.5) {
+      const timer = setTimeout(() => {
+        if (audioRef.current && !audioRef.current.ended) {
+          console.log('⏱️ Таймер: достигнут конец, переключаем');
+          handleEnded();
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentTime, duration, handleEnded]);
 
   const handlePlayPause = useCallback(() => {
     if (!currentTrack) return;

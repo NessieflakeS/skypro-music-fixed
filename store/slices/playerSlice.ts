@@ -1,13 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface PlayerTrack {
+export interface PlayerTrack {
   id: number;
   name: string;
   author: string;
   album: string;
   track_file?: string;
   time?: string;
-  duration?: number;
+  actualDuration?: number;
 }
 
 interface PlayerState {
@@ -38,9 +38,8 @@ const playerSlice = createSlice({
   reducers: {
     setCurrentTrack: (state, action: PayloadAction<{track: PlayerTrack, playlist: PlayerTrack[]}>) => {
       const { track, playlist } = action.payload;
-      
       const isSameTrack = state.currentTrack && state.currentTrack.id === track.id;
-      
+
       if (isSameTrack) {
         state.isPlaying = !state.isPlaying;
       } else {
@@ -48,7 +47,7 @@ const playerSlice = createSlice({
         state.playlist = playlist;
         state.isPlaying = true;
         state.currentTime = 0;
-        state.duration = 0;
+        state.duration = 0; 
       }
     },
     togglePlayPause: (state) => {
@@ -71,22 +70,32 @@ const playerSlice = createSlice({
     setDuration: (state, action: PayloadAction<number>) => {
       state.duration = action.payload;
     },
+    updateTrackDuration: (state, action: PayloadAction<{ id: number; duration: number }>) => {
+      const { id, duration } = action.payload;
+      const trackInPlaylist = state.playlist.find(t => t.id === id);
+      if (trackInPlaylist) {
+        trackInPlaylist.actualDuration = duration;
+      }
+      if (state.currentTrack && state.currentTrack.id === id) {
+        state.currentTrack.actualDuration = duration;
+      }
+    },
     setNextTrack: (state) => {
       if (!state.currentTrack || state.playlist.length === 0) return;
-      console.log('setNextTrack: currentTrack id', state.currentTrack.id);
+
       const currentIndex = state.playlist.findIndex(track => track.id === state.currentTrack?.id);
-      console.log('currentIndex', currentIndex, 'playlist length', state.playlist.length);
       let nextIndex = currentIndex + 1;
+
       if (state.shuffle) {
         nextIndex = Math.floor(Math.random() * state.playlist.length);
       } else if (nextIndex >= state.playlist.length) {
         nextIndex = 0;
       }
+
       state.currentTrack = state.playlist[nextIndex];
       state.currentTime = 0;
       state.duration = 0;
       state.isPlaying = true;
-      console.log('new track id', state.currentTrack.id);
     },
     setPrevTrack: (state) => {
       if (!state.currentTrack || state.playlist.length === 0) return;
@@ -122,6 +131,7 @@ export const {
   toggleRepeat,
   setCurrentTime,
   setDuration,
+  updateTrackDuration,
   setNextTrack,
   setPrevTrack,
   clearPlayer,
