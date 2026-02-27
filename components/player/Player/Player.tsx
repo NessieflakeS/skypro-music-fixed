@@ -21,9 +21,6 @@ const Player = memo(function Player() {
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying, volume, repeat, shuffle, currentTime, duration } = playerState;
 
-  const lastTimeRef = useRef<number>(0);
-  const stallCheckIntervalRef = useRef<NodeJS.Timeout>();
-
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
@@ -109,44 +106,30 @@ const Player = memo(function Player() {
     dispatch(setNextTrack());
   }, [dispatch]);
 
-  const handleStalled = useCallback(() => {
-    console.log('⚠️ Загрузка остановилась (stalled), возможно, конец потока');
-    if (isPlaying) {
-      dispatch(setNextTrack());
-    }
-  }, [isPlaying, dispatch]);
-
   useEffect(() => {
-    if (!isPlaying) {
-      if (stallCheckIntervalRef.current) {
-        clearInterval(stallCheckIntervalRef.current);
-      }
-      return;
-    }
+    if (!isPlaying) return;
 
-    stallCheckIntervalRef.current = setInterval(() => {
+    let lastTime = -1;
+    const interval = setInterval(() => {
       const audio = audioRef.current;
       if (!audio || audio.ended) return;
 
       const current = audio.currentTime;
-      if (current === lastTimeRef.current) {
-        setTimeout(() => {
-          if (audio.currentTime === lastTimeRef.current && isPlaying) {
-            console.log('⚠️ Трек завис, принудительное переключение');
-            dispatch(setNextTrack());
-          }
-        }, 2000);
+      if (current === lastTime) {
+        if (current >= duration - 2) {
+          console.log('⏱️ Таймер: достигнут конец (зависание), переключаем');
+          handleEnded();
+        } else {
+          console.log('⚠️ Трек завис на середине, переключаем');
+          dispatch(setNextTrack());
+        }
       } else {
-        lastTimeRef.current = current;
+        lastTime = current;
       }
     }, 3000);
 
-    return () => {
-      if (stallCheckIntervalRef.current) {
-        clearInterval(stallCheckIntervalRef.current);
-      }
-    };
-  }, [isPlaying, dispatch]);
+    return () => clearInterval(interval);
+  }, [isPlaying, duration, handleEnded, dispatch]);
 
   const handlePlayPause = useCallback(() => {
     if (!currentTrack) return;
@@ -203,7 +186,6 @@ const Player = memo(function Player() {
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleEnded}
           onError={handleError}
-          onStalled={handleStalled}
           preload="metadata"
         />
       )}

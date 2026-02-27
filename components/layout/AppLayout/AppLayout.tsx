@@ -60,10 +60,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         </svg>
                       </div>
                       <div className={styles.trackPlay__author}>
-                        <span>{currentTrack.author}</span>
+                        <span className={styles.trackPlay__authorLink} title={currentTrack.name}>
+                          {currentTrack.name}
+                        </span>
                       </div>
                       <div className={styles.trackPlay__album}>
-                        <span>{currentTrack.album}</span>
+                        <span className={styles.trackPlay__albumLink} title={currentTrack.author}>
+                          {currentTrack.author}
+                        </span>
                       </div>
                     </div>
                     <div className={styles.trackPlay__likeDis}>
