@@ -67,11 +67,12 @@ const Player = memo(function Player() {
   }, [currentTrack, isPlaying]);
 
   const handleTimeUpdate = useCallback(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      dispatch(setCurrentTime(audio.currentTime));
-    }
-  }, [dispatch]);
+  const audio = audioRef.current;
+  if (audio) {
+    console.log('⏱️ время:', audio.currentTime, 'длит:', audio.duration);
+    dispatch(setCurrentTime(audio.currentTime));
+  }
+}, [dispatch]);
 
   const handleLoadedMetadata = useCallback(() => {
     const audio = audioRef.current;
@@ -81,7 +82,8 @@ const Player = memo(function Player() {
   }, [dispatch]);
 
   const handleEnded = useCallback(() => {
-    console.log('Трек закончился, repeat =', repeat);
+      console.log('🔥 Трек закончился! repeat =', repeat);
+      console.log('Текущее время:', audioRef.current?.currentTime, 'длительность:', audioRef.current?.duration);
     if (repeat) {
       const audio = audioRef.current;
       if (audio) {
@@ -89,6 +91,7 @@ const Player = memo(function Player() {
         audio.play().catch(console.error);
       }
     } else {
+      console.log('➡️ Вызываем setNextTrack');
       dispatch(setNextTrack());
     }
   }, [repeat, dispatch]);
