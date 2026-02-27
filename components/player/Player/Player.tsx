@@ -21,8 +21,7 @@ const Player = memo(function Player() {
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying, volume, repeat, shuffle, currentTime, duration } = playerState;
 
-  const lastTimeRef = useRef<number>(0);
-  const stallTimerRef = useRef<NodeJS.Timeout>();
+  console.log('Player render, currentTrack:', currentTrack?.name, 'isPlaying:', isPlaying);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -48,40 +47,39 @@ const Player = memo(function Player() {
           audio.src = currentTrack.track_file!;
           audio.load();
           await new Promise((resolve) => {
-            const onLoaded = () => {
-              audio.removeEventListener('loadedmetadata', onLoaded);
+            const onCanPlay = () => {
+              audio.removeEventListener('canplay', onCanPlay);
               resolve(null);
             };
-            audio.addEventListener('loadedmetadata', onLoaded, { once: true });
+            audio.addEventListener('canplay', onCanPlay, { once: true });
           });
         }
 
         if (isPlaying) {
           await audio.play();
+          console.log('▶️ Воспроизведение началось');
         } else {
           audio.pause();
         }
       } catch (error) {
-        console.error('Ошибка воспроизведения:', error);
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('⏸️ Воспроизведение прервано (нормально)');
+        } else {
+          console.error('❌ Ошибка воспроизведения:', error);
+          dispatch(setNextTrack());
+        }
       }
     };
 
     loadAndPlay();
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack, isPlaying, dispatch]);
 
   const handleTimeUpdate = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
-      const current = audio.currentTime;
-      dispatch(setCurrentTime(current));
-
-      if (duration > 0 && current >= duration - 1.0 && Math.abs(current - lastTimeRef.current) < 0.1) {
-        console.log('⚠️ Принудительное завершение трека (зависание)');
-        handleEnded();
-      }
-      lastTimeRef.current = current;
+      dispatch(setCurrentTime(audio.currentTime));
     }
-  }, [dispatch, duration]);
+  }, [dispatch]);
 
   const handleLoadedMetadata = useCallback(() => {
     const audio = audioRef.current;
@@ -91,11 +89,12 @@ const Player = memo(function Player() {
       if (currentTrack) {
         dispatch(updateTrackDuration({ id: currentTrack.id, duration: realDuration }));
       }
+      console.log('📀 Метаданные загружены, длительность:', realDuration);
     }
   }, [dispatch, currentTrack]);
 
   const handleEnded = useCallback(() => {
-    console.log('🔥 Трек закончился, repeat =', repeat);
+    console.log('✅ Событие ended, переключаем трек');
     if (repeat) {
       const audio = audioRef.current;
       if (audio) {
@@ -103,7 +102,6 @@ const Player = memo(function Player() {
         audio.play().catch(console.error);
       }
     } else {
-      console.log('➡️ Вызываем setNextTrack');
       dispatch(setNextTrack());
     }
   }, [repeat, dispatch]);
@@ -115,13 +113,14 @@ const Player = memo(function Player() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (duration > 0 && currentTime >= duration - 0.5) {
+    if (duration > 0 && currentTime >= duration - 1.0) {
       const timer = setTimeout(() => {
-        if (audioRef.current && !audioRef.current.ended) {
-          console.log('⏱️ Таймер: достигнут конец, переключаем');
+        const audio = audioRef.current;
+        if (audio && !audio.ended && audio.currentTime >= duration - 1.0) {
+          console.log('⏱️ Таймер: принудительное переключение');
           handleEnded();
         }
-      }, 500);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [currentTime, duration, handleEnded]);
