@@ -21,6 +21,8 @@ const Player = memo(function Player() {
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying, volume, repeat, shuffle, currentTime, duration } = playerState;
 
+  const actualDuration = currentTrack?.actualDuration || duration;
+
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
@@ -116,10 +118,10 @@ const Player = memo(function Player() {
 
       const current = audio.currentTime;
       if (current === lastTime) {
-        if (current >= duration - 2) {
+        if (actualDuration > 0 && current >= actualDuration - 1.5) {
           console.log('⏱️ Таймер: достигнут конец (зависание), переключаем');
           handleEnded();
-        } else {
+        } else if (actualDuration > 3) {
           console.log('⚠️ Трек завис на середине, переключаем');
           dispatch(setNextTrack());
         }
@@ -129,7 +131,7 @@ const Player = memo(function Player() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, duration, handleEnded, dispatch]);
+  }, [isPlaying, actualDuration, handleEnded, dispatch]);
 
   const handlePlayPause = useCallback(() => {
     if (!currentTrack) return;
