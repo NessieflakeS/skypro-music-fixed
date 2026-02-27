@@ -21,8 +21,6 @@ const Player = memo(function Player() {
   const playerState = useSelector((state: RootState) => state.player);
   const { currentTrack, isPlaying, volume, repeat, shuffle, currentTime, duration } = playerState;
 
-  const actualDuration = currentTrack?.actualDuration || duration;
-
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && Math.abs(audio.currentTime - currentTime) > 0.1) {
@@ -83,7 +81,6 @@ const Player = memo(function Player() {
     const audio = audioRef.current;
     if (audio) {
       const realDuration = audio.duration;
-      console.log(`loadedmetadata: трек ${currentTrack?.name}, реальная длительность ${realDuration}`);
       dispatch(setDuration(realDuration));
       if (currentTrack) {
         dispatch(updateTrackDuration({ id: currentTrack.id, duration: realDuration }));
@@ -112,30 +109,24 @@ const Player = memo(function Player() {
   useEffect(() => {
     if (!isPlaying) return;
 
-    let lastTime = -1;
     const interval = setInterval(() => {
       const audio = audioRef.current;
-      if (!audio || audio.ended) return;
+      if (!audio) return;
 
-      const current = audio.currentTime;
-      if (current === lastTime) {
-        if (audio.networkState === audio.NETWORK_LOADING) {
-          return;
-        }
-        if (actualDuration > 0 && current >= actualDuration - 1.5) {
-          console.log('⏱️ Таймер: достигнут конец (зависание), переключаем');
-          handleEnded();
-        } else if (actualDuration > 3) {
-          console.log('⚠️ Трек завис на середине, переключаем');
-          dispatch(setNextTrack());
-        }
-      } else {
-        lastTime = current;
+      if (audio.ended) {
+        console.log('⏱️ Обнаружено audio.ended, переключаем');
+        handleEnded();
+        return;
       }
-    }, 8000);
+
+      if (duration > 0 && audio.currentTime >= duration - 0.5) {
+        console.log('⏱️ Достигнут конец по таймеру, переключаем');
+        handleEnded();
+      }
+    }, 2000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, actualDuration, handleEnded, dispatch]);
+  }, [isPlaying, duration, handleEnded]);
 
   const handlePlayPause = useCallback(() => {
     if (!currentTrack) return;
