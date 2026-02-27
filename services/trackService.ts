@@ -45,18 +45,25 @@ const TRACK_CACHE: {
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
-const normalizeTrack = (item: RawTrack, index: number): Track => ({
-  id: item.id || item._id || index + 1,
-  name: item.name || item.title || `Трек ${index + 1}`,
-  author: item.author || item.artist || 'Неизвестный исполнитель',
-  album: item.album || 'Без альбома',
-  duration_in_seconds: item.duration_in_seconds || item.duration || 180,
-  track_file: item.track_file || item.audio_file || item.url || '',
-  release_date: item.release_date || '2023-01-01',
-  genre: Array.isArray(item.genre) ? item.genre : (item.genre ? [item.genre] : ['Не указан']),
-  logo: item.logo || null,
-  stared_user: item.stared_user || [],
-});
+const normalizeTrack = (item: RawTrack, index: number): Track => {
+  const trackFile = item.track_file || item.audio_file || item.url || '';
+  const fullTrackFile = trackFile.startsWith('http') 
+    ? trackFile 
+    : `${API_URL}${trackFile}`;
+
+  return {
+    id: item.id || item._id || index + 1,
+    name: item.name || item.title || `Трек ${index + 1}`,
+    author: item.author || item.artist || 'Неизвестный исполнитель',
+    album: item.album || 'Без альбома',
+    duration_in_seconds: item.duration_in_seconds || item.duration || 180,
+    track_file: fullTrackFile,
+    release_date: item.release_date || '2023-01-01',
+    genre: Array.isArray(item.genre) ? item.genre : (item.genre ? [item.genre] : ['Не указан']),
+    logo: item.logo || null,
+    stared_user: item.stared_user || [],
+  };
+};
 
 const extractTracksFromResponse = (data: unknown): RawTrack[] => {
   if (data && typeof data === 'object' && 'success' in data && Array.isArray((data as any).data)) {
