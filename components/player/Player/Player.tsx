@@ -83,6 +83,7 @@ const Player = memo(function Player() {
     const audio = audioRef.current;
     if (audio) {
       const realDuration = audio.duration;
+      console.log(`loadedmetadata: трек ${currentTrack?.name}, реальная длительность ${realDuration}`);
       dispatch(setDuration(realDuration));
       if (currentTrack) {
         dispatch(updateTrackDuration({ id: currentTrack.id, duration: realDuration }));
@@ -118,6 +119,9 @@ const Player = memo(function Player() {
 
       const current = audio.currentTime;
       if (current === lastTime) {
+        if (audio.networkState === audio.NETWORK_LOADING) {
+          return;
+        }
         if (actualDuration > 0 && current >= actualDuration - 1.5) {
           console.log('⏱️ Таймер: достигнут конец (зависание), переключаем');
           handleEnded();
@@ -128,7 +132,7 @@ const Player = memo(function Player() {
       } else {
         lastTime = current;
       }
-    }, 3000);
+    }, 8000);
 
     return () => clearInterval(interval);
   }, [isPlaying, actualDuration, handleEnded, dispatch]);
