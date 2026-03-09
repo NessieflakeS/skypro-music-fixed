@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from "@testing-library/react";
-import Filter from "@/components/Filter";
+import Filter from "@/components/ui/Filter/Filter";
 
 const mockAuthors = ["Artist 1", "Artist 2", "Artist 3"];
 const mockGenres = ["Rock", "Pop", "Jazz"];

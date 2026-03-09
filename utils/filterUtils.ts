@@ -1,4 +1,4 @@
-import { Track } from '@/types';
+import { Track } from '@/types/index';
 
 export const filterBySearch = (tracks: Track[], searchQuery: string): Track[] => {
   if (!searchQuery.trim()) return tracks;

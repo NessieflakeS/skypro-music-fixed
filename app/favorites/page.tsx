@@ -4,13 +4,13 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useFilters } from "@/hooks/useFilters";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
-import SearchBar from "@/components/SearchBar";
-import Filter from "@/components/Filter";
-import TrackList from "@/components/TrackList";
+import Header from "@/components/layout/Header/Header";
+import Sidebar from "@/components/layout/Sidebar/Sidebar";
+import SearchBar from "@/components/ui/SearchBar/SearchBar";
+import Filter from "@/components/ui/Filter/Filter";
+import TrackList from "@/components/track/TrackList/TrackList";
 import { trackService } from "@/services/trackService";
-import { Track, ITrackDisplay } from "@/types";
+import { Track, ITrackDisplay } from "@/types/index";
 import { RootState } from "@/store/store";
 import { formatDuration } from "@/utils/formatTime";
 import styles from "@/app/page.module.css";
@@ -18,6 +18,9 @@ import styles from "@/app/page.module.css";
 export default function FavoritesPage() {
   const router = useRouter();
   const { isAuthenticated } = useSelector((state: RootState) => state.user);
+  const favoriteIds = useSelector((state: RootState) => state.user.favoriteTracks);
+  const prevFavoriteIdsRef = useRef(favoriteIds);
+
   const [rawTracks, setRawTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +63,16 @@ export default function FavoritesPage() {
     }
   }, [isAuthenticated, router]);
 
+  useEffect(() => {
+    if (prevFavoriteIdsRef.current.length !== favoriteIds.length) {
+      const timer = setTimeout(() => {
+        loadFavorites();
+      }, 300);
+      prevFavoriteIdsRef.current = favoriteIds;
+      return () => clearTimeout(timer);
+    }
+  }, [favoriteIds, loadFavorites]);
+  
   useEffect(() => {
     loadFavorites();
   }, [loadFavorites, retryCount]);

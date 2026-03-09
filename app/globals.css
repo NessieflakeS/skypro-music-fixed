@@ -87,8 +87,3 @@ use {
 ::-webkit-scrollbar-thumb:hover {
   background: #ad61ff;
 }
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #4e4e4e #181818;
-}

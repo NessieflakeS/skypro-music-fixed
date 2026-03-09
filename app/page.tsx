@@ -3,11 +3,11 @@
 import { useEffect } from "react";
 import { useTracks } from "@/hooks/useTracks";
 import { useFilters } from "@/hooks/useFilters";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
-import SearchBar from "@/components/SearchBar";
-import Filter from "@/components/Filter";
-import TrackList from "@/components/TrackList";
+import Header from "@/components/layout/Header/Header";
+import Sidebar from "@/components/layout/Sidebar/Sidebar";
+import SearchBar from "@/components/ui/SearchBar/SearchBar";
+import Filter from "@/components/ui/Filter/Filter";
+import TrackList from "@/components/track/TrackList/TrackList";
 import { formatDuration } from "@/utils/formatTime";
 import styles from "./page.module.css";
 

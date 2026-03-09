@@ -9,7 +9,7 @@ import {
   getUniqueAuthors,
   getUniqueGenres,
 } from "@/utils/filterUtils";
-import { Track } from "@/types";
+import { Track } from "@/types/index";
 
 const mockTracks: Track[] = [
   {
